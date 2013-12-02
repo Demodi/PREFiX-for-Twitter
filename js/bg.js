@@ -1,0 +1,1145 @@
+var ce = chrome.extension;
+var ct = chrome.tabs;
+var root_url = ce.getURL('');
+var popup_url = ce.getURL('popup.html');
+
+var $temp = $('<div />');
+
+chrome.runtime.onMessage.addListener(function(request, sender) {
+	if (request.act === 'draw_attention') {
+		if (! sender || ! sender.tab || ! sender.tab.windowId) return;
+		chrome.windows.update(sender.tab.windowId, {
+			drawAttention: true
+		});
+	} else if (request.act === 'stop_drawing_attention') {
+		if (! sender || ! sender.tab || ! sender.tab.windowId) return;
+		chrome.windows.update(sender.tab.windowId, {
+			drawAttention: false
+		});
+	} else if (request.act === 'set_consumer') {
+		enableCustomConsumer(request.key, request.secret);
+	} else {
+		chrome.tabs.query({
+			url: chrome.extension.getURL('/popup.html?new_window=true')
+		}, function(tabs) {
+			tabs.forEach(function(tab) {
+				if (! sender.tab) {
+					chrome.tabs.remove(tab.id);
+				}
+			});
+		});
+	}
+});
+
+function onInputStarted() {
+	chrome.omnibox.setDefaultSuggestion({
+		description: '按回车键发送消息至 Twitter, 按 ↑/↓ 回复指定消息'
+	});
+	prepareSuggestions();
+}
+
+var suggestions = [];
+function prepareSuggestions() {
+	var users = { };
+	function getSpaces(n) {
+		return (new Array(n + 1)).join(' ');
+	}
+	suggestions = PREFiX.homeTimeline.buffered.
+		concat(PREFiX.homeTimeline.tweets).
+		slice(0, 5).
+		map(function(tweet) {
+			var _tweet = tweet;
+			tweet = tweet.retweeted_status || tweet;
+			var text = tweet.text;
+			if (tweet.entities && tweet.entities.user_mentions) {
+				tweet.entities.user_mentions.forEach(function(mention) {
+					text = text.replace('@' + mention.screen_name, function(_) {
+						return '<url>' + _ + '</url>';
+					});
+				});
+			}
+			users[tweet.user.screen_name] = users[tweet.user.screen_name] || 0;
+
+			var user = tweet.user.screen_name;
+
+			var cont = '@' + user + getSpaces(++users[user]);
+
+			var desc = '<dim>' + tweet.user.name + ' (@' + user + '): </dim>';
+			desc += tweet.photo ? '<url>[Photo]</url> ' : '';
+			desc += text + '<dim> - ';
+			if (_tweet !== tweet) {
+				desc += 'Retweeted by ' + _tweet.user.name + ' ';
+			}
+			desc += getRelativeTime(_tweet.created_at);
+			desc += ' via ' + tweet.source + '</dim>';
+
+			return {
+				content: cont,
+				description: desc
+			};
+		});
+}
+
+var delaySuggest = _.throttle(prepareSuggestions, 1000);
+
+function onInputChanged(text, suggest) {
+	delaySuggest();
+	suggest(suggestions);
+}
+
+function onInputEntered(text) {
+	var re = /^@([A-Za-z0-9_]{1,15})( +)/g;
+	var result = re.exec(text);
+	var at_user, spaces;
+	var tweet_id;
+	if (result) {
+		at_user = result[1];
+		spaces = result[2];
+		var matched_tweets = [];
+		PREFiX.homeTimeline.buffered.
+		concat(PREFiX.homeTimeline.tweets).
+		forEach(function(tweet) {
+			tweet = tweet.retweeted_status || tweet;
+			if (tweet.user.screen_name === at_user) {
+				matched_tweets.push(tweet);
+			}
+		});
+		for (var i = spaces.length; i-- > 0;) {
+			if (matched_tweets[i]) {
+				tweet_id = matched_tweets[i].id_str;
+				break;
+			}
+		}
+	}
+	PREFiX.user.postTweet({
+		status: text.replace(/\s+/g, ' ').trim(),
+		in_reply_to_status_id: tweet_id
+	}).next(function(tweet) {
+		PREFiX.update();
+		showNotification({
+			title: '消息已成功发送至 Twitter',
+			content: $temp.html(tweet.text).text(),
+			timeout: 10000
+		}).addEventListener('click', function(e) {
+			this.cancel();
+		});
+	}).error(function(e) {
+		var content = '错误原因: ' + e.exceptionType;
+		if (e.response && e.response.error) {
+			content += ' / ' + e.response.error;
+		}
+		content += ' (点击这里重试)';
+		showNotification({
+			title: '消息发送失败',
+			content: content,
+			timeout: false
+		}).addEventListener('click', function(e) {
+			this.cancel();
+			onInputEntered(text);
+		});
+	});
+}
+
+function updateDetails(flag) {
+	var user = Ripple(PREFiX.accessToken);
+	var verify = user.verify().next(function(details) {
+		lscache.set('account_details', details);
+		if (details.friends_count >= 75 && is_first_run) {
+			settings.current.autoFlushCache = true;
+			settings.save();
+		}
+		is_first_run = false;
+		PREFiX.account = details;
+	});
+	if (flag) {
+		// 延时重试
+		verify.
+		error(function() {
+			setTimeout(function() {
+				updateDetails(flag);
+			}, 60000);
+		});
+	}
+	return verify;
+}
+
+var saved_searches_items = [];
+function initSavedSearches() {
+	stopSavedSearches();
+	function isMentioned(tweet) {
+		var result = false;
+		if (tweet && tweet.entities) {
+			var user_mentions = tweet.entities.user_mentions;
+			if (user_mentions) {
+				return user_mentions.some(function(user) {
+					return user.id_str === PREFiX.account.id_str;
+				});
+			}
+		}
+		return result;
+	}
+	function SavedSearchItem(q) {
+		this.keyword = q;
+		this.tweets = [];
+		this.unread_count = 0;
+		this.interval = setInterval(this.check.bind(this), 3 * 60 * 1000);
+		this.ajax = null;
+		this.check();
+	}
+	SavedSearchItem.prototype.check = function() {
+		if (this.ajax) {
+			this.ajax.cancel();
+		}
+		var self = this;
+		var q = this.keyword;
+		var last_tweet_id;
+		var last_read_tweet_id = +lscache.get('saved-search-' + q + '-id');
+		if (this.tweets.length) {
+			last_tweet_id = this.tweets[0].id_str;
+		}
+		this.ajax = getDataSince(
+				'searchTweets',
+				last_tweet_id,
+				this,
+				{ q: q },
+				90
+			).next(function(tweets) {
+				if (tweets.length) {
+					unshift(self.tweets, tweets);
+					if (! last_read_tweet_id) {
+						last_read_tweet_id = +tweets[0].id_str;
+						lscache.set('saved-search-' + q + '-id', tweets[0].id_str)
+					}
+				}
+				if (! settings.current.showSavedSearchCount) {
+					self.unread_count = 0;
+					self.tweets.forEach(function(t) {
+						t.is_unread = false;
+					});
+				} else {
+					self.unread_count = self.tweets.filter(function(t) {
+							t.is_unread = t.user.id !== PREFiX.account.id &&
+								t.id > last_read_tweet_id && ! isMentioned(t);
+							return t.is_unread;
+						}).length;
+				}
+			});
+	}
+	SavedSearchItem.prototype.stop = function() {
+		if (this.ajax) {
+			this.ajax.cancel();
+		}
+		clearInterval(this.interval);
+	}
+	PREFiX.user.getSavedSearches().next(function(data) {
+		data.forEach(function(saved_search) {
+			saved_search = new SavedSearchItem(saved_search.query);
+			saved_searches_items.push(saved_search);
+		});
+	});
+	setTimeout(initSavedSearches, 60 * 60 * 1000);
+}
+
+function stopSavedSearches() {
+	saved_searches_items.forEach(function(item) {
+		item.stop();
+	});
+	saved_searches_items = [];
+}
+
+function getSavedSearchTweetsCount() {
+	var count = 0;
+	saved_searches_items.forEach(function(item) {
+		count += item.unread_count;
+	});
+	return count;
+}
+
+function createTab(url) {
+	ct.create({
+		url: url,
+		selected: true
+	});
+}
+
+function closeTab(id) {
+	ct.remove(id);
+}
+
+function closeWindow(id) {
+	chrome.windows.remove(id);
+}
+
+function getDataSince(method, since_id, lock, extra_data, timeout) {
+	if (lock) {
+		if (lock._ajax_active_) {
+			return new Deferred;
+		}
+		lock.timeout = setTimeout(function() {
+			d.fail({
+				exceptionType: 'timeout'
+			});
+			d = new Deferred;
+		}, timeout * 1000);
+		lock._ajax_active_ = true;
+	}
+
+	var d = new Deferred;
+	var list = [];
+	var get = PREFiX.user[method].bind(PREFiX.user);
+	var count = 60;
+
+	var data = extra_data || { };
+	if (since_id) {
+		data.since_id = since_id;
+	}
+	data.count = count;
+
+	function getBetween() {
+		if (! since_id) {
+			d.call(list);
+			return;
+		}
+		data.max_id = list[ list.length - 1 ].id_str;
+		return get(data).next(function(data) {
+				data = data.statuses || data;
+ 				push(list, data);
+				if (data.length < count) {
+					d.call(list);
+				} else {
+					getBetween();
+				}
+			}).error(function(err) {
+				d.fail(err);
+			});
+	}
+
+	get(data).next(function(data) {
+		data = data.statuses || data;
+		list = fixTweetList(data);
+		if (data.length < count) {
+			d.call(list);
+		} else {
+			getBetween();
+		}
+	}).error(function(err) {
+		d.fail(err);
+	});
+
+	return d.error(function(err) {
+			if (lock) {
+				delete lock._ajax_active_;
+				clearTimeout(lock.timeout);
+			}
+			throw err;
+		}).next(function(data) {
+			if (lock) {
+				delete lock._ajax_active_;
+				clearTimeout(lock.timeout);
+			}
+			return data;
+		});
+}
+
+function updateTitle() {
+	var need_notify = false;
+	var title = [ 'PREFiX for Twitter' ];
+
+	var tl = PREFiX.homeTimeline;
+	var new_tweets = tl.buffered.filter(function(tweet) {
+		return ! tweet.is_self;
+	});
+	if (new_tweets.length) {
+		title.push(new_tweets.length + ' 条新推文');
+		switchTo('tl_model');
+	}
+
+	var saved_searches_count = getSavedSearchTweetsCount();
+	if (saved_searches_count) {
+		title.push(saved_searches_count + ' 条关注的话题消息');
+		switchTo('searches_model');
+	}
+
+	PREFiX.previous_count = PREFiX.count;
+	PREFiX.count = {
+		mentions: PREFiX.mentions.buffered.filter(function(tweet) {
+			return ! tweet.is_self;
+		}).length,
+		direct_messages: PREFiX.directmsgs.buffered.length
+	};
+
+	if (PREFiX.count.mentions) {
+		switchTo('mentions_model');
+		title.push('你被 @ 了 ' + PREFiX.count.mentions + ' 次');
+		chrome.browserAction.setBadgeBackgroundColor({
+			color: [ 113, 202, 224, 204 ]
+		});
+		if (PREFiX.count.mentions > PREFiX.previous_count.mentions)
+			need_notify = true;
+	}
+
+	if (PREFiX.count.direct_messages) {
+		switchTo('directmsgs_model');
+		title.push('你有 ' + PREFiX.count.direct_messages + ' 条未读私信');
+		chrome.browserAction.setBadgeBackgroundColor({
+			color: [ 211, 0, 4, 204 ]
+		});
+		if (PREFiX.count.direct_messages > PREFiX.previous_count.direct_messages)
+			need_notify = true;
+	}
+
+	chrome.browserAction.setBadgeText({
+		text: (PREFiX.count.direct_messages || PREFiX.count.mentions || '') + ''
+	});
+	chrome.browserAction.setTitle({
+		title: title.join('\n')
+	});
+
+	return need_notify;
+}
+
+var update_browser_action_interval;
+function updateBrowserAction() {
+	chrome.browserAction.getTitle({ }, function(title) {
+		var re = /刷新|错误|Rate limit/i;
+		if (re.test(title)) return;
+		updateTitle();
+	});
+}
+
+function update(retry_chances, new_tweet_id) {
+	var d = new Deferred;
+
+	clearInterval(PREFiX.interval);
+	PREFiX.interval = setInterval(update, 60000);
+
+	chrome.browserAction.setBadgeText({
+		text: '...'
+	});
+	chrome.browserAction.setBadgeBackgroundColor({
+		color: [ 255, 255, 255, 200 ]
+	});
+	chrome.browserAction.setTitle({
+		title: 'PREFiX for Twitter - 正在刷新'
+	});
+
+	var tl = PREFiX.homeTimeline;
+	var tweets = fixTweetList(tl.tweets.concat(tl.buffered));
+	var latest_tweet = tweets[0];
+	var deferred_new = Deferred.next();
+
+	if (latest_tweet) {
+		deferred_new = getDataSince('getHomeTimeline', latest_tweet.id_str, tl, null, 45).
+			next(function(tweets) {
+				if (retry_chances && new_tweet_id) {
+					var new_tweet_found = tweets.some(function(t) {
+						return t.id === new_tweet_id;
+					});
+					if (! new_tweet_found) {
+						setTimeout(function() {
+							update(--retry_chances, new_tweet_id);
+						});
+					}
+				}
+				unshift(tl.buffered, tweets);
+				if (! settings.current.autoFlushCache)
+					return;
+				if (! PREFiX.popupActive && tl.scrollTop < 30) {
+					var buffered_count = tl.buffered.length;
+					var read_count = tl.tweets.length;
+					var tweets_per_page = PREFiX.settings.current.tweetsPerPage;
+					if (buffered_count + read_count > tweets_per_page) {
+						tl.tweets.splice(Math.max(0, tweets_per_page - buffered_count));
+						if (buffered_count > tweets_per_page) {
+							tl.buffered.splice(tweets_per_page);
+						}
+					}
+				}
+		});
+	}
+
+	var mentions = PREFiX.mentions;
+	var mention_tweets = fixTweetList(mentions.tweets.concat(mentions.buffered));
+	var deferred_mentions = Deferred.next();
+	var latest_mention_tweet = mention_tweets[0];
+
+	if (latest_mention_tweet) {
+		deferred_mentions = getDataSince('getMentions', latest_mention_tweet.id_str, mentions, null, 45).
+			next(function(tweets) {
+				unshift(mentions.buffered, tweets);
+			});
+	}
+
+	var directmsgs = PREFiX.directmsgs;
+	var dms = fixTweetList(directmsgs.messages.concat(directmsgs.buffered));
+	var deferred_dm = Deferred.next();
+	var latest_dm = dms[0];
+
+	if (latest_dm) {
+		deferred_dm = getDataSince('getDirectMessages', latest_dm.id_str, directmsgs, null, 45).
+			next(function(messages) {
+				unshift(directmsgs.buffered, messages);
+			});
+	}
+
+	var dl = [
+		deferred_new,
+		deferred_mentions,
+		deferred_dm
+	].map(function(d) {
+		return d.next(function() {
+			var need_notify = updateTitle();
+			if (need_notify) playSound();
+		});
+	});
+
+	Deferred.parallel(dl).next(function() {
+		d.call();
+	}).error(function(e) {
+		chrome.browserAction.setBadgeText({
+			text: ' '
+		});
+		chrome.browserAction.setBadgeBackgroundColor({
+			color: [ 255, 0, 0, 200 ]
+		});
+		chrome.browserAction.setTitle({
+			title: e && e.response ?
+				'PREFiX for Twitter - ' + e.response.errors[0].message : 'PREFiX for Twitter - 网络连接断开或内部错误'
+		});
+	});
+
+	return d;
+}
+
+function loadFriends() {
+	var friends = {};
+	[ 'Friends', 'Followers' ].forEach(function(type) {
+		(function get(cursor) {
+			PREFiX.user['get' + type]({
+				screen_name: PREFiX.account.screen_name,
+				skip_status: true,
+				include_user_entities: false,
+				count: 200,
+				cursor: cursor
+			}).next(function(data) {
+				var users = data.users.map(function(user) {
+					return {
+						name: user.name,
+						id: user.id,
+						screen_name: user.screen_name,
+						string: user.screen_name + ' ' + user.name,
+						following: user.following
+					};
+				}).filter(function(user) {
+					if (friends[user.screen_name]) return false;
+					friends[user.screen_name] = true;
+					return true;
+				});
+				PREFiX.friends.push.apply(PREFiX.friends, users);
+				var next_cursor = data.next_cursor_str;
+				if (next_cursor && next_cursor !== '0') {
+					get(next_cursor);
+				}
+			});
+		})('-1');
+	});
+}
+
+var init_interval;
+var _initData = function() { }
+function initData() {
+	return _initData();
+}
+
+function load() {
+	if (PREFiX.loaded) return;
+	PREFiX.loaded = true;
+	PREFiX.count = {
+		mentions: 0,
+		direct_messages: 0
+	};
+	PREFiX.friends = [];
+	PREFiX.user = Ripple(PREFiX.accessToken);
+	_initData = function() {
+		PREFiX.user.getHomeTimeline({
+			count: PREFiX.settings.current.tweetsPerPage
+		}).setupAjax({
+			lock: initData
+		}).next(function(tweets) {
+			if (! PREFiX.homeTimeline.tweets.length) {
+				PREFiX.homeTimeline.tweets = fixTweetList(tweets);
+			}
+			_initData = function() {
+				PREFiX.user.getMentions({
+					count: PREFiX.settings.current.tweetsPerPage
+				}).setupAjax({
+					lock: initData
+				}).next(function(tweets) {
+					if (! PREFiX.mentions.tweets.length) {
+						PREFiX.mentions.tweets = fixTweetList(tweets);
+					}
+					_initData = function() {
+						PREFiX.user.getDirectMessages({
+							count: PREFiX.settings.current.tweetsPerPage
+						}).setupAjax({
+							lock: initData
+						}).next(function(messages) {
+							if (! PREFiX.directmsgs.messages.length) {
+								PREFiX.directmsgs.messages = fixTweetList(messages);
+							}
+							clearInterval(init_interval);
+						});
+					}
+					setTimeout(initData);
+				});
+			}
+			setTimeout(initData);
+		});
+	};
+	init_interval = setInterval(initData, 15 * 1000);
+	initData();
+	update_browser_action_interval = setInterval(updateBrowserAction, 2500);
+	update();
+	loadFriends();
+	initSavedSearches();
+	chrome.omnibox.onInputStarted.addListener(onInputStarted);
+	chrome.omnibox.onInputChanged.addListener(onInputChanged);
+	chrome.omnibox.onInputEntered.addListener(onInputEntered);
+}
+
+function unload() {
+	if (! PREFiX.loaded) return;
+	clearInterval(PREFiX.interval);
+	clearInterval(init_interval);
+	clearInterval(update_browser_action_interval);
+	PREFiX.loaded = false;
+	PREFiX.user = PREFiX.account = null;
+	PREFiX.current = 'tl_model';
+	PREFiX.compose = {
+		text: '',
+		type: '',
+		id: '',
+		user: '',
+		screen_name: ''
+	};
+	PREFiX.count = {
+		mentions: 0,
+		direct_messages: 0
+	};
+	PREFiX.homeTimeline = {
+		tweets: [],
+		buffered: [],
+		scrollTop: 0
+	};
+	PREFiX.mentions = { 
+		tweets: [],
+		buffered: [],
+		scrollTop: 0
+	};
+	PREFiX.directmsgs = { 
+		messages: [],
+		buffered: [],
+		scrollTop: 0
+	};
+	PREFiX.friends = [];
+	PREFiX.keyword = '';
+	stopSavedSearches();
+	chrome.browserAction.setBadgeText({
+		text: ''
+	});
+	chrome.browserAction.setTitle({
+		title: 'PREFiX for Twitter'
+	});
+	chrome.omnibox.onInputStarted.removeListener(onInputStarted);
+	chrome.omnibox.onInputChanged.removeListener(onInputChanged);
+	chrome.omnibox.onInputEntered.removeListener(onInputEntered);
+}
+
+function initialize() {
+	settings.load();
+
+	if (PREFiX.accessToken) {
+		// 更新账户信息
+		updateDetails().
+		next(function() {
+			// 成功
+			load();
+		}).
+		error(function(event) {
+			if (event.status) {
+				if (event.status === 401) {
+					// access token 无效
+					reset();
+				} else {
+					if (PREFiX.account) {
+						load();
+					}
+					// 可能 API Hits 用光了, 延时重试
+					setTimeout(initialize, 60000);
+				}
+			} else {
+				// 网络错误
+				if (PREFiX.account) {
+					// 如果本地存在缓存的账户信息,
+					// 则先使用缓存, 等一会再重试
+					load();
+					setTimeout(function() {
+						updateDetails(true);
+					}, 60000);
+				} else {
+					// 如果不存在, 则稍后再重试
+					setTimeout(initialize, 60000);
+				}
+			}
+		});
+
+		return;
+	}
+
+	var tab_id, tab_port;
+	Ripple.authorize.withPINCode(function(auth_url) {
+		var options = {
+			url: auth_url,
+			selected: true
+		};
+		var deferred = Deferred();
+
+		// 打开验证页面
+		ct.create(options, function(tab) {
+
+			ct.onUpdated.addListener(function onUpdated(id, info) {
+				// 等待用户点击 '授权' 后跳转至 PIN Code 页面
+				if (id !== tab.id) return;
+				tab_id = id;
+
+				// 继续验证操作
+				ct.executeScript(id, {
+					file: 'js/authorize.js',
+					runAt: 'document_end'
+				}, function() {
+					// 等待页面传送 PIN Code
+					var port = ct.connect(id);
+					port.onMessage.addListener(function listenForPINCode(msg) {
+						var pin_code = msg.pinCode;
+						tab_port = port;
+						// 如果页面端没有拿到 PIN Code, 会传送 'rejected' 消息过来
+						deferred[pin_code == 'rejected' ? 'fail' : 'call'](pin_code);
+
+						ct.onUpdated.removeListener(onUpdated);
+						tab_port.onMessage.removeListener(listenForPINCode);
+					});
+				});
+
+				ct.insertCSS(id, {
+					code: '#retry { text-decoration: underline; }' +
+								'#retry:hover { cursor: pointer; }'
+				});
+			});
+
+		});
+
+		// 返回 Deferred, 当拿到 PIN Code 后会继续后面的操作
+		return deferred;
+	}).
+	next(function(token) {
+		// 成功拿到 access token
+		tab_port.postMessage({
+			type: 'authorize',
+			msg: 'success'
+		});
+
+		// 把 access token 缓存下来并重启程序
+		lscache.set('access_token', token);
+		PREFiX.accessToken = token;
+		initialize();
+
+		setTimeout(function() {
+			closeTab(tab_id);
+		}, 5000);
+	}).
+	error(function(error) {
+		if (Ripple.getConfig('dumpLevel') > 0) {
+			console.log(error);
+		}
+		if (tab_port) {
+			// 打开了验证页面, 却没有完成验证
+			tab_port.postMessage('failure');
+			tab_port.onMessage.addListener(function(msg) {
+				// 等待用户点击 '重试'
+				if (msg.type === 'authorize' && msg.msg === 'retry') {
+					closeTab(tab_id);
+					initialize();
+				}
+			});
+		} else {
+			// 可能由于网络错误, 导致验证地址没有成功获取
+			setTimeout(initialize, 60000);
+		}
+	});
+
+}
+
+// 清理所有与当前用户有关的数据, 恢复到未加载状态
+function reset() {
+	PREFiX.unload();
+	PREFiX.accessToken = PREFiX.account = PREFiX.user = null;
+	lscache.remove('access_token');
+	lscache.remove('account_details');
+	initialize();
+}
+
+function switchTo(model_name) {
+	if (! PREFiX.popupActive) {
+		PREFiX.current = model_name;
+	}
+}
+
+var Notifications = Notifications || webkitNotifications;
+var notifications = [];
+
+function showNotification(options) {
+	var notification = Notifications.createNotification(options.icon || '/icons/128.png',
+		options.title || 'PREFiX for Twitter', options.content);
+
+	if (options.id) {
+		notification.id = options.id;
+		notifications = notifications.filter(function(n) {
+			if (n.id != options.id)
+				return true;
+			n.cancel();
+			return false;
+		});
+	}
+
+	notification.addEventListener('close', function(e) {
+		clearTimeout(notification.timeout);
+		hideNotification(notification);
+	}, false);
+
+	notification.show();
+	notifications.push(notification);
+
+	if (options.timeout !== false) {
+		notification.timeout = setTimeout(function() {
+			hideNotification(notification);
+		}, options.timeout || 30000);
+	}
+
+	return notification;
+}
+function hideAllNotifications() {
+	notifications.slice(0).
+	forEach(hideNotification);
+}
+function hideNotification(notification) {
+	notification.cancel();
+	if (notification.timeout) {
+		clearTimeout(notification.timeout);
+	}
+	var index = notifications.indexOf(notification);
+	if (index > -1) {
+		notifications.splice(index, 1);
+	}
+}
+
+function getStatusCount() {
+	return lscache.get('status_count') || 0;
+}
+
+function getPhotoCount() {
+	return lscache.get('photo_count') || 0;
+}
+
+var playSound = (function() {
+	var audio = new Audio;
+	audio.src = 'dongdong.mp3';
+	var timeout;
+	var last_played = new Date;
+	last_played.setFullYear(1970);
+	return function() {
+		clearTimeout(timeout);
+		if (! settings.current.playSound)
+			return;
+		timeout = setTimeout(function() {
+			if (audio.networkState !== 1)
+				return playSound();
+			var now = new Date;
+			if (now - last_played < 15 * 1000)
+				return;
+			last_played = now;
+			audio.play();
+		}, 50);
+	}
+})();
+
+function getLargeImage(raw){
+	//Twitter Profile pic
+    raw = raw.replace('_normal', '');
+    raw = raw.replace('_mini', '');
+	raw = raw.replace('_reasonably_small', '');
+	raw = raw.replace('_bigger', '');
+
+	//Recent Photos
+	raw = raw.replace(':thumb', ''); //twimg
+	raw = raw.replace('?size=t', ''); //Instagram
+	raw = raw.replace('size=medium', '');
+
+	if (/^https?:\/\/pbs\.twimg\.com\/[^\.]+\.(jpg|png)$/.test(raw)) {
+		raw += ':large';
+	}
+	
+    return raw;
+}
+
+
+function isZoomAble(src){
+    if (src.indexOf('profile_images') != -1 ||
+		src.indexOf('instagr') != -1||
+		src.indexOf('instagr') != -1 ||
+		src.indexOf('twimg') != -1 ||
+		src.indexOf('twitpic') != -1 ||
+		src.indexOf('plixi') != -1 ||
+		src.indexOf('twitgoo') != -1) {
+        return true;
+    }
+    return false;
+}
+
+Ripple.events.observe('process_tweet', function(tweet) {
+	if (! tweet) return;
+	if (tweet.user) {
+		tweet.is_self = tweet.user.id === PREFiX.account.id;
+	}
+	var created_at = (tweet.retweeted_status || tweet).created_at;
+	tweet.fullTime = getFullTime(created_at);
+
+	if ((tweet.is_self && ! tweet.retweeted) ||
+		(tweet.user && tweet.user.protected)) {
+		tweet.repostOnly = true;
+	}
+
+	var user = tweet.user || tweet.sender;
+	if (user) {
+		user.profile_image_url = user.profile_image_url.replace('_normal', '');
+		user.profile_image_url_https = user.profile_image_url_https.replace('_normal', '');
+	}
+
+	var text = tweet.text;
+	tweet.textWithoutTags = text;
+	if (tweet.entities) {
+		var urls = [];
+		urls.push.apply(urls, tweet.entities.urls);
+		urls.push.apply(urls, tweet.entities.media);
+
+		urls.forEach(function(item) {
+			tweet.textWithoutTags = tweet.textWithoutTags.replace(item.url, item.display_url);
+			text = text.replace(item.url, '<a href="' + item.expanded_url +
+				'" title="' + item.expanded_url +
+				'">' + item.display_url + '</a>');
+		});
+
+		var media = tweet.entities.media;
+		if (media && media.length) {
+			var photo = { };
+			photo.url = media[0].media_url;
+			var width = media[0].sizes.small.w;
+			var height = media[0].sizes.small.h;
+			if (width > 100 || height > 100) {
+				if (width > height) {
+					var k = width / 100;
+					width = 100;
+					height = Math.round(height / k);
+				} else {
+					var k = height / 100;
+					height = 100;
+					width = Math.round(width / k);
+				}
+			}
+			photo.thumb_size = {
+				width: width,
+				height: height
+			};
+			photo.url_large = isZoomAble(photo.url) ?
+				getLargeImage(photo.url) : photo.url;
+			var img_thumb = new Image;
+			img_thumb.src = photo.url;
+			if (photo.url_large !== photo.url) {
+				var img_large = new Image;
+				img_large.src = photo.url_large;
+			}
+			tweet.photo = photo;
+		}
+
+		var hashtags = tweet.entities.hashtags;
+		if (hashtags && hashtags.length) {
+			hashtags.forEach(function(hashtag) {
+				var search =  Ripple.helpers.param({
+						q: '#' + hashtag.text,
+						src: 'hash'
+					});
+				var html = '<a href="http://twitter.com/search?' +
+					search + '">#' + hashtag.text + '</a>';
+				text = text.replace('#' + hashtag.text, html);
+			});
+		}
+
+		var mentions = tweet.entities.user_mentions;
+		if (mentions && mentions.length) {
+			mentions.forEach(function(mention) {
+				var html = '@<a href="http://twitter.com/' + mention.screen_name +
+					'" title="' + mention.name +
+					' (@' + mention.screen_name + ')"">' +
+					mention.screen_name + '</a>';
+				text = text.replace('@' + mention.screen_name, html)
+			});
+		}
+	}
+
+	text = text.replace(/\n+/g, '<br />');
+
+	var html = jEmoji.softbankToUnified(text);
+	html = jEmoji.googleToUnified(html);
+	html = jEmoji.docomoToUnified(html);
+	html = jEmoji.kddiToUnified(html);
+	tweet.fixedText = jEmoji.unifiedToHTML(html);
+
+	tweet.is_breakpoint = false;
+	tweet.loaded_at = null;
+	tweet.loaded_at_relative = '';
+
+	if (tweet.retweeted_status) {
+		arguments.callee(tweet.retweeted_status);
+		tweet.photo = tweet.retweeted_status.photo;
+	}
+});
+
+Ripple.events.addGlobalObserver('after', function(data, e) {
+	if (! e || e.type !== 'after.ajax_success')
+		return;
+	e = e.srcEvent;
+	if (! e) return;
+	if (e.url === 'https://api.twitter.com/1.1/statuses/update.json') {
+		lscache.set('status_count', getStatusCount() + 1);
+	} else if (e.url === 'https://api.twitter.com/1.1/statuses/update_with_media.json') {
+		lscache.set('photo_count', getPhotoCount() + 1);
+	}
+});
+
+if (! lscache.get('install_time')) {
+	lscache.set('install_time', Date.now());
+}
+
+var is_mac = navigator.platform.indexOf('Mac') > -1;
+
+var settings = {
+	current: { },
+	default: {
+		playSound: true,
+		smoothScroll: true,
+		autoFlushCache: false,
+		zoomRatio: '1',
+		drawAttention: true,
+		tweetsPerPage: 50,
+		showSavedSearchCount: true
+	},
+	load: function() {
+		var local_settings = lscache.get('settings') || { };
+		var current = settings.current;
+		for (var key in settings.default) {
+			current[key] = local_settings[key] === undefined ?
+				settings.default[key] : local_settings[key];
+		}
+		if (current.zoomRatio === '1.11') {
+			current.zoomRatio = '1.125';
+			settings.save();
+		}
+	},
+	save: function() {
+		lscache.set('settings', settings.current);
+	},
+	onSettingsUpdated: function() {
+		initSavedSearches();
+		chrome.extension.getViews().forEach(function(view) {
+			if (view.location.pathname === '/popup.html' &&
+				view.location.search === '?new_window=true') {
+				view.location.reload();
+			}
+		});
+	}
+};
+
+var usage_tips = [
+	'按 Ctrl + Enter 或双击输入框即可发送消息. ',
+	'如果您觉得字体太小, 可以在设置页启用<b>放大功能</b>. ',
+	'点击 PREFiX 回到页面顶部或刷新. ',
+	'在地址栏输入 f 按空格键, 然后输入内容即可直接发送消息. ',
+	'在上传图片窗口, 双击输入框发送. ',
+	'按 1/2/3 键在 首页/提到我的/私信 页面间切换. ',
+	'左击上下文图标展开回复和转发, 右击显示上下文. ',
+	'右击消息中的图片小图, 将在新窗口打开大图. ',
+	'将鼠标指针放在用户头像上, 可以显示用户 ID. ',
+	'窗口模式运行时最小化, 有新消息时任务栏图标会闪烁. ',
+	'如果饭友生日提醒打扰了您, 可以在设置页关闭. ',
+	'如果您不希望 PREFiX 播放提示音, 可以在设置页关闭. ',
+	'本页面关闭前保持滚动条在顶端可让程序性能更佳. ',
+	'当输入框中字数超过 140 时, 输入框背景显示为淡红色. ',
+	'按住 Ctrl / Command 键双击输入框可以发送歌词 :)',
+	'按 PageUp/PageDown 可以快速翻页. ',
+	'按 Home/End 可以快速滑动到页面顶端/末端. ',
+	'您可以自定义尾巴 (即通过...发送), 详情请见设置页. '
+];
+
+var PREFiX = this.PREFiX = {
+	version: chrome.app.getDetails().version,
+	is_mac: is_mac,
+	load: load,
+	unload: unload,
+	initialize: initialize,
+	reset: reset,
+	update: update,
+	updateTitle: updateTitle,
+	getDataSince: getDataSince,
+	loaded: false,
+	interval: null,
+	current: 'tl_model',
+	keyword: '',
+	compose: {
+		text: '',
+		type: '',
+		id: '',
+		user: '',
+		screen_name: ''
+	},
+	count: {
+		mentions: 0,
+		direct_messages: 0
+	},
+	previous_count: {
+		mentions: 0,
+		direct_messages: 0
+	},
+	homeTimeline: {
+		tweets: [],
+		buffered: [],
+		scrollTop: 0
+	},
+	mentions: { 
+		tweets: [],
+		buffered: [],
+		scrollTop: 0
+	},
+	directmsgs: { 
+		messages: [],
+		buffered: [],
+		scrollTop: 0
+	},
+	friends: [],
+	settings: settings,
+	account: lscache.get('account_details'), // 当前账号的数据, 如昵称头像等
+	accessToken: lscache.get('access_token'), // 缓存的 access token, 与饭否服务器联络的凭证
+	user: null // 一个 Ripple 实例, 提供所有 API 接口
+};
+
+initialize();
+var is_first_run = lscache.get('is_first_run') !== false;
+lscache.set('is_first_run', false);

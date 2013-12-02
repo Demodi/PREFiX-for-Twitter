@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>PREFiX - 选项</title>
+		<link id="favicon" rel="shortcut icon" type="image/png" sizes="16x16" href="/icons/16.png" />
+		<link rel="stylesheet" href="css/options.css"/>
+		<link rel="stylesheet" href="css/chrome-shared.css"/>
+		<script src="js/lib/jquery-min.js"></script>
+		<script src="js/options.js"></script>
+	</head>
+	<body>
+	<div id="wrapper">
+		<div id="navbar-container">
+			<h1>PREFiX</h1>
+			<ul id="navbar">
+				<li id="basics" class="navbar-item navbar-item-selected">基本设置</li>
+				<li id="advanced" class="navbar-item">高级设置</li>
+				<li id="about" class="navbar-item">关于</li>
+				<li id="usage-tip" style="margin-top: 26px;">使用技巧</li>
+			</ul>
+		</div>
+		<div id="mainview">
+			<div id="mainview-content">
+				<div id="page-container">
+					<div id="basics-page" class="page">
+						<header>
+							<h2>基本设置</h2>
+						</header>
+						<ul>
+							<h3>账号</h3>
+							<li><span id="user-info">您已以 <a target="_blank" id="username"></a> 的身份登录. </span><br /><button id="switch-account">切换到另一个账号...</button></li>
+						</ul>
+						<ul>
+							<h3>界面</h3>
+							<li>
+								<label><input type="checkbox" key="smoothScroll" />启用平滑滚动</label>
+							</li>
+							<li>
+								<label>放大比率
+									<select key="zoomRatio" type="select">
+										<option value="1">100%</option>
+										<option value="1.125">110%</option><!-- 放大 111% 解决放大 110% 时页面元素抖动的 bug -->
+										<option value="1.25">125%</option>
+										<option value="1.5">150%</option>
+									</select>
+									仅独立窗口模式有效
+								</label>
+							</li>
+							<li><b>请一定关闭 Chrome 原生的缩放功能, 否则会出现严重的错误. </b></li>
+						</ul>
+						<ul>
+							<h3>提醒</h3>
+							<li>
+								<label><input type="checkbox" key="playSound" />有新的未读 @ 消息或未读私信时播放提示音</label>
+							</li>
+							<li>
+								<label><input type="checkbox" key="drawAttention" />Timeline 上有新消息时闪烁任务栏图标 (禁用后有新@和私信时仍会闪烁)</label>
+							</li>
+							<li>
+								<label><input type="checkbox" key="showSavedSearchCount" />关注的话题有新消息时在图标上显示统计数字</label>
+							</li>
+						</ul>
+					</div>
+					<div id="advanced-page" class="page">
+						<header>
+							<h2>高级设置</h2>
+						</header>
+						<ul>
+							<h3>内部处理规则</h3>
+							<li><label><input type="checkbox" key="autoFlushCache" />自动抛弃缓存中较旧的数据</li>
+							<li>可以改善性能, 但仅建议当关注的人较多时启用. </li>
+						</ul>
+						<ul>
+							<h3>Timeline</h3>
+							<li>每页加载的推文数量 <input key="tweetsPerPage" type="range" min="20" max="200" step="10" /><span id="tweetsPerPage"></span></li>
+							<li>当 Timeline 上的消息更新非常快时, 建议使用较大的加载数量, 但性能可能会稍有下降. </li>
+						</ul>
+						<ul id="custom-consumer">
+						</ul>
+					</div>
+					<div id="about-page" class="page">
+						<header>
+							<h2>关于</h2>
+						</header>
+						<ul id="about-prefix">
+							<h4>PREFiX</h4>
+							<li>简洁、易用的 Twitter 客户端</li>
+						</ul>
+						<ul>
+							<li>从 <span id="install-time"></span> 到现在, 您一共使用 PREFiX 发送了 <span id="status-count"></span> 条消息和 <span id="photo-count"></span> 张照片. </li>
+							<li></li>
+						</ul>
+						<ul>
+							<li>版本 <span id="version"></span> (<a id="show-updates">查看更新历史</a>)</li>
+							<li>作者 <a href="https://twitter.com/ruif" target="_blank">@ruif</a></li>
+							<li>基于开源项目 <a href="https://github.com/riophae/Ripple" target="_blank">Ripple</a> 开发. </li>
+							<li>感谢 <a href="http://fanfou.com/anegie" target="_blank">@太空小孩</a> 为 <a href="https://github.com/riophae/PREFiX-for-Twitter" target="_blank">PREFiX</a> 设计了精致的 Logo. </li>
+						</ul>
+						<ul>
+							<li>如果您喜欢 PREFiX, 请考虑 <a href="https://me.alipay.com/riophae" target="_blank" title="感谢你的点击! :)">捐助作者</a> 让它变得更好更强大!</li>
+						</ul>
+					</div>
+					<div id="usage-tip-page" class="page">
+						<header>
+							<h2>使用技巧</h2>
+						</header>
+						<ol>
+							<h3>指南</h3>
+						</ol>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</body>
+</html>
