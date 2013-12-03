@@ -1401,8 +1401,6 @@ html.panel-mode #new-window {
 .tweet-list li .action-icons .remove {
 	left: 0;
 	background-image: url('/images/remove.png');
-	border-right: 3px solid transparent;
-	border-bottom: 3px solid transparent;
 }
 .tweet-list li .action-icons .remove:hover {
 	background-position: left bottom;

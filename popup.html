@@ -94,7 +94,7 @@
           <li ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
             <div class="tweet fix">
               <div class="action-icons">
-                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-click="remove" class="remove" title="删除"></a>
+                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除"></a>
                 <a ms-click="reply" class="reply" title="回复"></a>
                 <a ms-click="retweet" ms-on-contextmenu="repost" class="repost" ms-class="retweeted: tweet.retweeted" ms-title="tweet.repostOnly ? '引用转发' : '左击 ' + (tweet.retweeted ? 'Unretweet' : 'Retweet') +  ' / 右击引用转发'"></a>
                 <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏' : '收藏'"></a>
@@ -126,7 +126,7 @@
           <li ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
             <div class="tweet fix">
               <div class="action-icons">
-                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-click="remove" class="remove" title="删除"></a>
+                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除"></a>
                 <a ms-click="reply" class="reply" title="回复"></a>
                 <a ms-click="retweet" ms-on-contextmenu="repost" class="repost" ms-class="retweeted: tweet.retweeted" ms-title="tweet.repostOnly ? '引用转发' : '左击 ' + (tweet.retweeted ? 'Unretweet' : 'Retweet') +  ' / 右击引用转发'"></a>
                 <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏' : '收藏'"></a>
@@ -157,7 +157,7 @@
           <li>
             <div class="tweet fix">
               <div class="action-icons">
-                <a ms-click="remove" class="remove" title="删除"></a>
+                <a ms-dblclick="remove" class="remove" title="双击删除"></a>
                 <a ms-click="reply" class="reply" title="回复"></a>
               </div>
               <div class="avatar">
@@ -178,7 +178,7 @@
           <li ms-class-my-tweet="tweet.is_self" ms-class-protected="tweet.user.protected">
             <div class="tweet fix">
               <div class="action-icons">
-                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-click="remove" class="remove" title="删除"></a>
+                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除"></a>
                 <a ms-click="reply" class="reply" title="回复"></a>
                 <a ms-click="retweet" ms-on-contextmenu="repost" class="repost" ms-class="retweeted: tweet.retweeted" ms-title="tweet.repostOnly ? '引用转发' : '左击 ' + (tweet.retweeted ? 'Unretweet' : 'Retweet') +  ' / 右击引用转发'"></a>
                 <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏' : '收藏'"></a>
