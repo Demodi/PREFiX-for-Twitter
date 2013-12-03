@@ -1587,7 +1587,7 @@ html.panel-mode #new-window {
 	letter-spacing: 2px;
 	font: 13px "Calibri for PREFiX";
 	line-height: 48px;
-	background: url('/images/status-bg.png') repeat;
+	background: url('/images/tweet-bg.png') repeat;
 }
 #loading {
 	width: 400px;
