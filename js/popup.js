@@ -1431,6 +1431,8 @@ mentions_model.initialize = function() {
 		var buffered = mentions.buffered;
 		mentions.buffered = [];
 
+		PREFiX.count.mentions = 0;
+
 		if (! mentions.tweets.length) {
 			unshift(mentions_model.tweets, buffered);
 		} else {
@@ -1523,6 +1525,8 @@ directmsgs_model.initialize = function() {
 
 		var buffered = directmsgs.buffered;
 		directmsgs.buffered = [];
+
+		PREFiX.count.direct_messages = 0;
 
 		if (! directmsgs.messages.length) {
 			unshift(directmsgs_model.messages, buffered);
