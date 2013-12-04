@@ -56,27 +56,21 @@ $(function() {
 		});
 	}).eq(last_used_page).click();
 
-	var custom_consumer = lscache.get('custom_consumer');
-	if (custom_consumer) {
-		$('#key').val(custom_consumer.key);
-		$('#secret').val(custom_consumer.secret);
-	} else {
-		custom_consumer = { };
+	var is_sub_consumer_enabled = !! lscache.get('sub_access_token');
+	if (is_sub_consumer_enabled) {
+		$('#sub-consumer-info').text('您已经启用了 Sub-Consumer. ');
+		$('#toggle-sub-consumer').text('禁用 Sub-Consumer');
 	}
-	$('#set-consumer').click(function(e) {
-		var key = $('#key').val().trim();
-		var secret = $('#secret').val().trim();
-		if (! key || ! secret) return;
-		if (key === custom_consumer.key ||
-			secret === custom_consumer.secret) {
-			alert('您已经成功设置了尾巴, 不需要重复设置. :)');
-			return;
+	if (! PREFiX.account) {
+		$('#toggle-sub-consumer').prop('disabled', 'true');
+	}
+	$('#toggle-sub-consumer').click(function(e) {
+		if (! is_sub_consumer_enabled) {
+			bg_win.getPinCode();
+		} else {
+			lscache.remove('sub_access_token');
+			location.reload();
 		}
-		bg_win.enableCustomConsumer(key, secret);
-	});
-	$('#reset-consumer').click(function(e) {
-		bg_win.disableCustomConsumer();
-		location.reload();
 	});
 
 	var $usage_tip_list = $('#usage-tip-page ol');

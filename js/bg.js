@@ -16,8 +16,8 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 		chrome.windows.update(sender.tab.windowId, {
 			drawAttention: false
 		});
-	} else if (request.act === 'set_consumer') {
-		enableCustomConsumer(request.key, request.secret);
+	} else if (request.act === 'send_pincode') {
+		getSubAccessToken(request.code);
 	} else {
 		chrome.tabs.query({
 			url: chrome.extension.getURL('/popup.html?new_window=true')
@@ -30,6 +30,21 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 		});
 	}
 });
+
+function user() {
+	if (! PREFiX.accessToken) return;
+	var account_instances = [];
+	account_instances.push(Ripple(PREFiX.accessToken));
+	var sub_access_token = lscache.get('sub_access_token');
+	if (sub_access_token) {
+		var sub_instance = Ripple(sub_access_token, {
+			consumer: sub_consumer
+		});
+		account_instances.push(sub_instance);
+	}
+	var total = account_instances.length;
+	return account_instances[Math.round(Math.random() * (total - 1))];
+}
 
 function onInputStarted() {
 	chrome.omnibox.setDefaultSuggestion({
@@ -111,7 +126,7 @@ function onInputEntered(text) {
 			}
 		}
 	}
-	PREFiX.user.postTweet({
+	PREFiX.user().postTweet({
 		status: text.replace(/\s+/g, ' ').trim(),
 		in_reply_to_status_id: tweet_id
 	}).next(function(tweet) {
@@ -231,7 +246,7 @@ function initSavedSearches() {
 		}
 		clearInterval(this.interval);
 	}
-	PREFiX.user.getSavedSearches().next(function(data) {
+	PREFiX.user().getSavedSearches().next(function(data) {
 		data.forEach(function(saved_search) {
 			saved_search = new SavedSearchItem(saved_search.query);
 			saved_searches_items.push(saved_search);
@@ -286,7 +301,8 @@ function getDataSince(method, since_id, lock, extra_data, timeout) {
 
 	var d = new Deferred;
 	var list = [];
-	var get = PREFiX.user[method].bind(PREFiX.user);
+	var user = PREFiX.user();
+	var get = user[method].bind(user);
 	var count = 60;
 
 	var data = extra_data || { };
@@ -567,7 +583,7 @@ function loadFriends() {
 	var friends = {};
 	[ 'Friends', 'Followers' ].forEach(function(type) {
 		(function get(cursor) {
-			PREFiX.user['get' + type]({
+			PREFiX.user()['get' + type]({
 				screen_name: PREFiX.account.screen_name,
 				skip_status: true,
 				include_user_entities: false,
@@ -611,9 +627,8 @@ function load() {
 		direct_messages: 0
 	};
 	PREFiX.friends = [];
-	PREFiX.user = Ripple(PREFiX.accessToken);
 	_initData = function() {
-		PREFiX.user.getHomeTimeline({
+		PREFiX.user().getHomeTimeline({
 			count: PREFiX.settings.current.tweetsPerPage
 		}).setupAjax({
 			lock: initData
@@ -622,7 +637,7 @@ function load() {
 				PREFiX.homeTimeline.tweets = fixTweetList(tweets);
 			}
 			_initData = function() {
-				PREFiX.user.getMentions({
+				PREFiX.user().getMentions({
 					count: PREFiX.settings.current.tweetsPerPage
 				}).setupAjax({
 					lock: initData
@@ -631,7 +646,7 @@ function load() {
 						PREFiX.mentions.tweets = fixTweetList(tweets);
 					}
 					_initData = function() {
-						PREFiX.user.getDirectMessages({
+						PREFiX.user().getDirectMessages({
 							count: PREFiX.settings.current.tweetsPerPage
 						}).setupAjax({
 							lock: initData
@@ -665,7 +680,7 @@ function unload() {
 	clearInterval(init_interval);
 	clearInterval(update_browser_action_interval);
 	PREFiX.loaded = false;
-	PREFiX.user = PREFiX.account = null;
+	PREFiX.account = null;
 	PREFiX.current = 'tl_model';
 	PREFiX.compose = {
 		text: '',
@@ -831,11 +846,61 @@ function initialize() {
 
 }
 
+function getPinCode() {
+	var ghost_r = Ripple.createGhostRipple();
+	var tab_id, tab_port;
+	ghost_r.authorize.getRequestToken(sub_consumer).
+	next(function(request_token) {
+		request_token = Ripple.OAuth.decodeForm(request_token);
+		request_token = Ripple.OAuth.getParameterMap(request_token);
+		var url = R.getConstant('baseOAuthUrl') +
+			'authorize?oauth_token=' +
+			request_token.oauth_token +
+			'&oauth_callback=oob' +
+			'&appname=PREFiX';
+		createTab(url);
+		getSubAccessToken = function(pincode) {
+			var message = {
+				action: Ripple.getConstant('baseOAuthUrl') + 'access_token',
+				method: 'GET',
+				parameters: {
+					oauth_verifier: pincode,
+					oauth_token: request_token.oauth_token,
+					oauth_signature_method: Ripple.getConstant('signMethod'),
+					oauth_consumer_key: sub_consumer.consumer_key,
+					oauth_version: Ripple.getConfig('OAuthVersion')
+				}
+			};
+			var accessor = {
+				tokenSecret: request_token.oauth_token_secret
+			};
+			ghost_r.authorize.sendRequest(sub_consumer, message, accessor).
+			next(function(data) {
+				data = Ripple.authorize.processToken(data);
+				var id = +data.user_id;
+				if (id !== PREFiX.account.id) return;
+				lscache.set('sub_access_token', {
+					oauth_token: data.oauth_token,
+					oauth_token_secret: data.oauth_token_secret
+				});
+				ce.getViews().forEach(function(view) {
+					if (view.location.href === ce.getURL('options.html')) {
+						view.location.reload();
+					}
+				});
+			});
+		}
+	});
+}
+
+function getSubAccessToken() { }
+
 // 清理所有与当前用户有关的数据, 恢复到未加载状态
 function reset() {
 	PREFiX.unload();
-	PREFiX.accessToken = PREFiX.account = PREFiX.user = null;
+	PREFiX.accessToken = PREFiX.account = null;
 	lscache.remove('access_token');
+	lscache.remove('sub_access_token');
 	lscache.remove('account_details');
 	initialize();
 }
@@ -1213,7 +1278,7 @@ var PREFiX = this.PREFiX = {
 	settings: settings,
 	account: lscache.get('account_details'), // 当前账号的数据, 如昵称头像等
 	accessToken: lscache.get('access_token'), // 缓存的 access token, 与饭否服务器联络的凭证
-	user: null // 一个 Ripple 实例, 提供所有 API 接口
+	user: user
 };
 
 initialize();

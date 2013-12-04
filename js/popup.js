@@ -23,9 +23,7 @@ PREFiX.popupActive = true;
 
 var lyric;
 
-var r = PREFiX.user;
-
-if (! r) {
+if (! PREFiX.user()) {
 	bg_win.initialize();
 	close();
 }
@@ -259,7 +257,7 @@ function createTab(url, active) {
 }
 
 function confirmFollowing() {
-	r.follow({ screen_name: 'ruif' }).next(function() {
+	PREFiX.user().follow({ screen_name: 'ruif' }).next(function() {
 		showNotification('感谢关注 :)');
 	});
 	hideFollowingTip();
@@ -380,7 +378,7 @@ function initMainUI() {
 	if (! lscache.get('hide-following-tip')) {
 		$('#confirm-following').click(confirmFollowing);
 		$('#deny-following').click(denyFollowing);
-		r.getUser({ screen_name: 'ruif' }).next(function(user) {
+		PREFiX.user().getUser({ screen_name: 'ruif' }).next(function(user) {
 			if (user.following) denyFollowing();
 		});
 	} else {
@@ -836,7 +834,7 @@ function loadOldder() {
 		var $selector = $('#topic-selector');
 		var k = $selector.val();
 		if (k === '##MY_TIMELINE##') {
-			r.getUserTimeline({
+			PREFiX.user().getUserTimeline({
 				max_id: oldest_tweet.id_str,
 				count: PREFiX.settings.current.tweetsPerPage
 			}).setupAjax({
@@ -861,7 +859,7 @@ function loadOldder() {
 			});
 		} else {
 			var id = oldest_tweet.id_str;
-			r.searchTweets({
+			PREFiX.user().searchTweets({
 				q: k,
 				max_id: id,
 			}).setupAjax({
@@ -890,7 +888,7 @@ function loadOldder() {
 		var oldest_tweet = model.tweets[model.tweets.length - 1];
 		if (! oldest_tweet) return;
 		var id = oldest_tweet.id_str;
-		r[model === tl_model ? 'getHomeTimeline' : 'getMentions']({
+		PREFiX.user()[model === tl_model ? 'getHomeTimeline' : 'getMentions']({
 			max_id: id,
 			count: PREFiX.settings.current.tweetsPerPage
 		}).setupAjax({
@@ -925,7 +923,7 @@ function loadOldder() {
 		var oldest_message = model.messages[model.messages.length - 1];
 		if (! oldest_message) return;
 		var id = oldest_message.id_str;
-		r.getDirectMessages({
+		PREFiX.user().getDirectMessages({
 			max_id: id,
 			count: PREFiX.settings.current.tweetsPerPage
 		}).setupAjax({
@@ -962,7 +960,7 @@ function remove(e) {
 	showNotification('正在删除..')
 	var self = this;
 	var tweet_id = self.$vmodel.tweet.id_str;
-	r.destroyTweet({ 
+	PREFiX.user().destroyTweet({
 		id: tweet_id 
 	}).setupAjax({
 		lock: self
@@ -1022,13 +1020,13 @@ function retweet(vm) {
 		}
 		showNotification((tweet.retweeted ? '取消' : '正在') + '锐推..');
 		if (tweet.retweeted) {
-			r.destroyTweet({
+			PREFiX.user().destroyTweet({
 				id: tweet.id_str
 			}).next(function(tweet) {
 				$vm.tweets.splice($vmodel.$index, 1, tweet.retweeted_status);
 			});
 		} else {
-			r.retweet({ 
+			PREFiX.user().retweet({
 				id: (tweet.retweeted_status || tweet).id_str
 			}).next(function(tweet) {
 				$vm.tweets.splice($vmodel.$index, 1, tweet);
@@ -1056,7 +1054,7 @@ function toggleFavourite(e) {
 	tweet = tweet.retweeted_status || tweet;
 	$(self).css('animation', '');
 	showNotification(tweet.favorited ? '取消收藏..' : '正在收藏..')
-	r[tweet.favorited ? 'unfavorite' : 'favorite']({
+	PREFiX.user()[tweet.favorited ? 'unfavorite' : 'favorite']({
 		id: tweet.id_str
 	}).setupAjax({
 		lock: self
@@ -1079,7 +1077,7 @@ function showRelatedTweets(e) {
 		push(tweets, [ tweet ]);
 		var id = tweet.in_reply_to_status_id_str;
 		if (id) {
-			showRelatedTweets.ajax = r.showTweet({ id: id }).next(function(s) {
+			showRelatedTweets.ajax = PREFiX.user().showTweet({ id: id }).next(function(s) {
 				tweet = s;
 				get();
 			}).error(function() {
@@ -1192,7 +1190,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 				data.in_reply_to_status_id = vm.id;
 			}
 			if (vm.type === 'send-dm') {
-				r.createDirectMessage({
+				PREFiX.user().createDirectMessage({
 					user_id: vm.user,
 					text: vm.text.trim()
 				}).setupAjax({
@@ -1214,7 +1212,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 				var full_length = $compose_bar.width();
 				data.status = vm.text;
 				data['media[]'] = PREFiX.image;
-				r[ PREFiX.image ? 'uploadPhoto' : 'postTweet' ](data).
+				PREFiX.user()[ PREFiX.image ? 'uploadPhoto' : 'postTweet' ](data).
 				setupAjax({
 					timeout: PREFiX.image ? 180000 : 30000,
 					onstart: function(e) {
@@ -1456,7 +1454,7 @@ var directmsgs_model = avalon.define('directmsgs', function(vm) {
 		showNotification('正在删除..')
 		var self = this;
 		var message_id = self.$vmodel.message.id_str;
-		r.destroyDirectMessage({ 
+		PREFiX.user().destroyDirectMessage({
 			id: message_id 
 		}).setupAjax({
 			lock: self
@@ -1575,7 +1573,7 @@ searches_model.initialize = function() {
 
 	function showMyTimeline() {
 		searches_model.tweets = [];
-		r.getUserTimeline().next(function(tweets) {
+		PREFiX.user().getUserTimeline().next(function(tweets) {
 			unshift(searches_model.tweets, tweets);
 		});
 	}

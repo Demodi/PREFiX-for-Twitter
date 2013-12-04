@@ -1,26 +1,13 @@
 var default_consumer = {
-	key: 'yBSjn0E6IH5ccRcFqu5Bg',
-	secret: 's6mmPCRVKFFz6lp6c2npBZ3tcUDPFolZX2A2Kr4kvs'
+	consumer_key: 'yBSjn0E6IH5ccRcFqu5Bg',
+	consumer_secret: 's6mmPCRVKFFz6lp6c2npBZ3tcUDPFolZX2A2Kr4kvs'
 };
-var custom_consumer = lscache.get('custom_consumer');
-Ripple.setupConsumer(custom_consumer || default_consumer);
+Ripple.setupConsumer(default_consumer);
 
-function enableCustomConsumer(key, secret) {
-	custom_consumer = {
-		key: key,
-		secret: secret
-	};
-	lscache.set('custom_consumer', custom_consumer);
-	Ripple.setupConsumer(custom_consumer);
-	PREFiX.reset();
-}
-
-function disableCustomConsumer() {
-	custom_consumer = null;
-	lscache.remove('custom_consumer');
-	Ripple.setupConsumer(default_consumer);
-	PREFiX.reset();
-}
+var sub_consumer = {
+	consumer_key: 'Lp3DKTAhhUwaBvEOIrAqA',
+	consumer_secret: 'LuVB86K07thONyg8ypI4nrJm85zInHBTAPaNV93BY'
+};
 
 var waitFor = (function() {
 	var waiting_list = [];

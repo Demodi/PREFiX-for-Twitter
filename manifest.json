@@ -15,7 +15,7 @@
 	},
 	"content_scripts": [ {
 		"js": [ "js/lib/jquery-min.js", "js/consumer-helper.js" ],
-		"matches": [ "http://dev.twitter.com/apps/*", "https://dev.twitter.com/apps/*" ],
+		"matches": [ "*://api.twitter.com/oauth/authorize*" ],
 		"run_at": "document_end"
 	} ],
 	"browser_action": {
