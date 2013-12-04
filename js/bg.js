@@ -360,6 +360,39 @@ function updateTitle() {
 		switchTo('searches_model');
 	}
 
+	var mentions_count = PREFiX.mentions.buffered.filter(function(tweet) {
+		return ! tweet.is_self;
+	}).length;
+
+	if (mentions_count) {
+		switchTo('mentions_model');
+		title.push('你被 @ 了 ' + mentions_count + ' 次');
+		chrome.browserAction.setBadgeBackgroundColor({
+			color: [ 113, 202, 224, 204 ]
+		});
+	}
+
+	var directmsgs_count = PREFiX.directmsgs.buffered.length;
+
+	if (directmsgs_count) {
+		switchTo('directmsgs_model');
+		title.push('你有 ' + directmsgs_count + ' 条未读私信');
+		chrome.browserAction.setBadgeBackgroundColor({
+			color: [ 211, 0, 4, 204 ]
+		});
+	}
+
+	chrome.browserAction.setBadgeText({
+		text: (directmsgs_count || mentions_count || '') + ''
+	});
+	chrome.browserAction.setTitle({
+		title: title.join('\n')
+	});
+}
+
+function isNeedNotify() {
+	var need_notify = false;
+
 	PREFiX.previous_count = PREFiX.count;
 	PREFiX.count = {
 		mentions: PREFiX.mentions.buffered.filter(function(tweet) {
@@ -369,31 +402,14 @@ function updateTitle() {
 	};
 
 	if (PREFiX.count.mentions) {
-		switchTo('mentions_model');
-		title.push('你被 @ 了 ' + PREFiX.count.mentions + ' 次');
-		chrome.browserAction.setBadgeBackgroundColor({
-			color: [ 113, 202, 224, 204 ]
-		});
 		if (PREFiX.count.mentions > PREFiX.previous_count.mentions)
 			need_notify = true;
 	}
 
 	if (PREFiX.count.direct_messages) {
-		switchTo('directmsgs_model');
-		title.push('你有 ' + PREFiX.count.direct_messages + ' 条未读私信');
-		chrome.browserAction.setBadgeBackgroundColor({
-			color: [ 211, 0, 4, 204 ]
-		});
 		if (PREFiX.count.direct_messages > PREFiX.previous_count.direct_messages)
 			need_notify = true;
 	}
-
-	chrome.browserAction.setBadgeText({
-		text: (PREFiX.count.direct_messages || PREFiX.count.mentions || '') + ''
-	});
-	chrome.browserAction.setTitle({
-		title: title.join('\n')
-	});
 
 	return need_notify;
 }
@@ -407,12 +423,7 @@ function updateBrowserAction() {
 	});
 }
 
-function update(retry_chances, new_tweet_id) {
-	var d = new Deferred;
-
-	clearInterval(PREFiX.interval);
-	PREFiX.interval = setInterval(update, 60000);
-
+function setRefreshingState() {
 	chrome.browserAction.setBadgeText({
 		text: '...'
 	});
@@ -422,6 +433,13 @@ function update(retry_chances, new_tweet_id) {
 	chrome.browserAction.setTitle({
 		title: 'PREFiX for Twitter - 正在刷新'
 	});
+}
+
+function updateHomeTimeline(retry_chances, new_tweet_id) {
+	clearInterval(PREFiX.interval);
+	PREFiX.interval = setInterval(update, 60000);
+
+	setRefreshingState();
 
 	var tl = PREFiX.homeTimeline;
 	var tweets = fixTweetList(tl.tweets.concat(tl.buffered));
@@ -437,7 +455,7 @@ function update(retry_chances, new_tweet_id) {
 					});
 					if (! new_tweet_found) {
 						setTimeout(function() {
-							update(--retry_chances, new_tweet_id);
+							updateHomeTimeline(--retry_chances, new_tweet_id);
 						});
 					}
 				}
@@ -458,6 +476,15 @@ function update(retry_chances, new_tweet_id) {
 		});
 	}
 
+	return deferred_new;
+}
+
+function updateMentions() {
+	clearInterval(PREFiX.interval);
+	PREFiX.interval = setInterval(update, 60000);
+
+	setRefreshingState();
+
 	var mentions = PREFiX.mentions;
 	var mention_tweets = fixTweetList(mentions.tweets.concat(mentions.buffered));
 	var deferred_mentions = Deferred.next();
@@ -469,6 +496,15 @@ function update(retry_chances, new_tweet_id) {
 				unshift(mentions.buffered, tweets);
 			});
 	}
+
+	return deferred_mentions;
+}
+
+function updateDirectMsgs() {
+	clearInterval(PREFiX.interval);
+	PREFiX.interval = setInterval(update, 60000);
+
+	setRefreshingState();
 
 	var directmsgs = PREFiX.directmsgs;
 	var dms = fixTweetList(directmsgs.messages.concat(directmsgs.buffered));
@@ -482,20 +518,35 @@ function update(retry_chances, new_tweet_id) {
 			});
 	}
 
+	return deferred_dm;
+}
+
+function update() {
+	var d = new Deferred;
+
+	clearInterval(PREFiX.interval);
+	PREFiX.interval = setInterval(update, 60000);
+
+	setRefreshingState();
+
 	var dl = [
-		deferred_new,
-		deferred_mentions,
-		deferred_dm
+		updateHomeTimeline(),
+		updateMentions(),
+		updateDirectMsgs()
 	].map(function(d) {
 		return d.next(function() {
-			var need_notify = updateTitle();
-			if (need_notify) playSound();
+			updateTitle();
 		});
 	});
 
-	Deferred.parallel(dl).next(function() {
+	Deferred.parallel(dl).
+	hold(function() {
+		if (isNeedNotify()) playSound();
+	}).
+	next(function() {
 		d.call();
-	}).error(function(e) {
+	}).
+	error(function(e) {
 		chrome.browserAction.setBadgeText({
 			text: ' '
 		});
@@ -1118,6 +1169,9 @@ var PREFiX = this.PREFiX = {
 	initialize: initialize,
 	reset: reset,
 	update: update,
+	updateHomeTimeline: updateHomeTimeline,
+	updateMentions: updateMentions,
+	updateDirectMsgs: updateDirectMsgs,
 	updateTitle: updateTitle,
 	getDataSince: getDataSince,
 	loaded: false,

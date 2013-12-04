@@ -1237,7 +1237,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 					showNotification('发表成功!');
 					vm.text = '';
 					setImage(null);
-					PREFiX.update(7, tweet.id).next(function() {
+					PREFiX.updateHomeTimeline(7, tweet.id).next(function() {
 						if (PREFiX.current === 'tl_model') {
 							var now = new Date;
 							waitFor(function() {
@@ -1363,6 +1363,7 @@ tl_model.initialize = function() {
 						}
 					}
 					unshift(tl_model.tweets, buffered);
+					PREFiX.updateTitle();
 				});
 			}, 50);
 		}
@@ -1436,6 +1437,7 @@ mentions_model.initialize = function() {
 			setTimeout(function() {
 				insertKeepScrollTop(function() {
 					unshift(mentions_model.tweets, buffered);
+					PREFiX.updateTitle();
 				});
 			}, 50);
 		}
@@ -1528,6 +1530,7 @@ directmsgs_model.initialize = function() {
 			setTimeout(function() {
 				insertKeepScrollTop(function() {
 					unshift(directmsgs_model.messages, buffered);
+					PREFiX.updateTitle();
 				});
 			}, 50);
 		}
@@ -1586,6 +1589,7 @@ searches_model.initialize = function() {
 			return true;
  		});
 		unshift(searches_model.tweets, tweets);
+		PREFiX.updateTitle();
 	}
 
 	function refreshCount() {
