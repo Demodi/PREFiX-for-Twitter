@@ -54,7 +54,7 @@
             <div class="info fix">
               <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)" class="name" ms-text="tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name"></a>
               <span class="screen-name" ms-text="'@' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"></span>
-              <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + tweet.fullTime" class="permanent-link">#</a>
+              <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
               <span class="timestamp" ms-html="tweet.relativeTime"></span>
             </div>
             <div class="tweet-content" ms-html="tweet.fixedText"></div>
@@ -106,7 +106,7 @@
                 <div class="info fix">
                   <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)" class="name" ms-text="tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name" ms-data-send-dm="tweet.user.id_str + ':' + tweet.user.screen_name"></a>
                   <span class="screen-name" ms-text="'@' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"></span>
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + tweet.fullTime" class="permanent-link">#</a>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
                   <span class="timestamp" ms-html="tweet.relativeTime"></span>
                 </div>
                 <div class="tweet-content" ms-html="tweet.retweeted_status ? tweet.retweeted_status.fixedText : tweet.fixedText"></div>
@@ -138,7 +138,7 @@
                 <div class="info fix">
                   <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)" class="name" ms-text="tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name" ms-data-send-dm="tweet.user.id_str + ':' + tweet.user.screen_name"></a>
                   <span class="screen-name" ms-text="'@' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"></span>
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + tweet.fullTime" class="permanent-link">#</a>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
                   <span class="timestamp" ms-html="tweet.relativeTime"></span>
                 </div>
                 <div class="tweet-content" ms-html="tweet.retweeted_status ? tweet.retweeted_status.fixedText : tweet.fixedText"></div>
@@ -190,7 +190,7 @@
                 <div class="info fix">
                   <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)" class="name" ms-text="tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name"></a>
                   <span class="screen-name" ms-text="'@' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"></span>
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + tweet.fullTime" class="permanent-link">#</a>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
                   <span class="timestamp" ms-html="tweet.relativeTime"></span>
                 </div>
                 <div class="tweet-content" ms-html="tweet.retweeted_status ? tweet.retweeted_status.fixedText : tweet.fixedText" ms-class-bold="tweet.is_unread"></div>

@@ -106,22 +106,10 @@ var getShortTime = Ripple.helpers.generateTimeFormater(function(table) {
 });
 
 var getFullTime = Ripple.helpers.generateTimeFormater(function(table) {
-	var time_zone = -(new Date).getTimezoneOffset() / 60;
-	if (Math.abs(time_zone) < 10) {
-		if (time_zone >= 0) {
-			time_zone = '0' + ('' + time_zone);
-		} else {
-			time_zone = (time_zone + '').split('');
-			time_zone.splice(1, 0, '0');
-			time_zone = time_zone.join('');
-		}
-	}
-	if (+time_zone >= 0) time_zone = '+' + time_zone;
-	time_zone += '00';
 	return [
 		function(c) {
 			return c._yr() + '-' + c._ms(2) + 　 '-' + c._d(2) +
-			' ' + c._h(2) + ':' + c._m(2) + ':' + c._s(2) + ' ' + time_zone;
+			' ' + c._h(2) + ':' + c._m(2) + ':' + c._s(2);
 		}
 	];
 });
