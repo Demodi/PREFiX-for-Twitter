@@ -534,8 +534,20 @@ function update() {
 		updateMentions(),
 		updateDirectMsgs()
 	].map(function(d) {
-		return d.next(function() {
-			updateTitle();
+		return d.error(function(e) {
+			var prefix = 'PREFiX for Twitter - ';
+			var default_error = prefix + 'PREFiX for Twitter - 网络连接断开或内部错误';
+			chrome.browserAction.setBadgeText({
+				text: ' '
+			});
+			chrome.browserAction.setBadgeBackgroundColor({
+				color: [ 255, 0, 0, 200 ]
+			});
+			chrome.browserAction.setTitle({
+				title: e && e.response ?
+					prefix + e.response.errors[0].message : default_error
+			});
+			throw e;
 		});
 	});
 
@@ -544,19 +556,8 @@ function update() {
 		if (isNeedNotify()) playSound();
 	}).
 	next(function() {
+		updateTitle();
 		d.call();
-	}).
-	error(function(e) {
-		chrome.browserAction.setBadgeText({
-			text: ' '
-		});
-		chrome.browserAction.setBadgeBackgroundColor({
-			color: [ 255, 0, 0, 200 ]
-		});
-		chrome.browserAction.setTitle({
-			title: e && e.response ?
-				'PREFiX for Twitter - ' + e.response.errors[0].message : 'PREFiX for Twitter - 网络连接断开或内部错误'
-		});
 	});
 
 	return d;
