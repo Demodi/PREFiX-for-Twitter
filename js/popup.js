@@ -800,7 +800,7 @@ function checkCount() {
 	var search_tweets_count = bg_win.getSavedSearchTweetsCount();
 	if (search_tweets_count && PREFiX.settings.current.showSavedSearchCount) {
 		title_contents.push(search_tweets_count + ' 关注话题消息');
-		$saved_searchs.text(search_tweets_count).fadeIn(120);
+		$saved_searchs.text(Math.min(search_tweets_count, 9)).fadeIn(120);
 	} else {
 		$saved_searchs.text('').fadeOut(120);
 	}
@@ -835,7 +835,31 @@ function loadOldder() {
 		if (! oldest_tweet) return;
 		var $selector = $('#topic-selector');
 		var k = $selector.val();
-		if (k !== '##PUBLIC_TIMELINE##') {
+		if (k === '##MY_TIMELINE##') {
+			r.getUserTimeline({
+				max_id: oldest_tweet.id_str,
+				count: PREFiX.settings.current.tweetsPerPage
+			}).setupAjax({
+				lock: loadOldder,
+				send: function() {
+					loading = true;
+				},
+				oncomplete: function() {
+					loading = false;
+				}
+			}).next(function(tweets) {
+				if (tweets && tweets.length) {
+					if (tweets[0].id_str === id) {
+						tweets.splice(0, 1);
+					}
+				}
+				if (tweets && ! tweets.length) {
+					//model.allLoaded = true;
+				} else {
+					push(searches_model.tweets, tweets);
+				}
+			});
+		} else {
 			var id = oldest_tweet.id_str;
 			r.searchTweets({
 				q: k,
@@ -856,7 +880,7 @@ function loadOldder() {
 					}
 				}
 				if (tweets && ! tweets.length) {
-					model.allLoaded = true;
+					//model.allLoaded = true;
 				} else {
 					push(searches_model.tweets, tweets);
 				}
@@ -1542,11 +1566,11 @@ searches_model.initialize = function() {
 
 	$main.scrollTop(0);
 
-	function showPublicTimeline() {
+	function showMyTimeline() {
 		searches_model.tweets = [];
-		/*r.getPublicTimeline().next(function(tweets) {
+		r.getUserTimeline().next(function(tweets) {
 			unshift(searches_model.tweets, tweets);
-		});*/
+		});
 	}
 
 	function search() {
@@ -1582,15 +1606,15 @@ searches_model.initialize = function() {
 	}
 
 	if (! $('#topic-selector').length) {
-		var public_tl_id = '##PUBLIC_TIMELINE##';
+		var my_tl_id = '##MY_TIMELINE##';
 
 		var $selector = $('<select />');
 		$selector.prop('id', 'topic-selector');
 
-		var $public_tl = $('<option />');
-		$public_tl.text('随便看看');
-		$public_tl.prop('value', public_tl_id);
-		$selector.append($public_tl);
+		var $my_tl = $('<option />');
+		$my_tl.text('我的消息');
+		$my_tl.prop('value', my_tl_id);
+		$selector.append($my_tl);
 
 		bg_win.saved_searches_items.some(function(item) {
 			var $item = $('<option />');
@@ -1599,13 +1623,13 @@ searches_model.initialize = function() {
 			$selector.append($item);
 		});
 
-		$selector.val(public_tl_id);
+		$selector.val(my_tl_id);
 		$selector.appendTo('#title');
 
 		$selector.on('change', function(e) {
-			if (this.value === public_tl_id) {
+			if (this.value === my_tl_id) {
 				searches_model.keyword = '';
-				showPublicTimeline();
+				showMyTimeline();
 			} else {
 				searches_model.keyword = this.value;
 				search();
