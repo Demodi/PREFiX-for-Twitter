@@ -1001,7 +1001,11 @@ function remove(e) {
 		}
 	}).next(function() {
 		showNotification('删除成功!');
-		$(self).parents('li').slideUp(function() {
+		var $item = $(self);
+		$item.parents('.tweet').
+		css('animation', 'remove .4s linear');
+		$item.parents('li').
+		slideUp(function() {
 			self.$vmodel.$remove();
 		});
 	});
@@ -1496,7 +1500,11 @@ var directmsgs_model = avalon.define('directmsgs', function(vm) {
 			}
 		}).next(function() {
 			showNotification('删除成功!');
-			$(self).parents('li').slideUp(function() {
+			var $item = $(self);
+			$item.parents('.tweet').
+			css('animation', 'remove .4s linear');
+			$item.parents('li').
+			slideUp(function() {
 				self.$vmodel.$remove();
 			});
 		});
