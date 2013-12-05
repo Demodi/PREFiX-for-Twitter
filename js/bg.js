@@ -1137,6 +1137,13 @@ Ripple.events.observe('process_tweet', function(tweet) {
 
 	var text = tweet.text;
 	tweet.textWithoutTags = text;
+
+	text = jEmoji.softbankToUnified(text);
+	text = jEmoji.googleToUnified(text);
+	text = jEmoji.docomoToUnified(text);
+	text = jEmoji.kddiToUnified(text);
+	text = jEmoji.unifiedToHTML(text);
+
 	if (tweet.entities) {
 		var urls = [];
 		urls.push.apply(urls, tweet.entities.urls);
@@ -1208,11 +1215,7 @@ Ripple.events.observe('process_tweet', function(tweet) {
 
 	text = text.replace(/\n+/g, '<br />');
 
-	var html = jEmoji.softbankToUnified(text);
-	html = jEmoji.googleToUnified(html);
-	html = jEmoji.docomoToUnified(html);
-	html = jEmoji.kddiToUnified(html);
-	tweet.fixedText = jEmoji.unifiedToHTML(html);
+	tweet.fixedText = text;
 
 	tweet.is_breakpoint = false;
 	tweet.loaded_at = null;
