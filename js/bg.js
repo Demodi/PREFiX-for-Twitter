@@ -43,6 +43,7 @@ function getRateLimit() {
 		instance.getMentions = resources.statuses['/statuses/mentions_timeline'].remaining;
 		instance.getUserTimeline = resources.statuses['/statuses/user_timeline'].remaining;
 		instance.getDirectMessages = resources.direct_messages['/direct_messages'].remaining;
+		instance.getFavoritedTweets = resources.favorites['/favorites/list'].remaining;
 		instance.searchTweets = resources.search['/search/tweets'].remaining;
 	}
 	var default_instance = getDefaultInstance();
@@ -1123,6 +1124,7 @@ Ripple.events.observe('process_tweet', function(tweet) {
 		time_zone = (time_zone > 0 ? '-' : '+') + parsed.join('');
 		return getFullTime(time) + ' ' + time_zone;
 	})();
+	tweet.relativeTime = '';
 
 	if ((tweet.is_self && ! tweet.retweeted) ||
 		(tweet.user && tweet.user.protected)) {
