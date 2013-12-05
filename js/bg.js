@@ -82,16 +82,25 @@ function getSubInstance() {
 function getInstanceByRateLimit(method) {
 	var default_instance_remaining = rate_limit.default[method] || 0;
 	var sub_instance_remaining = rate_limit.sub[method] || 0;
+	var instance, func;
+	var type = 'default';
 	if (sub_instance_remaining > 0) {
-		if (default_instance_remaining >= sub_instance_remaining) {
-			rate_limit.default[method] = --default_instance_remaining;
-			return getDefaultInstance();
-		} else {
-			rate_limit.sub[method] = --sub_instance_remaining;
-			return getSubInstance();
+		if (default_instance_remaining < sub_instance_remaining) {
+			instance = getSubInstance();
+			func = instance[method].bind(instance);
+			type = 'sub';
 		}
 	}
-	return getDefaultInstance();
+	if (! func) {
+		instance = getDefaultInstance();
+		func = instance[method].bind(instance);
+	}
+	return function() {
+		return func.apply(instance, arguments).next(function(data) {
+			--rate_limit[type][method];
+			return data;
+		});
+	}
 }
 
 function user() {
@@ -361,8 +370,7 @@ function getDataSince(method, since_id, lock, extra_data, timeout) {
 
 	var d = new Deferred;
 	var list = [];
-	var user = getInstanceByRateLimit(method);
-	var get = user[method].bind(user);
+	var get = getInstanceByRateLimit(method);
 	var count = 60;
 
 	var data = extra_data || { };
