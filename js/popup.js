@@ -664,6 +664,7 @@ function cutStream() {
 	} else {
 		current.messages = current.messages.slice(0, tweets_per_page);
 	}
+	current.allLoaded = false;
 }
 
 function computePosition(data) {
