@@ -834,7 +834,7 @@ function loadOldder() {
 		var $selector = $('#topic-selector');
 		var k = $selector.val();
 		if (k === '##MY_TIMELINE##') {
-			PREFiX.user().getUserTimeline({
+			PREFiX.getInstanceByRateLimit('getUserTimeline').getUserTimeline({
 				max_id: oldest_tweet.id_str,
 				count: PREFiX.settings.current.tweetsPerPage
 			}).setupAjax({
@@ -859,7 +859,7 @@ function loadOldder() {
 			});
 		} else {
 			var id = oldest_tweet.id_str;
-			PREFiX.user().searchTweets({
+			PREFiX.getInstanceByRateLimit('searchTweets').searchTweets({
 				q: k,
 				max_id: id,
 			}).setupAjax({
@@ -888,7 +888,13 @@ function loadOldder() {
 		var oldest_tweet = model.tweets[model.tweets.length - 1];
 		if (! oldest_tweet) return;
 		var id = oldest_tweet.id_str;
-		PREFiX.user()[model === tl_model ? 'getHomeTimeline' : 'getMentions']({
+		var instance;
+		if (model === tl_model) {
+			instance = PREFiX.getInstanceByRateLimit('getHomeTimeline');
+		} else {
+			instance = PREFiX.getInstanceByRateLimit('getMentions');
+		}
+		instance[model === tl_model ? 'getHomeTimeline' : 'getMentions']({
 			max_id: id,
 			count: PREFiX.settings.current.tweetsPerPage
 		}).setupAjax({
@@ -923,7 +929,7 @@ function loadOldder() {
 		var oldest_message = model.messages[model.messages.length - 1];
 		if (! oldest_message) return;
 		var id = oldest_message.id_str;
-		PREFiX.user().getDirectMessages({
+		PREFiX.getInstanceByRateLimit('getDirectMessages').getDirectMessages({
 			max_id: id,
 			count: PREFiX.settings.current.tweetsPerPage
 		}).setupAjax({
@@ -1573,7 +1579,7 @@ searches_model.initialize = function() {
 
 	function showMyTimeline() {
 		searches_model.tweets = [];
-		PREFiX.user().getUserTimeline().next(function(tweets) {
+		PREFiX.getInstanceByRateLimit('getUserTimeline').getUserTimeline().next(function(tweets) {
 			unshift(searches_model.tweets, tweets);
 		});
 	}

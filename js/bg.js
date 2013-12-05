@@ -3,6 +3,11 @@ var ct = chrome.tabs;
 var root_url = ce.getURL('');
 var popup_url = ce.getURL('popup.html');
 
+var rate_limit = {
+	default: { },
+	sub: { }
+}
+
 var $temp = $('<div />');
 
 chrome.runtime.onMessage.addListener(function(request, sender) {
@@ -31,15 +36,70 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 	}
 });
 
+function getRateLimit() {
+	function process(instance, detail) {
+		var resources = detail.resources;
+		instance.getHomeTimeline = resources.statuses['/statuses/home_timeline'].remaining;
+		instance.getMentions = resources.statuses['/statuses/mentions_timeline'].remaining;
+		instance.getUserTimeline = resources.statuses['/statuses/user_timeline'].remaining;
+		instance.getDirectMessages = resources.direct_messages['/direct_messages'].remaining;
+		instance.searchTweets = resources.search['/search/tweets'].remaining;
+	}
+	var default_instance = getDefaultInstance();
+	if (default_instance) {
+		default_instance.getRateLimitStatus().
+		next(function(detail) {
+			process(rate_limit.default, detail);
+		});
+	} else {
+		rate_limit.default = { };
+	}
+	var sub_instance = getSubInstance();
+	if (sub_instance) {
+		sub_instance.getRateLimitStatus().
+		next(function(detail) {
+			process(rate_limit.sub, detail);
+		});
+	} else {
+		rate_limit.sub = { };
+	}
+}
+
+function getDefaultInstance() {
+	if (! PREFiX.accessToken) return;
+	return Ripple(PREFiX.accessToken);
+}
+
+function getSubInstance() {
+	var sub_access_token = lscache.get('sub_access_token');
+	if (sub_access_token) {
+		return Ripple(sub_access_token, {
+			consumer: sub_consumer
+		});
+	}
+}
+
+function getInstanceByRateLimit(method) {
+	var default_instance_remaining = rate_limit.default[method] || 0;
+	var sub_instance_remaining = rate_limit.sub[method] || 0;
+	if (sub_instance_remaining > 0) {
+		if (default_instance_remaining >= sub_instance_remaining) {
+			rate_limit.default[method] = --default_instance_remaining;
+			return getDefaultInstance();
+		} else {
+			rate_limit.sub[method] = --sub_instance_remaining;
+			return getSubInstance();
+		}
+	}
+	return getDefaultInstance();
+}
+
 function user() {
 	if (! PREFiX.accessToken) return;
 	var account_instances = [];
-	account_instances.push(Ripple(PREFiX.accessToken));
-	var sub_access_token = lscache.get('sub_access_token');
-	if (sub_access_token) {
-		var sub_instance = Ripple(sub_access_token, {
-			consumer: sub_consumer
-		});
+	account_instances.push(getDefaultInstance());
+	var sub_instance = getSubInstance();
+	if (sub_instance) {
 		account_instances.push(sub_instance);
 	}
 	var total = account_instances.length;
@@ -301,7 +361,7 @@ function getDataSince(method, since_id, lock, extra_data, timeout) {
 
 	var d = new Deferred;
 	var list = [];
-	var user = PREFiX.user();
+	var user = getInstanceByRateLimit(method);
 	var get = user[method].bind(user);
 	var count = 60;
 
@@ -669,6 +729,7 @@ function load() {
 	update();
 	loadFriends();
 	initSavedSearches();
+	getRateLimit();
 	chrome.omnibox.onInputStarted.addListener(onInputStarted);
 	chrome.omnibox.onInputChanged.addListener(onInputChanged);
 	chrome.omnibox.onInputEntered.addListener(onInputEntered);
@@ -1214,7 +1275,7 @@ var usage_tips = [
 	'按 Ctrl + Enter 或双击输入框即可发送消息. ',
 	'如果您觉得字体太小, 可以在设置页启用<b>放大功能</b>. ',
 	'点击 PREFiX 回到页面顶部或刷新. ',
-	'如果您希望删除消息或私信, 请<b>双击</b>删除图标. '
+	'如果您希望删除消息或私信, 请<b>双击</b>删除图标. ',
 	'在地址栏输入 t 按空格键, 然后输入内容即可直接发送消息. ',
 	'按 1/2/3/4 键在 首页/提到我的/关注的话题 页面间切换. ',
 	'右击消息中的图片小图, 将在新窗口打开大图. ',
@@ -1280,9 +1341,12 @@ var PREFiX = this.PREFiX = {
 	settings: settings,
 	account: lscache.get('account_details'), // 当前账号的数据, 如昵称头像等
 	accessToken: lscache.get('access_token'), // 缓存的 access token, 与饭否服务器联络的凭证
-	user: user
+	user: user,
+	getInstanceByRateLimit: getInstanceByRateLimit
 };
 
 initialize();
 var is_first_run = lscache.get('is_first_run') !== false;
 lscache.set('is_first_run', false);
+
+setInterval(getRateLimit, 3 * 60 * 1000);
