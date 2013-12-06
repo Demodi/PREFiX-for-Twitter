@@ -1092,6 +1092,16 @@ function isZoomAble(src){
     return false;
 }
 
+function replaceEmoji(text) {
+	text = jEmoji.softbankToUnified(text);
+	text = jEmoji.googleToUnified(text);
+	text = jEmoji.docomoToUnified(text);
+	text = jEmoji.kddiToUnified(text);
+	text = jEmoji.unifiedToHTML(text);
+
+	return text;
+}
+
 Ripple.events.observe('process_tweet', function(tweet) {
 	if (! tweet) return;
 	if (tweet.user) {
@@ -1140,23 +1150,8 @@ Ripple.events.observe('process_tweet', function(tweet) {
 	var text = tweet.text;
 	tweet.textWithoutTags = text;
 
-	text = jEmoji.softbankToUnified(text);
-	text = jEmoji.googleToUnified(text);
-	text = jEmoji.docomoToUnified(text);
-	text = jEmoji.kddiToUnified(text);
-	text = jEmoji.unifiedToHTML(text);
-
 	if (tweet.entities) {
-		var urls = [];
-		urls.push.apply(urls, tweet.entities.urls);
-		urls.push.apply(urls, tweet.entities.media);
-
-		urls.forEach(function(item) {
-			tweet.textWithoutTags = tweet.textWithoutTags.replace(item.url, item.display_url);
-			text = text.replace(item.url, '<a href="' + item.expanded_url +
-				'" title="' + item.expanded_url +
-				'">' + item.display_url + '</a>');
-		});
+		var entities = [];
 
 		var media = tweet.entities.media;
 		if (media && media.length) {
@@ -1188,35 +1183,142 @@ Ripple.events.observe('process_tweet', function(tweet) {
 				img_large.src = photo.url_large;
 			}
 			tweet.photo = photo;
+
+			var media_entity = media[0];
+			media_entity.type = 'url';
+			entities.push(media_entity);
+		}
+
+		var urls = tweet.entities.urls;
+
+		if (urls && urls.length) {
+			urls.forEach(function(item) {
+				item.type = 'url';
+			});
+			entities.push.apply(entities, urls);
 		}
 
 		var hashtags = tweet.entities.hashtags;
+
 		if (hashtags && hashtags.length) {
-			hashtags.forEach(function(hashtag) {
-				var search =  Ripple.helpers.param({
-						q: '#' + hashtag.text,
-						src: 'hash'
-					});
-				var html = '<a href="http://twitter.com/search?' +
-					search + '">#' + hashtag.text + '</a>';
-				text = text.replace('#' + hashtag.text, html);
+			hashtags.forEach(function(item) {
+				item.type = 'hashtag';
 			});
+			entities.push.apply(entities, hashtags);
 		}
 
 		var mentions = tweet.entities.user_mentions;
 		if (mentions && mentions.length) {
-			mentions.forEach(function(mention) {
-				var html = '@<a href="http://twitter.com/' + mention.screen_name +
-					'" title="' + mention.name +
-					' (@' + mention.screen_name + ')"">' +
-					mention.screen_name + '</a>';
-				text = text.replace('@' + mention.screen_name, html)
+			mentions.forEach(function(item) {
+				item.type = 'mention';
 			});
+			entities.push.apply(entities, mentions);
 		}
+
+		entities = entities.sort(function(a, b) {
+			return a.indices[0] - b.indices[0];
+		});
+
+		var fixed_text = [];
+		var new_entities = [];
+
+		var _original_text = text;
+		var _text = text.replace(jEmoji.EMOJI_ALL_RE, ' ');
+		var _original_added = 0;
+		var _added = 0;
+
+		entities.unshift({
+			indices: [ 0, 0 ]
+		});
+
+		entities.forEach(function(item) {
+			item.original_indices = item.indices.slice();
+		});
+
+		function getStr(item) {
+			var start = item.original_indices[0];
+			var end = item.original_indices[1];
+			return _text.slice(start - _added, end - _added);
+		}
+
+		entities.forEach(function(item, i) {
+			var str = getStr(item);
+			_original_text = _original_text.replace(str, '');
+			_text = _text.replace(str, '');
+			_original_added += str.length;
+			_added += str.length;
+			var next_item = entities[i + 1];
+			if (next_item) {
+				var mid_str = _text.slice(0, next_item.indices[0] - _added);
+				var next_str = getStr(next_item);
+				var next_start = _original_text.indexOf(next_str) + _original_added;
+				var next_end = next_start + next_str.length;
+				next_item.indices = [ next_start, next_end ];
+				var mid_str_o = _original_text.slice(0, next_start - _original_added);
+				_original_text = _original_text.replace(mid_str_o, '');
+				_text = _text.replace(mid_str, '');
+				_original_added += mid_str_o.length;
+				_added += mid_str.length;
+			}
+		});
+
+		entities.shift();
+
+		if (entities.length) {
+			var prefix_pos = entities[0].indices[0];
+			fixed_text.push(replaceEmoji(text.slice(0, prefix_pos)));
+		} else {
+			fixed_text.push(replaceEmoji(text));
+		}
+
+		entities.forEach(function(entity, i) {
+
+			var text_to_add = '';
+			var start = entity.indices[0];
+			var end = entity.indices[1];
+
+			switch (entity.type) {
+				case 'url':
+					tweet.textWithoutTags = tweet.textWithoutTags.replace(entity.url, entity.display_url);
+					text_to_add = '<a href="' + entity.expanded_url +
+						'" title="' + entity.expanded_url +
+						'">' + entity.display_url + '</a>';
+					break;
+				case 'hashtag':
+					var search = Ripple.helpers.param({
+							q: '#' + entity.text,
+							src: 'hash'
+						});
+					text_to_add = '<a href="http://twitter.com/search?' +
+						search + '" data-hashtag="' + entity.text +
+						'">#' + entity.text + '</a>';
+					break;
+				case 'mention':
+					text_to_add = '@<a href="http://twitter.com/' +
+						entity.screen_name + '" title="' + entity.name +
+						' (@' + entity.screen_name + ')"">' +
+						entity.screen_name + '</a>';
+					break;
+				default:
+					text_to_add = text.slice(start, end);
+			}
+
+			fixed_text.push(text_to_add);
+
+			var next_entity = entities[i + 1];
+			var next_end = text.length;
+			if (next_entity) {
+				next_end = next_entity.indices[0];
+			}
+			text_to_add = text.slice(end, next_end);
+
+			text_to_add = replaceEmoji(text_to_add);
+			text_to_add = text_to_add.replace(/\n+/g, '<br />');
+			fixed_text.push(text_to_add);
+		});
 	}
 
-	text = text.replace(/\n+/g, '<br />');
-
+	text = fixed_text.join('');
 	tweet.fixedText = text;
 
 	tweet.is_breakpoint = false;

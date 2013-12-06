@@ -807,11 +807,13 @@ var EMOJI_DOCOMO_MAP = {};
 var EMOJI_KDDI_MAP = {};
 var EMOJI_SOFTBANK_MAP = {};
 var EMOJI_GOOGLE_MAP = {};
+var EMOJI_ALL_MAP = {};
 var _maps = [EMOJI_DOCOMO_MAP, EMOJI_KDDI_MAP, EMOJI_SOFTBANK_MAP, EMOJI_GOOGLE_MAP];
 var maps_length = _maps.length;
 var em, i, index, code, map;
 for (var k in EMOJI_MAP) {
 	em = EMOJI_MAP[k];
+	EMOJI_ALL_MAP[k] = true;
 	for (i = 0; i < maps_length; i++) {
 		index = i + 3;
 		code = em[index][0];
@@ -820,6 +822,7 @@ for (var k in EMOJI_MAP) {
 			continue;
 		}
 		map[code] = k;
+		EMOJI_ALL_MAP[code] = true;
 	}
 }
 
@@ -891,6 +894,7 @@ function googleToUnified(text) {
 }
 jEmoji.googleToUnified = googleToUnified;
 
+jEmoji.EMOJI_ALL_RE = _createRegexp(EMOJI_ALL_MAP);
 return jEmoji;
 
 });
