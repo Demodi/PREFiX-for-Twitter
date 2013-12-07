@@ -742,6 +742,10 @@ function load() {
 	chrome.omnibox.onInputStarted.addListener(onInputStarted);
 	chrome.omnibox.onInputChanged.addListener(onInputChanged);
 	chrome.omnibox.onInputEntered.addListener(onInputEntered);
+	if (startup && settings.current.createPopAtStartup) {
+		createPopup();
+	}
+	startup = false;
 }
 
 function unload() {
@@ -1358,7 +1362,8 @@ var settings = {
 		zoomRatio: '1',
 		drawAttention: true,
 		tweetsPerPage: 50,
-		showSavedSearchCount: true
+		showSavedSearchCount: true,
+		createPopAtStartup: false
 	},
 	load: function() {
 		var local_settings = lscache.get('settings') || { };
@@ -1391,8 +1396,8 @@ var usage_tips = [
 	'如果您觉得字体太小, 可以在设置页启用<b>放大功能</b>. ',
 	'点击 PREFiX 回到页面顶部或刷新. ',
 	'如果您希望删除消息或私信, 请<b>双击</b>删除图标. ',
-	'在地址栏输入 t 按空格键, 然后输入内容即可直接发送消息. ',
-	'按 1/2/3/4 键在 首页/提到我的/关注的话题 页面间切换. ',
+	'在地址栏输入 t 按空格, 输入内容即可直接发送消息. ',
+	'按 1/2/3/4 键在 首页/提到我的/私信/关注的话题 页面间切换. ',
 	'右击消息中的图片小图, 将在新窗口打开大图. ',
 	'窗口模式运行时最小化, 有新消息时任务栏图标会闪烁. ',
 	'如果您不希望 PREFiX 播放提示音, 可以在设置页关闭. ',
@@ -1465,3 +1470,5 @@ var is_first_run = lscache.get('is_first_run') !== false;
 lscache.set('is_first_run', false);
 
 setInterval(getRateLimit, 3 * 60 * 1000);
+
+var startup = true;
