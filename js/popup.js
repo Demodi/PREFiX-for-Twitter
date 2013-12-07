@@ -508,6 +508,12 @@ function initMainUI() {
 		e.preventDefault();
 		e.stopPropagation();
 		createTab(e.currentTarget.href);
+	}).delegate('[data-hashtag]', 'click', function(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		var keyword = $(e.target).attr('data-hashtag');
+		searches_model.search_keyword = decodeURIComponent(keyword);
+		$('#navigation-bar .saved-searches').trigger('click');
 	}).delegate('.photo img', 'contextmenu', function(e) {
 		var large_url = e.target.dataset.largeImg;
 		if (large_url) {
@@ -864,6 +870,9 @@ function loadOldder() {
 				}
 			});
 		} else {
+			if (k === null) {
+				k = searches_model.keyword;
+			}
 			var id = oldest_tweet.id_str;
 			PREFiX.getInstanceByRateLimit('searchTweets')({
 				q: k,
@@ -1621,7 +1630,7 @@ searches_model.initialize = function() {
 		var keyword = searches_model.keyword;
 		searches_model.tweets = [];
 		var tweets;
-		bg_win.saved_searches_items.some(function(item) {
+		var is_saved = bg_win.saved_searches_items.some(function(item) {
 			if (item.keyword !== keyword) return;
 			tweets = JSON.parse(JSON.stringify(item.tweets));
 			lscache.set('saved-search-' + keyword + '-id', tweets[0].id_str);
@@ -1629,8 +1638,20 @@ searches_model.initialize = function() {
 			item.check();
 			return true;
  		});
-		unshift(searches_model.tweets, tweets);
-		PREFiX.updateTitle();
+ 		if (is_saved) {
+			unshift(searches_model.tweets, tweets);
+			PREFiX.updateTitle();
+		} else {
+			PREFiX.getInstanceByRateLimit('searchTweets')({
+				q: keyword,
+				count: PREFiX.settings.current.tweetsPerPage
+			}).setupAjax({
+				lock: search
+			}).next(function(data) {
+				tweets = data.statuses;
+				unshift(searches_model.tweets, tweets);
+			});
+		}
 	}
 
 	function refreshCount() {
@@ -1650,8 +1671,8 @@ searches_model.initialize = function() {
 		});
 	}
 
+	var my_tl_id = '##MY_TIMELINE##';
 	if (! $('#topic-selector').length) {
-		var my_tl_id = '##MY_TIMELINE##';
 		var fav_id ='##MY_FAVORITES##';
 
 		var $selector = $('<select />');
@@ -1674,6 +1695,12 @@ searches_model.initialize = function() {
 			$selector.append($item);
 		});
 
+		var $search = $('<option />');
+		$search.text('搜索');
+		$search.prop('value', '##SEARCH##');
+		$search.prop('disabled', true);
+		$selector.append($search);
+
 		$selector.val(my_tl_id);
 		$selector.appendTo('#title');
 
@@ -1684,6 +1711,10 @@ searches_model.initialize = function() {
 			} else if (this.value === fav_id) {
 				searches_model.keyword = '';
 				showFavorites();
+			} else if (this.value === '##SEARCH##') {
+				searches_model.keyword = searches_model.search_keyword;
+				delete searches_model.search_keyword;
+				search();
 			} else {
 				searches_model.keyword = this.value;
 				search();
@@ -1700,7 +1731,9 @@ searches_model.initialize = function() {
 	});
 
 	var $selector = $('#topic-selector');
-	if (last) {
+	if (searches_model.search_keyword) {
+		$selector.val('##SEARCH##');
+	} else if (last) {
 		$selector.val(searches_model.keyword);
 	} else if (! last && bg_win.getSavedSearchTweetsCount()) {
 		bg_win.saved_searches_items.some(function(item) {
@@ -1710,7 +1743,14 @@ searches_model.initialize = function() {
 			}
 		});
 	} else if (searches_model.keyword) {
-		$selector.val(searches_model.keyword);
+		var keyword = searches_model.keyword;
+		var is_saved = [].slice.call($selector.find('option')).
+			some(function(option) {
+				return option.value === keyword;
+			});
+		$selector.val(is_saved ? keyword : my_tl_id);
+	} else {
+		$selector.val(my_tl_id);
 	}
 	$selector.trigger('change');
 

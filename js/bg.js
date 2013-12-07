@@ -1289,12 +1289,7 @@ Ripple.events.observe('process_tweet', function(tweet) {
 						'">' + entity.display_url + '</a>';
 					break;
 				case 'hashtag':
-					var search = Ripple.helpers.param({
-							q: '#' + entity.text,
-							src: 'hash'
-						});
-					text_to_add = '<a href="http://twitter.com/search?' +
-						search + '" data-hashtag="' + entity.text +
+					text_to_add = '<a data-hashtag="' + entity.text +
 						'">#' + entity.text + '</a>';
 					break;
 				case 'mention':
