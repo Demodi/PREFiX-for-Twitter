@@ -1187,6 +1187,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 			}
 		}
 		$textarea.prop('placeholder', placeholder);
+		$('#compose-bar').toggleClass('uploading-not-supported', vm.type === 'send-dm');
 	}
 	vm.onblur = function(e) {
 		$textarea.prop('placeholder', '');
@@ -1196,6 +1197,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 			vm.user = '';
 			vm.screen_name = '';
 		}
+		$('#compose-bar').toggleClass('uploading-not-supported', vm.type === 'send-dm');
 	}
 	vm.ondblclick = function(e) {
 		if (e.ctrlKey || e.metaKey) {
