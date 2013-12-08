@@ -277,7 +277,7 @@ function hideFollowingTip() {
 }
 
 function showRatingPage() {
-	var url = 'https://chrome.google.com/webstore/detail/prefix/gjpcbbbopajjjnkbkeaflldnocoppcpc/reviews';
+	var url = 'https://chrome.google.com/webstore/detail/prefix/dcmnjbgdfjhikldahhhjhccnnpjlcodg/reviews';
 	createTab(url, true);
 	hideRatingTip();
 }
