@@ -1097,6 +1097,7 @@ function showRelatedTweets(e) {
 	$context_tl.scrollTop(0);
 	context_tl_model.tweets = [];
 	var tweet = this.$vmodel.tweet.$model;
+	tweet = tweet.retweeted_status || tweet;
 	var tweets = [];
 	(function get() {
 		push(tweets, [ tweet ]);

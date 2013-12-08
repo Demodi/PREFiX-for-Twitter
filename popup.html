@@ -115,7 +115,7 @@
                   <img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
                 </div>
               </div>
-              <div ms-if="!! tweet.in_reply_to_status_id" class="context">
+              <div ms-if="!! (tweet.retweeted_status || tweet).in_reply_to_status_id" class="context">
                 <span ms-click="showRelatedTweets" title="查看上下文消息"></span>
               </div>
             </div>
@@ -147,7 +147,7 @@
                   <img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
                 </div>
               </div>
-              <div ms-if="!! tweet.in_reply_to_status_id" class="context">
+              <div ms-if="!! (tweet.retweeted_status || tweet).in_reply_to_status_id" class="context">
                 <span ms-click="showRelatedTweets" title="查看上下文消息"></span>
               </div>
             </div>
@@ -199,7 +199,7 @@
                   <img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
                 </div>
               </div>
-              <div ms-if="!! tweet.in_reply_to_status_id" class="context">
+              <div ms-if="!! (tweet.retweeted_status || tweet).in_reply_to_status_id" class="context">
                 <span ms-click="showRelatedTweets" title="查看上下文消息"></span>
               </div>
             </div>
