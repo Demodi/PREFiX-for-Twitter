@@ -297,7 +297,6 @@ function hideRatingTip() {
 }
 
 function sendDM(id, name) {
-	if (id === PREFiX.account.id_str) return;
 	composebar_model.text = '';
 	composebar_model.type = 'send-dm';
 	composebar_model.id = '';
@@ -503,7 +502,13 @@ function initMainUI() {
 		e.stopImmediatePropagation();
 		e.preventDefault();
 		var data = $(this).data('send-dm').split(':');
-		sendDM(data[0], data[1]);
+		var id = data[0];
+		if (id === PREFiX.account.id_str) {
+			searches_model.show_my_timeline = true;
+			$('#navigation-bar .saved-searches').trigger('click');
+		} else {
+			sendDM(id, data[1]);
+		}
 	}).delegate('a', 'click', function(e) {
 		if (e.currentTarget.href.indexOf('http://') !== 0 &&
 			e.currentTarget.href.indexOf('https://') !== 0)
@@ -1675,21 +1680,18 @@ searches_model.initialize = function() {
 		});
 	}
 
-	var my_tl_id = '##MY_TIMELINE##';
 	if (! $('#topic-selector').length) {
-		var fav_id ='##MY_FAVORITES##';
-
 		var $selector = $('<select />');
 		$selector.prop('id', 'topic-selector');
 
 		var $my_tl = $('<option />');
 		$my_tl.text('我的消息');
-		$my_tl.prop('value', my_tl_id);
+		$my_tl.prop('value', '##MY_TIMELINE##');
 		$selector.append($my_tl);
 
 		var $fav = $('<option />');
 		$fav.text('我的收藏');
-		$fav.prop('value', fav_id);
+		$fav.prop('value', '##MY_FAVORITES##');
 		$selector.append($fav);
 
 		bg_win.saved_searches_items.some(function(item) {
@@ -1705,14 +1707,15 @@ searches_model.initialize = function() {
 		$search.prop('disabled', true);
 		$selector.append($search);
 
-		$selector.val(my_tl_id);
+		$selector.val('##MY_TIMELINE##');
 		$selector.appendTo('#title');
 
 		$selector.on('change', function(e) {
-			if (this.value === my_tl_id) {
+			if (this.value === '##MY_TIMELINE##') {
 				searches_model.keyword = '';
+				delete searches_model.show_my_timeline;
 				showMyTimeline();
-			} else if (this.value === fav_id) {
+			} else if (this.value === '##MY_FAVORITES##') {
 				searches_model.keyword = '';
 				showFavorites();
 			} else if (this.value === '##SEARCH##') {
@@ -1735,7 +1738,9 @@ searches_model.initialize = function() {
 	});
 
 	var $selector = $('#topic-selector');
-	if (searches_model.search_keyword) {
+	if (searches_model.show_my_timeline) {
+		$selector.val('##MY_TIMELINE##');
+	} else if (searches_model.search_keyword) {
 		$selector.val('##SEARCH##');
 	} else if (last) {
 		$selector.val(searches_model.keyword);
@@ -1752,9 +1757,9 @@ searches_model.initialize = function() {
 			some(function(option) {
 				return option.value === keyword;
 			});
-		$selector.val(is_saved ? keyword : my_tl_id);
+		$selector.val(is_saved ? keyword : '##MY_TIMELINE##');
 	} else {
-		$selector.val(my_tl_id);
+		$selector.val('##MY_TIMELINE##');
 	}
 	$selector.trigger('change');
 
