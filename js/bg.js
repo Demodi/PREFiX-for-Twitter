@@ -1402,7 +1402,8 @@ var usage_tips = [
 	'按 PageUp/PageDown 可以快速翻页. ',
 	'按 Home/End 可以快速滑动到页面顶端/末端. ',
 	'您可以在设置页启用 Sub-Consumer 来增加可用 API 限额. ',
-	'当您把鼠标放在用户名后面的 # 上时, 显示推友当地时间. '
+	'当您把鼠标放在用户名后面的 # 上时, 显示推友当地时间. ',
+	'您可以设置浏览器启动时自动打开 PREFiX 窗口. '
 ];
 
 var PREFiX = this.PREFiX = {

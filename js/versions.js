@@ -1,4 +1,7 @@
 var history = {
+	'0.1.0': [
+		'首次发布'
+	]
 };
 
 var manifest = chrome.app.getDetails();
