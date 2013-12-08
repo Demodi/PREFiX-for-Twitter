@@ -621,7 +621,7 @@ function update() {
 	].map(function(d) {
 		return d.error(function(e) {
 			var prefix = 'PREFiX for Twitter - ';
-			var default_error = prefix + 'PREFiX for Twitter - 网络连接断开或内部错误';
+			var default_error = prefix + '网络连接断开或内部错误';
 			chrome.browserAction.setBadgeText({
 				text: ' '
 			});
