@@ -1111,7 +1111,7 @@ Ripple.events.observe('process_tweet', function(tweet) {
 	if (tweet.user) {
 		tweet.is_self = tweet.user.id === PREFiX.account.id;
 	}
-	var created_at = (tweet.retweeted_status || tweet).created_at;
+	var created_at = tweet.created_at;
 	tweet.fullTime = (function() {
 		var now = new Date;
 		var local_utc_offset = now.getTimezoneOffset() * 60 * 1000;
@@ -1138,7 +1138,8 @@ Ripple.events.observe('process_tweet', function(tweet) {
 		time_zone = (time_zone > 0 ? '-' : '+') + parsed.join('');
 		return getFullTime(time) + ' ' + time_zone;
 	})();
-	tweet.relativeTime = '';
+	tweet.relativeTime = getRelativeTime(created_at);
+	tweet.shortTime = getShortTime(created_at);
 
 	if ((tweet.is_self && ! tweet.retweeted) ||
 		(tweet.user && tweet.user.protected)) {

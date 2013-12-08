@@ -1581,7 +1581,8 @@ html.panel-mode #new-window {
 	margin: 0 5px;
 	pointer-events: none;
 }
-.tweet-list .retweeted-by {
+.tweet-list .retweeted-by,
+.tweet-list .retweeted-by span {
 	font-size: 12px !important;
 	color: #999;
 }

@@ -46,18 +46,18 @@
     </div>
   	<div id="context-timeline">
   		<ul ms-controller="context-timeline" ms-each-tweet="tweets">
-        <li class="fix" ms-class-protected="tweet.user.protected">
+        <li class="fix" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
           <div class="avatar">
-            <a ms-title="{{tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name}} (@{{tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"><img ms-src="tweet.retweeted_status ? tweet.retweeted_status.user.profile_image_url : tweet.user.profile_image_url" /></a>
+            <a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name"><img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url" /></a>
           </div>
           <div class="content">
             <div class="info fix">
-              <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)" class="name" ms-text="tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name"></a>
-              <span class="screen-name" ms-text="'@' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"></span>
-              <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
-              <span class="timestamp" ms-html="tweet.relativeTime"></span>
+              <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="(tweet.retweeted_status || tweet).user.name"></a>
+              <span class="screen-name" ms-text="'@' + (tweet.retweeted_status || tweet).user.screen_name"></span>
+              <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
+              <span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
             </div>
-            <div class="tweet-content" ms-html="tweet.fixedText"></div>
+            <div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
             <div class="photo" ms-if="!! tweet.photo">
                   <img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url" />
             </div>
@@ -100,17 +100,17 @@
                 <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏' : '收藏'"></a>
               </div>
               <div class="avatar">
-                <a ms-title="{{tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name}} (@{{tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"><img ms-src="tweet.retweeted_status ? tweet.retweeted_status.user.profile_image_url : tweet.user.profile_image_url" /></a>
+                <a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name"><img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url" /></a>
               </div>
               <div class="content">
                 <div class="info fix">
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)" class="name" ms-text="tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name" ms-data-send-dm="tweet.user.id_str + ':' + tweet.user.screen_name"></a>
-                  <span class="screen-name" ms-text="'@' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"></span>
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
-                  <span class="timestamp" ms-html="tweet.relativeTime"></span>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="(tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name"></a>
+                  <span class="screen-name" ms-text="'@' + (tweet.retweeted_status || tweet).user.screen_name"></span>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
+                  <span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
                 </div>
-                <div class="tweet-content" ms-html="tweet.retweeted_status ? tweet.retweeted_status.fixedText : tweet.fixedText"></div>
-                <div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-text="'Retweeted by ' + tweet.user.name + ' (@' + tweet.user.screen_name + ')'"></div>
+                <div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
+                <div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'@' + tweet.user.screen_name + '\'>' + tweet.user.name + '</span> @ ' + tweet.shortTime"></div>
                 <div class="photo" ms-if="!! tweet.photo">
                   <img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
                 </div>
@@ -132,17 +132,17 @@
                 <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏' : '收藏'"></a>
               </div>
               <div class="avatar">
-                <a ms-title="{{tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name}} (@{{tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"><img ms-src="tweet.retweeted_status ? tweet.retweeted_status.user.profile_image_url : tweet.user.profile_image_url" /></a>
+                <a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name"><img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url" /></a>
               </div>
               <div class="content">
                 <div class="info fix">
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)" class="name" ms-text="tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name" ms-data-send-dm="tweet.user.id_str + ':' + tweet.user.screen_name"></a>
-                  <span class="screen-name" ms-text="'@' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"></span>
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
-                  <span class="timestamp" ms-html="tweet.relativeTime"></span>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="(tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name"></a>
+                  <span class="screen-name" ms-text="'@' + (tweet.retweeted_status || tweet).user.screen_name"></span>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
+                  <span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
                 </div>
-                <div class="tweet-content" ms-html="tweet.retweeted_status ? tweet.retweeted_status.fixedText : tweet.fixedText"></div>
-                <div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-text="'Retweeted by ' + tweet.user.name + ' (@' + tweet.user.screen_name + ')'"></div>
+                <div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
+                <div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'@' + tweet.user.screen_name + '\'>' + tweet.user.name + '</span> @ ' + tweet.shortTime"></div>
                 <div class="photo" ms-if="!! tweet.photo">
                   <img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
                 </div>
@@ -175,7 +175,7 @@
           </li>
         </ul>
         <ul id="saved-searches" class="tweet-list fix" ms-controller="saved-searches" ms-each-tweet="tweets">
-          <li ms-class-my-tweet="tweet.is_self" ms-class-protected="tweet.user.protected">
+          <li ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
             <div class="tweet fix">
               <div class="action-icons">
                 <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除"></a>
@@ -184,17 +184,17 @@
                 <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏' : '收藏'"></a>
               </div>
               <div class="avatar">
-                <a ms-title="{{tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name}} (@{{tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"><img ms-src="tweet.retweeted_status ? tweet.retweeted_status.user.profile_image_url : tweet.user.profile_image_url" /></a>
+                <a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name"><img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url" /></a>
               </div>
               <div class="content">
                 <div class="info fix">
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)" class="name" ms-text="tweet.retweeted_status ? tweet.retweeted_status.user.name : tweet.user.name"></a>
-                  <span class="screen-name" ms-text="'@' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name)"></span>
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status ? tweet.retweeted_status.user.screen_name : tweet.user.screen_name) + '/status/' + (tweet.retweeted_status ? tweet.retweeted_status.id_str : tweet.id_str)" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
-                  <span class="timestamp" ms-html="tweet.relativeTime"></span>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="(tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name"></a>
+                  <span class="screen-name" ms-text="'@' + (tweet.retweeted_status || tweet).user.screen_name"></span>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
+                  <span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
                 </div>
-                <div class="tweet-content" ms-html="tweet.retweeted_status ? tweet.retweeted_status.fixedText : tweet.fixedText" ms-class-bold="tweet.is_unread"></div>
-                <div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-text="'Retweeted by ' + tweet.user.name + ' (@' + tweet.user.screen_name + ')'"></div>
+                <div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
+                <div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'@' + tweet.user.screen_name + '\'>' + tweet.user.name + '</span> @ ' + tweet.shortTime"></div>
                 <div class="photo" ms-if="!! tweet.photo">
                   <img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
                 </div>

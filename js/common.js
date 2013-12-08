@@ -127,8 +127,11 @@ re.compile('[「\u4E00-\u9FA5\uf900-\ufa2d」]', 'g');
 function fixTweetList(tweets) {
 	var $text = $('<div />');
 	tweets.forEach(function(tweet) {
-		var created_at = (tweet.retweeted_status || tweet).created_at;
-		tweet.relativeTime = getRelativeTime(created_at);
+		tweet.relativeTime = getRelativeTime(tweet.created_at);
+		var retweeted = tweet.retweeted_status;
+		if (retweeted) {
+			retweeted.relativeTime = getRelativeTime(retweeted.created_at);
+		}
 	});
 	return tweets.sort(function(tweet_a, tweet_b) {
 		return tweet_b.id - tweet_a.id;

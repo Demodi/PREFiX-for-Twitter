@@ -234,9 +234,12 @@ function updateRelativeTime() {
 	var current = getCurrent();
 	if (! current || (! current.tweets && ! current.messages))
 		return;
-	(current.tweets || current.messages).forEach(function(s) {
-		var created_at = (s.retweeted_status || s).created_at;
-		s.relativeTime = getRelativeTime(created_at);
+	(current.tweets || current.messages).forEach(function(t) {
+		t.relativeTime = getRelativeTime(t.created_at);
+		var retweeted = t.retweeted_status;
+		if (retweeted) {
+			retweeted.relativeTime = getRelativeTime(retweeted.created_at);
+		}
 	});
 }
 
