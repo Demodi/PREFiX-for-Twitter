@@ -1047,17 +1047,18 @@ var playSound = (function() {
 	var timeout;
 	var last_played = new Date;
 	last_played.setFullYear(1970);
-	return function() {
+	return function(force) {
 		clearTimeout(timeout);
-		if (! settings.current.playSound)
+		if (! settings.current.playSound && ! force)
 			return;
 		timeout = setTimeout(function() {
 			if (audio.networkState !== 1)
 				return playSound();
 			var now = new Date;
-			if (now - last_played < 15 * 1000)
+			if (now - last_played < 15 * 1000 && ! force)
 				return;
 			last_played = now;
+			audio.volume = settings.current.volume;
 			audio.play();
 		}, 50);
 	}
@@ -1359,7 +1360,8 @@ var settings = {
 		drawAttention: true,
 		tweetsPerPage: 50,
 		showSavedSearchCount: true,
-		createPopAtStartup: false
+		createPopAtStartup: false,
+		volume: 1
 	},
 	load: function() {
 		var local_settings = lscache.get('settings') || { };
@@ -1404,7 +1406,8 @@ var usage_tips = [
 	'按 Home/End 可以快速滑动到页面顶端/末端. ',
 	'您可以在设置页启用 Sub-Consumer 来增加可用 API 限额. ',
 	'当您把鼠标放在用户名后面的 # 上时, 显示推友当地时间. ',
-	'您可以设置浏览器启动时自动打开 PREFiX 窗口. '
+	'您可以设置浏览器启动时自动打开 PREFiX 窗口. ',
+	'如果您觉得提示音音量过大, 可以在设置页调整音量. '
 ];
 
 var PREFiX = this.PREFiX = {

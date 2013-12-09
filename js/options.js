@@ -29,6 +29,23 @@ $(function() {
 		}
 	});
 
+	var $volume = $('#volume');
+	$('[key="volume"]').on('change', function(e) {
+		var volume = +$(this).val();
+		$volume.text(parseInt(volume * 100, 10) + '%');
+		PREFiX.settings.current.volume = volume;
+	}).trigger('change');
+
+	var $play_sound = $('[key="playSound"]');
+	$play_sound.on('change', function(e) {
+		var checked = $play_sound.prop('checked');
+		$('[key="volume"]').prop('disabled', ! checked);
+	}).trigger('change');
+
+	$('#playSound').click(function(e) {
+		bg_win.playSound(true);
+	});
+
 	var $tweets_per_page = $('#tweetsPerPage');
 	$('[key="tweetsPerPage"]').on('change', function(e) {
 		$tweets_per_page.text($(this).val());
