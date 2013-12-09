@@ -1348,7 +1348,9 @@ var tl_model = avalon.define('home-timeline', function(vm) {
 	});
 });
 tl_model.tweets.$watch('length', function() {
-	PREFiX.homeTimeline.tweets = tl_model.$model.tweets;
+	PREFiX.homeTimeline.tweets = tl_model.$model.tweets.map(function(t) {
+		return t.$model || t;
+	});
 });
 tl_model.initialize = function() {
 	$('#navigation-bar .home-timeline').addClass('current');
@@ -1432,7 +1434,9 @@ var mentions_model = avalon.define('mentions', function(vm) {
 	});
 });
 mentions_model.tweets.$watch('length', function() {
-	PREFiX.mentions.tweets = mentions_model.$model.tweets;
+	PREFiX.mentions.tweets = mentions_model.$model.tweets.map(function(t) {
+		return t.$model || t;
+	});
 });
 mentions_model.initialize = function() {
 	$('#navigation-bar .mentions').addClass('current');
@@ -1531,7 +1535,9 @@ var directmsgs_model = avalon.define('directmsgs', function(vm) {
 	});
 });
 directmsgs_model.messages.$watch('length', function() {
-	PREFiX.directmsgs.messages = directmsgs_model.$model.messages;
+	PREFiX.directmsgs.messages = directmsgs_model.$model.messages.map(function(m) {
+		return m.$model || m;
+	});
 });
 directmsgs_model.initialize = function() {
 	$('#navigation-bar .directmsgs').addClass('current');
