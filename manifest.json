@@ -42,7 +42,7 @@
 	"manifest_version": 2,
 	"name": "PREFiX for Twitter",
 	"options_page": "options.html",
-	"permissions": [ "tabs", "contextMenus", "notifications", "*://*.twitter.com/*" ],
+	"permissions": [ "tabs", "contextMenus", "notifications", "*://*.twitter.com/*", "*://*.twimg.com/*" ],
 	"version": "0.1.0",
 	"minimum_chrome_version": "28"
 }

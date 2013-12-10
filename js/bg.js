@@ -1153,6 +1153,8 @@ Ripple.events.observe('process_tweet', function(tweet) {
 	var user = tweet.user || tweet.sender;
 	if (user) {
 		user.profile_image_url = user.profile_image_url.replace('_normal', '');
+		var image_http = new Image;
+		image_http.src = user.profile_image_url;
 		user.profile_image_url_https = user.profile_image_url_https.replace('_normal', '');
 	}
 
