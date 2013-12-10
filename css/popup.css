@@ -1583,6 +1583,11 @@ html.panel-mode #new-window {
 	margin: 0 5px;
 	pointer-events: none;
 }
+.tweet-list .tweet-content a.focused {
+	outline: 1px dotted rgba(82, 168, 236, .5) !important;
+	background: rgba(82, 168, 236, .25);
+	color: #666 !important;
+}
 .tweet-list .retweeted-by,
 .tweet-list .retweeted-by span {
 	font-size: 12px !important;
