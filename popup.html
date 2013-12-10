@@ -193,7 +193,7 @@
                   <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
                   <span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
                 </div>
-                <div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
+                <div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText" ms-class-bold="tweet.is_unread"></div>
                 <div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'@' + tweet.user.screen_name + '\'>' + tweet.user.name + '</span> @ ' + tweet.shortTime"></div>
                 <div class="photo" ms-if="!! tweet.photo">
                   <img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
