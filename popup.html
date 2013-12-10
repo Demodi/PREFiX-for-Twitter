@@ -67,8 +67,8 @@
   	</div>
     <div id="header">
       <div id="top-bar" class="fix">
-        <h1 title="点击回到顶部或刷新"><b>PREFiX</b><span id="back-to-top"></span></h1>
-        <span id="new-window" title="弹出到新窗口"></span>
+        <h1 title="点击回到顶部或刷新 (快捷键 H)"><b>PREFiX</b><span id="back-to-top"></span></h1>
+        <span id="new-window" title="弹出到新窗口 (快捷键 P)"></span>
         <ul id="navigation-bar" ms-controller="navigation">
           <li class="home-timeline" title="首页 (快捷键 1)" ms-click="showHomeTimeline"><span class="count"></span></li>
           <li class="mentions" title="提到我的 (快捷键 2)" ms-click="showMentions"><span class="count"></span></li>
@@ -77,7 +77,7 @@
         </ul>
       </div>
       <div id="compose-bar" ms-controller="composebar-textarea">
-        <textarea class="content" title="Ctrl + Enter 或双击提交" ms-keydown="onkeydown" ms-dblclick="ondblclick" ms-focus="onfocus" ms-blur="onblur" ms-duplex="text"></textarea>
+        <textarea class="content" title="Ctrl + Enter 或双击提交 (空格键使输入框得到或失去焦点)" ms-keydown="onkeydown" ms-dblclick="ondblclick" ms-focus="onfocus" ms-blur="onblur" ms-duplex="text" tabIndex=1></textarea>
         <span id="uploading-photo" title="上传照片"><input type="file" id="file" /></span>
       </div>
     </div>
@@ -91,81 +91,81 @@
       </div>
       <div id="stream">
         <ul id="home-timeline" class="tweet-list fix" ms-controller="home-timeline" ms-each-tweet="tweets">
-          <li ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
+          <li ms-data-id="tweet.id_str" ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
             <div class="tweet fix">
               <div class="action-icons">
-                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除"></a>
-                <a ms-click="reply" class="reply" title="回复"></a>
-                <a ms-click="retweet" ms-on-contextmenu="repost" class="repost" ms-class="retweeted: tweet.retweeted" ms-title="tweet.repostOnly ? '引用转发' : '左击 ' + (tweet.retweeted ? 'Unretweet' : 'Retweet') +  ' / 右击引用转发'"></a>
-                <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏' : '收藏'"></a>
+                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除 (快捷键 Shift + D)"></a>
+                <a ms-click="reply" class="reply" title="回复 (快捷键 R)"></a>
+                <a ms-click="retweet" ms-on-contextmenu="repost" class="repost" ms-class="retweeted: tweet.retweeted" ms-title="tweet.repostOnly ? '引用转发 (快捷键 Q)' : '左击 ' + (tweet.retweeted ? 'Unretweet (快捷键 Shift + T)' : 'Retweet (快捷键 T)') +  ' / 右击引用转发 (快捷键 Q)'"></a>
+                <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏 (快捷键 Shift + F)' : '收藏 (快捷键 F)'"></a>
               </div>
               <div class="avatar">
                 <a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name"><img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url" /></a>
               </div>
               <div class="content">
                 <div class="info fix">
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="(tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name"></a>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="(tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name" ms-title="'发送私信给 @' + (tweet.retweeted_status || tweet).user.screen_name + ' (快捷键 D)'"></a>
                   <span class="screen-name" ms-text="'@' + (tweet.retweeted_status || tweet).user.screen_name"></span>
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
                   <span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
                 </div>
                 <div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
                 <div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'@' + tweet.user.screen_name + '\'>' + tweet.user.name + '</span> @ ' + tweet.shortTime"></div>
-                <div class="photo" ms-if="!! tweet.photo">
+                <div class="photo" ms-if="!! tweet.photo" title="查看大图 (快捷键 V)">
                   <img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
                 </div>
               </div>
               <div ms-if="!! (tweet.retweeted_status || tweet).in_reply_to_status_id" class="context">
-                <span ms-click="showRelatedTweets" title="查看上下文消息"></span>
+                <span ms-click="showRelatedTweets" title="查看上下文消息 (快捷键 C)"></span>
               </div>
             </div>
           </li>
           <li class="breakpoint" ms-if="status.is_breakpoint" ms-text="status.loaded_at"></li>
         </ul>
         <ul id="mentions" class="tweet-list fix" ms-controller="mentions" ms-each-tweet="tweets">
-          <li ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
+          <li ms-data-id="tweet.id_str" ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
             <div class="tweet fix">
               <div class="action-icons">
-                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除"></a>
-                <a ms-click="reply" class="reply" title="回复"></a>
-                <a ms-click="retweet" ms-on-contextmenu="repost" class="repost" ms-class="retweeted: tweet.retweeted" ms-title="tweet.repostOnly ? '引用转发' : '左击 ' + (tweet.retweeted ? 'Unretweet' : 'Retweet') +  ' / 右击引用转发'"></a>
-                <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏' : '收藏'"></a>
+                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除 (快捷键 Shift + D)"></a>
+                <a ms-click="reply" class="reply" title="回复 (快捷键 R)"></a>
+                <a ms-click="retweet" ms-on-contextmenu="repost" class="repost" ms-class="retweeted: tweet.retweeted" ms-title="tweet.repostOnly ? '引用转发 (快捷键 Q)' : '左击 ' + (tweet.retweeted ? 'Unretweet (快捷键 Shift + T)' : 'Retweet (快捷键 T)') +  ' / 右击引用转发 (快捷键 Q)'"></a>
+                <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏 (快捷键 Shift + F)' : '收藏 (快捷键 F)'"></a>
               </div>
               <div class="avatar">
                 <a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name"><img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url" /></a>
               </div>
               <div class="content">
                 <div class="info fix">
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="(tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name"></a>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="(tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name" ms-title="'发送私信给 @' + (tweet.retweeted_status || tweet).user.screen_name + ' (快捷键 D)'"></a>
                   <span class="screen-name" ms-text="'@' + (tweet.retweeted_status || tweet).user.screen_name"></span>
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
                   <span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
                 </div>
                 <div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
                 <div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'@' + tweet.user.screen_name + '\'>' + tweet.user.name + '</span> @ ' + tweet.shortTime"></div>
-                <div class="photo" ms-if="!! tweet.photo">
+                <div class="photo" ms-if="!! tweet.photo" title="查看大图 (快捷键 V)">
                   <img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
                 </div>
               </div>
               <div ms-if="!! (tweet.retweeted_status || tweet).in_reply_to_status_id" class="context">
-                <span ms-click="showRelatedTweets" title="查看上下文消息"></span>
+                <span ms-click="showRelatedTweets" title="查看上下文消息 (快捷键 C)"></span>
               </div>
             </div>
           </li>
         </ul>
         <ul id="directmsgs" class="tweet-list fix" ms-controller="directmsgs" ms-each-message="messages">
-          <li>
+          <li ms-data-id="message.id_str">
             <div class="tweet fix">
               <div class="action-icons">
-                <a ms-dblclick="remove" class="remove" title="双击删除"></a>
-                <a ms-click="reply" class="reply" title="回复"></a>
+                <a ms-dblclick="remove" class="remove" title="双击删除 (快捷键 Shift + D)"></a>
+                <a ms-click="reply" class="reply" title="回复 (快捷键 R)"></a>
               </div>
               <div class="avatar">
                 <a ms-title="{{message.sender.name}} ({{message.sender.id}})"><img ms-src="message.sender.profile_image_url" /></a>
               </div>
               <div class="content">
                 <div class="info fix">
-                  <a ms-href="'https://twitter.com/' + message.sender.id" class="name" ms-text="message.sender.name" ms-data-send-dm="message.sender.id_str + ':' + message.sender.screen_name"></a>
+                  <a ms-href="'https://twitter.com/' + message.sender.id" class="name" ms-text="message.sender.name" ms-data-send-dm="message.sender.id_str + ':' + message.sender.screen_name"  ms-title="'发送私信给 @' + message.sender.screen_name + ' (快捷键 D)'"></a>
                   <span class="timestamp" ms-html="message.relativeTime"></span>
                 </div>
                 <div class="tweet-content" ms-html="message.fixedText"></div>
@@ -175,32 +175,32 @@
           </li>
         </ul>
         <ul id="saved-searches" class="tweet-list fix" ms-controller="saved-searches" ms-each-tweet="tweets">
-          <li ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
+          <li ms-data-id="tweet.id_str" ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
             <div class="tweet fix">
               <div class="action-icons">
-                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除"></a>
-                <a ms-click="reply" class="reply" title="回复"></a>
-                <a ms-click="retweet" ms-on-contextmenu="repost" class="repost" ms-class="retweeted: tweet.retweeted" ms-title="tweet.repostOnly ? '引用转发' : '左击 ' + (tweet.retweeted ? 'Unretweet' : 'Retweet') +  ' / 右击引用转发'"></a>
-                <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏' : '收藏'"></a>
+                <a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除 (快捷键 Shift + D)"></a>
+                <a ms-click="reply" class="reply" title="回复 (快捷键 R)"></a>
+                <a ms-click="retweet" ms-on-contextmenu="repost" class="repost" ms-class="retweeted: tweet.retweeted" ms-title="tweet.repostOnly ? '引用转发 (快捷键 Q)' : '左击 ' + (tweet.retweeted ? 'Unretweet (快捷键 Shift + T)' : 'Retweet (快捷键 T)') +  ' / 右击引用转发 (快捷键 Q)'"></a>
+                <a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏 (快捷键 Shift + F)' : '收藏 (快捷键 F)'"></a>
               </div>
               <div class="avatar">
                 <a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name"><img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url" /></a>
               </div>
               <div class="content">
                 <div class="info fix">
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="(tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name"></a>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="(tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name" ms-title="'发送私信给 @' + (tweet.retweeted_status || tweet).user.screen_name + ' (快捷键 D)'"></a>
                   <span class="screen-name" ms-text="'@' + (tweet.retweeted_status || tweet).user.screen_name"></span>
-                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
+                  <a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime" class="permanent-link">#</a>
                   <span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
                 </div>
                 <div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText" ms-class-bold="tweet.is_unread"></div>
                 <div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'@' + tweet.user.screen_name + '\'>' + tweet.user.name + '</span> @ ' + tweet.shortTime"></div>
-                <div class="photo" ms-if="!! tweet.photo">
+                <div class="photo" ms-if="!! tweet.photo" title="查看大图 (快捷键 V)">
                   <img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
                 </div>
               </div>
               <div ms-if="!! (tweet.retweeted_status || tweet).in_reply_to_status_id" class="context">
-                <span ms-click="showRelatedTweets" title="查看上下文消息"></span>
+                <span ms-click="showRelatedTweets" title="查看上下文消息 (快捷键 C)"></span>
               </div>
             </div>
           </li>

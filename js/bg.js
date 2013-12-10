@@ -770,17 +770,20 @@ function unload() {
 	PREFiX.homeTimeline = {
 		tweets: [],
 		buffered: [],
-		scrollTop: 0
+		scrollTop: 0,
+		current: ''
 	};
 	PREFiX.mentions = { 
 		tweets: [],
 		buffered: [],
-		scrollTop: 0
+		scrollTop: 0,
+		current: ''
 	};
 	PREFiX.directmsgs = { 
 		messages: [],
 		buffered: [],
-		scrollTop: 0
+		scrollTop: 0,
+		current: ''
 	};
 	PREFiX.friends = [];
 	PREFiX.keyword = '';
@@ -1407,7 +1410,12 @@ var usage_tips = [
 	'您可以在设置页启用 Sub-Consumer 来增加可用 API 限额. ',
 	'当您把鼠标放在用户名后面的 # 上时, 显示推友当地时间. ',
 	'您可以设置浏览器启动时自动打开 PREFiX 窗口. ',
-	'如果您觉得提示音音量过大, 可以在设置页调整音量. '
+	'如果您觉得提示音音量过大, 可以在设置页调整音量. ',
+	'您可以使用 Vim 风格的快捷键操作 PREFiX. ',
+	'您可以按 Shift + D 删除消息. ',
+	'您可以按 F / Shift + F 收藏或取消收藏消息. ',
+	'您可以按 V 放大或缩小图片. ',
+	'您可以按 C 查看或隐藏上下文消息. '
 ];
 
 var PREFiX = this.PREFiX = {
@@ -1445,17 +1453,20 @@ var PREFiX = this.PREFiX = {
 	homeTimeline: {
 		tweets: [],
 		buffered: [],
-		scrollTop: 0
+		scrollTop: 0,
+		current: ''
 	},
 	mentions: { 
 		tweets: [],
 		buffered: [],
-		scrollTop: 0
+		scrollTop: 0,
+		current: ''
 	},
 	directmsgs: { 
 		messages: [],
 		buffered: [],
-		scrollTop: 0
+		scrollTop: 0,
+		current: ''
 	},
 	friends: [],
 	settings: settings,

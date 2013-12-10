@@ -1409,7 +1409,8 @@ html.panel-mode #new-window {
 	-webkit-perspective-origin: top center;
 	perspective-origin: top center;
 }
-.tweet-list li:hover {
+.tweet-list li:hover,
+.tweet-list li.current {
 	background: url('/images/tweet-bg.png') repeat;
 	box-shadow: 0 1px 0 rgba(255, 255, 255, .6) inset;
 }
@@ -1500,7 +1501,8 @@ html.panel-mode #new-window {
 			rgba(248, 248, 248, 1) 25px
 		);
 }
-.tweet-list li:hover .timestamp {
+.tweet-list li:hover .timestamp,
+.tweet-list li.current .timestamp{
 	opacity: 0;
 	background: none;
 }

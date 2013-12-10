@@ -154,6 +154,206 @@ function smoothScrollTo(destination) {
 	});
 }
 
+function findView(model, id) {
+	if (id) {
+		return model.$elem.find('[data-id=' + id + ']');
+	} else {
+		return model.$elem.children().first();
+	}
+}
+
+function findModel(model, id) {
+	var list = model.tweets || model.messages;
+	var model_found;
+	if (id) {
+		list.some(function(item) {
+			if (item.id_str === id) {
+				model_found = item;
+				return true;
+			}
+		});
+	}
+	return model_found || list[0];
+}
+
+function setCurrent(model, id) {
+	var $view = findView(model, id);
+	if ($view.length) {
+		model.current = id;
+		model.$elem.children().removeClass('current');
+		$view.addClass('current');
+	} else {
+		model.current = null;
+	}
+}
+
+function initKeyboardControl() {
+	var model = getCurrent();
+	var list = model.tweets || model.messages;
+	waitFor(function() {
+		return list.length;
+	}, function() {
+		if (! model.current) {
+			model.current = list[0].id_str;
+		}
+		setCurrent(model, model.current);
+	});
+}
+
+function initKeyboardControlEvents() {
+	var min_pos = 0;
+	min_pos += parseInt($main.css('top'), 10);
+	min_pos += $('#title').height();
+	$main.delegate('[data-id]', 'mouseenter', function(e) {
+		setCurrent(getCurrent(), e.currentTarget.getAttribute('data-id'));
+	});
+	$(window).keydown(function(e) {
+		if (e.ctrlKey || e.altKey || e.metaKey) return;
+		switch (e.keyCode) {
+			case 74 /* J */: case 75 /* K */:
+			case 72 /* H */: case 76 /* L */:
+				e.preventDefault();
+				break;
+			default:
+				return;
+		}
+		var current_model = getCurrent();
+		var current_id = current_model.current;
+		var $current_view = findView(current_model, current_id);
+		var is_context_tl = !! $('body.show-context-timeline').length;
+		var is_photo = !! $('body.show-picture').length;
+		if (is_context_tl || is_photo) {
+			var key_matched = 0;
+			switch (e.keyCode) {
+				case 74:
+					key_matched = 40;
+					break;
+				case 75:
+					key_matched = 38;
+					break;
+				case 72:
+					key_matched = 36;
+					break;
+				case 76:
+					key_matched = 35;
+					break;
+			}
+			if (key_matched) {
+				$(window).trigger({
+					type: 'keydown',
+					keyCode: key_matched
+				});
+			}
+			return;
+		}
+		if (e.keyCode === 74) {
+			var $next_view = $current_view.next();
+			if (! $next_view.length) return;
+			var delta = $next_view.offset().top;
+			var current_pos = $main.scrollTop();
+			var height = $current_view.height();
+			var next_view_height = $next_view.height();
+			var target = Math.max(current_pos + height, delta + current_pos - $body.height() + next_view_height);
+			setCurrent(current_model, $next_view.attr('data-id'));
+		} else if (e.keyCode === 75) {
+			var $pre_view = $current_view.prev();
+			if (! $pre_view.length) return;
+			var delta = $pre_view.offset().top;
+			var current_pos = $main.scrollTop();
+			var height = $pre_view.height();
+			var target = Math.min(current_pos - height, delta + current_pos - min_pos);
+			setCurrent(current_model, $pre_view.attr('data-id'));
+		} else if (e.keyCode === 72) {
+			var list = current_model.tweets || current_model.messages;
+			target = 0;
+			if ($scrolling_elem === $main) {
+				if ($main.scrollTop() === 0) {
+					PREFiX.update();
+				}
+				setCurrent(current_model, list[0].id_str);
+			}
+
+		} else if (e.keyCode === 76) {
+			var list = current_model.tweets || current_model.messages;
+			target = $main[0].scrollHeight - $main.height();
+			setCurrent(current_model, list[list.length - 1].id_str);
+		}
+		smoothScrollTo(target);
+	}).keydown(function(e) {
+		if (e.ctrlKey || e.altKey || e.metaKey) return;
+		switch (e.keyCode) {
+			case 86 /* V */: case 67 /* C */:
+			case 70 /* F */: case 81 /* Q */:
+			case 82 /* R */: case 68 /* D */:
+			case 32 /* Space */:
+			case 80 /* P */: case 85 /* U */:
+			case 84 /* T */:
+				e.preventDefault();
+				break;
+			default:
+				return;
+		}
+		var current_model = getCurrent();
+		var $view = findView(current_model, current_model.current);
+		var current = findModel(current_model, current_model.current);
+		if (e.keyCode === 86) {
+			if ($('body.show-picture').length) {
+				hidePicture();
+			} else {
+				$view.find('.photo img').click();
+			}
+		} else if (e.keyCode === 67) {
+			if ($('body.show-context-timeline').length) {
+				$('#context-timeline').trigger('click');
+			} else {
+				$view.find('.context span').click();
+			}
+		} else if (e.keyCode === 70) {
+			var $fav = $view.find('a.favourite');
+			if (e.shiftKey && current.favorited) {
+				$fav[0].click();
+			} else if (! e.shiftKey && ! current.favorited) {
+				$fav[0].click();
+			}
+		} else if (e.keyCode === 81) {
+			var $repost = $view.find('a.repost');
+			if ($repost.length) {
+				var event = new Event('contextmenu');
+				$repost[0].dispatchEvent(event);
+			}
+		} else if (e.keyCode === 84) {
+			var $repost = $view.find('a.repost');
+			if ($repost.length) {
+				if (! current.retweeted || e.shiftKey) {
+					$repost[0].click();
+				}
+			}
+		} else if (e.keyCode === 82) {
+			var $reply = $view.find('a.reply');
+			if ($reply.length) {
+				$reply[0].click();
+			}
+		} else if (e.keyCode === 68 && e.shiftKey) {
+			var $remove = $view.find('a.remove');
+			if ($remove.length) {
+				var event = new Event('dblclick');
+				$remove[0].dispatchEvent(event);
+			}
+		} else if (e.keyCode === 68) {
+			var $name = $view.find('a.name');
+			$name.click();
+		} else if (e.keyCode === 85) {
+			var $link = $view.find('a.permanent-link');
+			$link.click();
+		} else if (e.keyCode === 32 && ! e.shiftKey) {
+			$textarea.focus();
+		} else if (e.keyCode === 80) {
+			if (is_panel_mode) return;
+			$('#new-window').click();
+		}
+	});
+}
+
 var showNotification = (function() {
 	var timeout;
 	return function(text) {
@@ -397,6 +597,13 @@ function initMainUI() {
 		data: PREFiX.friends,
 		search_key: 'string',
 		tpl: '<li data-value="${screen_name}">${name} (@${screen_name})</li>'
+	}).keydown(function(e) {
+		if (! this.value && e.keyCode === 32 &&
+			! (e.shiftKey || e.ctrlKey || e.metaKey)) {
+			e.stopPropagation();
+			e.preventDefault();
+			$textarea.blur();
+		}
 	});
 
 	$app.on({
@@ -606,6 +813,8 @@ function initMainUI() {
 		var event = new Event('click');
 		$link[0].dispatchEvent(event);
 	}).on('keydown', function(e) {
+		if ($(e.target).is('select'))
+			return;
 		switch (e.keyCode) {
 			case 40: case 38:
 				break;
@@ -618,8 +827,8 @@ function initMainUI() {
 			page_height -= parseInt($main.css('top'), 10);
 		}
 		var current_pos = $scrolling_elem.scrollTop();
-		var direction = e.keyCode === 40 ? 1 : -1;
-		smoothScrollTo(current_pos + (page_height * direction));
+		var direction = e.keyCode === 40 ? -1 : 1;
+		$scrolling_elem.trigger('mousewheel', direction);
 	}).on('keydown', function(e) {
 		if (e.keyCode !== 36) return;
 		if ($scrolling_elem === $main)
@@ -642,14 +851,25 @@ function initMainUI() {
 				return;
 		}
 		e.preventDefault();
-		var $win = $(window);
-		var event;
-		for (var i = 0; i < 4; i++) {
-			event = new Event('keydown');
-			event.keyCode = e.keyCode === 33 ? 38 : 40;
-			dispatchEvent(event);
+		var current_pos = $scrolling_elem.scrollTop();
+		var height = $scrolling_elem.height();
+		smoothScrollTo(e.keyCode === 34 ?
+			current_pos + height : current_pos - height);
+	}).on('keydown', function(e) {
+		if (e.keyCode !== 8) return;
+		if ($('body.show-context-timeline').length) {
+			e.preventDefault();
+			$('#context-timeline').trigger('click');
+		} else if ($('body.show-picture').length) {
+			e.preventDefault();
+			hidePicture();
 		}
 	});
+
+	tl_model.$elem = $('#home-timeline');
+	mentions_model.$elem = $('#mentions');
+	directmsgs_model.$elem = $('#directmsgs');
+	searches_model.$elem = $('#saved-searches');
 
 	resetLoadingEffect();
 
@@ -671,8 +891,10 @@ function cutStream() {
 	var tweets_per_page = PREFiX.settings.current.tweetsPerPage;
 	if (current.tweets) {
 		current.tweets = current.tweets.slice(0, tweets_per_page);
+		current.current = current.tweets[0].id_str;
 	} else {
 		current.messages = current.messages.slice(0, tweets_per_page);
+		current.current = current.messages[0].id_str;
 	}
 	current.allLoaded = false;
 }
@@ -986,7 +1208,22 @@ function loadOldder() {
 }
 
 function remove(e) {
-	showNotification('正在删除..')
+	showNotification('正在删除..');
+	var current_model = getCurrent();
+	var current = current_model.current;
+	var next;
+	if (current) {
+		var index;
+		current_model.tweets.some(function(tweet, i) {
+			if (tweet.id_str === current) {
+				index = i;
+				return true;
+			}
+		});
+		if (index === current_model.tweets.length - 1) {
+			index--;
+		}
+	}
 	var self = this;
 	var tweet_id = self.$vmodel.tweet.id_str;
 	PREFiX.user().destroyTweet({
@@ -1006,6 +1243,9 @@ function remove(e) {
 		$item.parents('li').
 		slideUp(function() {
 			self.$vmodel.$remove();
+			if (index >= 0) {
+				setCurrent(current_model, current_model.tweets[index].id_str);
+			}
 		});
 	});
 }
@@ -1057,6 +1297,7 @@ function retweet(vm) {
 				id: tweet.id_str
 			}).next(function(tweet) {
 				$vm.tweets.splice($vmodel.$index, 1, tweet.retweeted_status);
+				showNotification('取消锐推成功!');
 			});
 		} else {
 			PREFiX.user().retweet({
@@ -1327,6 +1568,8 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 });
 
 var tl_model = avalon.define('home-timeline', function(vm) {
+	vm.current = PREFiX.homeTimeline.current;
+
 	vm.remove = remove;
 
 	vm.reply = reply;
@@ -1342,10 +1585,12 @@ var tl_model = avalon.define('home-timeline', function(vm) {
 	vm.tweets = [];
 
 	vm.scrollTop = 0;
-
-	vm.$watch('scrollTop', function(value) {
-		PREFiX.homeTimeline.scrollTop = value;
-	});
+});
+tl_model.$watch('current', function(value) {
+	PREFiX.homeTimeline.current = value;
+});
+tl_model.$watch('scrollTop', function(value) {
+	PREFiX.homeTimeline.scrollTop = value;
 });
 tl_model.tweets.$watch('length', function() {
 	PREFiX.homeTimeline.tweets = tl_model.$model.tweets.map(function(t) {
@@ -1365,6 +1610,7 @@ tl_model.initialize = function() {
 		markBreakpoint();
 		setTimeout(function() {
 			$main.scrollTop(PREFiX.homeTimeline.scrollTop);
+			initKeyboardControl();
 		}, 50);
 		updateRelativeTime();
 	});
@@ -1413,6 +1659,8 @@ tl_model.unload = function() {
 }
 
 var mentions_model = avalon.define('mentions', function(vm) {
+	vm.current = PREFiX.mentions.current;
+
 	vm.remove = remove;
 
 	vm.reply = reply;
@@ -1428,10 +1676,12 @@ var mentions_model = avalon.define('mentions', function(vm) {
 	vm.tweets = [];
 
 	vm.scrollTop = 0;
-
-	vm.$watch('scrollTop', function(value) {
-		PREFiX.mentions.scrollTop = value;
-	});
+});
+mentions_model.$watch('current', function(value) {
+	PREFiX.mentions.current = value;
+});
+mentions_model.$watch('scrollTop', function(value) {
+	PREFiX.mentions.scrollTop = value;
 });
 mentions_model.tweets.$watch('length', function() {
 	PREFiX.mentions.tweets = mentions_model.$model.tweets.map(function(t) {
@@ -1450,6 +1700,7 @@ mentions_model.initialize = function() {
 		mentions_model.tweets = mentions.tweets;
 		setTimeout(function() {
 			$main.scrollTop(PREFiX.mentions.scrollTop);
+			initKeyboardControl();
 		}, 50);
 		updateRelativeTime();
 	});
@@ -1491,8 +1742,25 @@ mentions_model.unload = function() {
 }
 
 var directmsgs_model = avalon.define('directmsgs', function(vm) {
+	vm.current = PREFiX.directmsgs.current;
+
 	vm.remove = function() {
 		showNotification('正在删除..')
+		var current_model = directmsgs_model;
+		var current = current_model.current;
+		var next;
+		if (current) {
+			var index;
+			current_model.messages.some(function(message, i) {
+				if (message.id_str === current) {
+					index = i;
+					return true;
+				}
+			});
+			if (index === current_model.messages.length - 1) {
+				index--;
+			}
+		}
 		var self = this;
 		var message_id = self.$vmodel.message.id_str;
 		PREFiX.user().destroyDirectMessage({
@@ -1512,6 +1780,9 @@ var directmsgs_model = avalon.define('directmsgs', function(vm) {
 			$item.parents('li').
 			slideUp(function() {
 				self.$vmodel.$remove();
+				if (index >= 0) {
+					setCurrent(current_model, current_model.messages[index].id_str);
+				}
 			});
 		});
 	}
@@ -1529,10 +1800,12 @@ var directmsgs_model = avalon.define('directmsgs', function(vm) {
 	vm.messages = [];
 
 	vm.scrollTop = 0;
-
-	vm.$watch('scrollTop', function(value) {
-		PREFiX.directmsgs.scrollTop = value;
-	});
+});
+directmsgs_model.$watch('current', function(value) {
+	PREFiX.directmsgs.current = value;
+});
+directmsgs_model.$watch('scrollTop', function(value) {
+	PREFiX.directmsgs.scrollTop = value;
 });
 directmsgs_model.messages.$watch('length', function() {
 	PREFiX.directmsgs.messages = directmsgs_model.$model.messages.map(function(m) {
@@ -1551,6 +1824,7 @@ directmsgs_model.initialize = function() {
 		directmsgs_model.messages = directmsgs.messages;
 		setTimeout(function() {
 			$main.scrollTop(PREFiX.directmsgs.scrollTop);
+			initKeyboardControl();
 		}, 50);
 		updateRelativeTime();
 	});
@@ -1621,8 +1895,10 @@ searches_model.initialize = function() {
 	function showMyTimeline() {
 		$('#topic-selector').prop('disabled', true);
 		searches_model.tweets = [];
+		searches_model.current = null;
 		PREFiX.getInstanceByRateLimit('getUserTimeline')().next(function(tweets) {
 			unshift(searches_model.tweets, tweets);
+			initKeyboardControl();
 		}).hold(function() {
 			$('#topic-selector').prop('disabled', false);
 		});
@@ -1631,10 +1907,12 @@ searches_model.initialize = function() {
 	function showFavorites() {
 		$('#topic-selector').prop('disabled', true);
 		searches_model.tweets = [];
+		searches_model.current = null;
 		PREFiX.getInstanceByRateLimit('getFavoritedTweets')({
 			count: PREFiX.settings.current.tweetsPerPage
 		}).next(function(tweets) {
 			searches_model.tweets = tweets;
+			initKeyboardControl();
 			updateRelativeTime();
 		}).hold(function() {
 			$('#topic-selector').prop('disabled', false);
@@ -1644,6 +1922,7 @@ searches_model.initialize = function() {
 	function search() {
 		var keyword = searches_model.keyword;
 		searches_model.tweets = [];
+		searches_model.current = null;
 		var tweets;
 		var is_saved = bg_win.saved_searches_items.some(function(item) {
 			if (item.keyword !== keyword) return;
@@ -1655,6 +1934,7 @@ searches_model.initialize = function() {
  		});
  		if (is_saved) {
 			unshift(searches_model.tweets, tweets);
+			initKeyboardControl();
 			PREFiX.updateTitle();
 		} else {
 			PREFiX.getInstanceByRateLimit('searchTweets')({
@@ -1665,6 +1945,7 @@ searches_model.initialize = function() {
 			}).next(function(data) {
 				tweets = data.statuses;
 				unshift(searches_model.tweets, tweets);
+				initKeyboardControl();
 			});
 		}
 	}
@@ -1689,6 +1970,7 @@ searches_model.initialize = function() {
 	if (! $('#topic-selector').length) {
 		var $selector = $('<select />');
 		$selector.prop('id', 'topic-selector');
+		$selector.prop('tabIndex', 2);
 
 		var $my_tl = $('<option />');
 		$my_tl.text('我的消息');
@@ -1798,6 +2080,7 @@ $(function() {
 			$textarea[0].selectionStart = $textarea[0].selectionEnd = 0;
 		}
 		getCurrent().initialize();
+		initKeyboardControlEvents();
 		setTimeout(showUsageTip, 100);
 		var $tip = $('#uploading-photo-tip');
 		var shown = lscache.get('uploading_photo_tip');
