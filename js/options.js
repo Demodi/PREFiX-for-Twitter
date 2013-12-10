@@ -101,7 +101,7 @@ $(function() {
 	$('#photo-count').text(bg_win.getPhotoCount());
 
 	var install_time = lscache.get('install_time');
-	install_time = bg_win.getYMD(install_time);
+	install_time = bg_win.getMDY(install_time);
 	$('#install-time').text(install_time);
 
 	$('#show-updates').click(function(e) {
