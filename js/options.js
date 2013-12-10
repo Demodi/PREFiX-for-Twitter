@@ -90,7 +90,7 @@ $(function() {
 		}
 	});
 
-	var $usage_tip_list = $('#usage-tip-page ol');
+	var $usage_tip_list = $('#usage-tip-page ol').first();
 	bg_win.usage_tips.forEach(function(tip) {
 		var $li = $('<li />');
 		$li.html(tip);
