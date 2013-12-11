@@ -1370,7 +1370,8 @@ var settings = {
 		tweetsPerPage: 50,
 		showSavedSearchCount: true,
 		createPopAtStartup: false,
-		volume: 1
+		volume: 1,
+		holdCtrlToSubmit: false
 	},
 	load: function() {
 		var local_settings = lscache.get('settings') || { };
@@ -1420,7 +1421,8 @@ var usage_tips = [
 	'如果您觉得提示音音量过大, 可以在设置页调整音量. ',
 	'您可以使用 Vim 风格的快捷键操作 PREFiX, 详见设置页. ',
 	'您可以在扩展管理页面末端给 PREFiX 设置快捷键, 从而使用快捷键直接打开 PREFiX 页面. ',
-	'如果您发现 PREFiX 启动时容易卡顿, 建议开启自动抛弃缓存功能, 并设置保留在缓存中的最大消息数量. '
+	'如果您发现 PREFiX 启动时容易卡顿, 建议开启自动抛弃缓存功能, 并设置保留在缓存中的最大消息数量. ',
+	'如果您习惯使用双击选中文本, 请在设置页中开启 "只有按住 Ctrl / Command 键才能双击输入框发送消息". '
 ];
 
 var PREFiX = this.PREFiX = {
