@@ -85,16 +85,16 @@ $(function() {
 		});
 	}).eq(last_used_page).click();
 
-	var is_sub_consumer_enabled = !! lscache.get('sub_access_token');
-	if (is_sub_consumer_enabled) {
-		$('#sub-consumer-info').text('您已经启用了 Sub-Consumer. ');
-		$('#toggle-sub-consumer').text('禁用 Sub-Consumer');
+	var is_dual_consumer_enabled = !! lscache.get('sub_access_token');
+	if (is_dual_consumer_enabled) {
+		$('#dual-consumer-info').text('您已经启用了 Dual-Consumer. ');
+		$('#toggle-dual-consumer').text('禁用 Dual-Consumer');
 	}
 	if (! PREFiX.account) {
-		$('#toggle-sub-consumer').prop('disabled', 'true');
+		$('#toggle-dual-consumer').prop('disabled', 'true');
 	}
-	$('#toggle-sub-consumer').click(function(e) {
-		if (! is_sub_consumer_enabled) {
+	$('#toggle-dual-consumer').click(function(e) {
+		if (! is_dual_consumer_enabled) {
 			bg_win.getPinCode();
 		} else {
 			lscache.remove('sub_access_token');
