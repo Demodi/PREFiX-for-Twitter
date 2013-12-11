@@ -425,6 +425,7 @@ function showUsageTip() {
 	}
 	var pos = lscache.get('usage_tip_pos') || 0;
 	pos = Math.min(pos, usage_tips.length);
+	pos--
 	var tip = usage_tips[pos];
 	var $usage_tip = $('#usage-tip');
 	if (! tip) {
@@ -453,7 +454,7 @@ function showUsageTip() {
 		$title.removeClass('show-usage-tip');
 		$usage_tip.animate({
 			'margin-left': 0
-		}, 400);
+		}, 100);
 	}, 15000);
 }
 
