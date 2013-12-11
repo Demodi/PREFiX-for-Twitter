@@ -425,7 +425,6 @@ function showUsageTip() {
 	}
 	var pos = lscache.get('usage_tip_pos') || 0;
 	pos = Math.min(pos, usage_tips.length);
-	pos--
 	var tip = usage_tips[pos];
 	var $usage_tip = $('#usage-tip');
 	if (! tip) {
