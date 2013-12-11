@@ -783,6 +783,10 @@ function initMainUI() {
 		}
 	}).delegate('.photo img', 'click', function(e) {
 		showPicture(e.target.dataset.largeImg);
+	}).delegate('#picture', 'contextmenu', function(e) {
+		e.preventDefault();
+		createTab(e.target.src);
+		hidePicture();
 	});
 
 	$('h1').click(function(e) {
