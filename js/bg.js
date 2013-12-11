@@ -536,7 +536,7 @@ function updateHomeTimeline(retry_chances, new_tweet_id) {
 			next(function(tweets) {
 				if (retry_chances && new_tweet_id) {
 					var new_tweet_found = tweets.some(function(t) {
-						return t.id === new_tweet_id;
+						return t.id_str === new_tweet_id;
 					});
 					if (! new_tweet_found) {
 						setTimeout(function() {
@@ -550,11 +550,11 @@ function updateHomeTimeline(retry_chances, new_tweet_id) {
 				if (! PREFiX.popupActive && tl.scrollTop < 30) {
 					var buffered_count = tl.buffered.length;
 					var read_count = tl.tweets.length;
-					var tweets_per_page = PREFiX.settings.current.tweetsPerPage;
-					if (buffered_count + read_count > tweets_per_page) {
-						tl.tweets.splice(Math.max(0, tweets_per_page - buffered_count));
-						if (buffered_count > tweets_per_page) {
-							tl.buffered.splice(tweets_per_page);
+					var cache_amount = settings.current.cacheAmount;
+					if (buffered_count + read_count > cache_amount) {
+						tl.tweets.splice(Math.max(0, cache_amount - buffered_count));
+						if (buffered_count > cache_amount) {
+							tl.buffered.splice(cache_amount);
 						}
 					}
 				}
@@ -1361,6 +1361,7 @@ var settings = {
 		playSound: true,
 		smoothScroll: true,
 		autoFlushCache: false,
+		cacheAmount: 75,
 		zoomRatio: '1',
 		drawAttention: true,
 		tweetsPerPage: 50,

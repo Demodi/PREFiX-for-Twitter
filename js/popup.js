@@ -255,6 +255,7 @@ function initKeyboardControlEvents() {
 			var height = $current_view.height();
 			var next_view_height = $next_view.height();
 			var target = Math.max(current_pos + height, delta + current_pos - $body.height() + next_view_height);
+			target = Math.max(target, current_pos + delta + height - $body.height());
 			setCurrent(current_model, $next_view.attr('data-id'));
 		} else if (e.keyCode === 75) {
 			var $pre_view = $current_view.prev();
@@ -300,14 +301,13 @@ function initKeyboardControlEvents() {
 		var $view = findView(current_model, current_model.current);
 		var current = findModel(current_model, current_model.current);
 		if (e.keyCode === 86) {
+			if ($('body.show-picture').length) {
+				hidePicture();
+			} else if (! e.shiftKey) {
+				$view.find('.photo img').click();
+			}
 			if (e.shiftKey) {
 				$view.find('.photo img').trigger('contextmenu');
-			} else {
-				if ($('body.show-picture').length) {
-					hidePicture();
-				} else {
-					$view.find('.photo img').click();
-				}
 			}
 		} else if (e.keyCode === 67) {
 			if ($('body.show-context-timeline').length) {
@@ -426,8 +426,9 @@ function showUsageTip() {
 	var pos = lscache.get('usage_tip_pos') || 0;
 	pos = Math.min(pos, usage_tips.length);
 	var tip = usage_tips[pos];
+	var $usage_tip = $('#usage-tip');
 	if (! tip) {
-		$('#usage-tip').remove();
+		$usage_tip.remove();
 		return;
 	}
 	$('#hide-usage-tip').click(function(e) {
@@ -438,8 +439,21 @@ function showUsageTip() {
 	$('#usage-tip-content').html(tip);
 	var $title = $('#title');
 	$title.addClass('show-usage-tip');
+	var width = $usage_tip.width();
+	var delta = width - $body.width() + 25;
+	if (delta > 0) {
+		setTimeout(function() {
+			$usage_tip.css('margin-left', 0).
+			animate({
+				'margin-left': -delta + 'px'
+			}, 3000);
+		}, 3000);
+	}
 	setTimeout(function() {
 		$title.removeClass('show-usage-tip');
+		$usage_tip.animate({
+			'margin-left': 0
+		}, 400);
 	}, 15000);
 }
 
@@ -1094,6 +1108,27 @@ function insertKeepScrollTop(insert) {
 	}, 50);
 }
 
+function autoScroll(model, list) {
+	list = fixTweetList(list);
+	var item = list.reverse()[0];
+	setTimeout(function() {
+		var $item = model.$elem.find('li[data-id="' + item.id_str + '"]');
+		if (! $item.length) return;
+		var $breakpoint = $item.next('.breakpoint');
+		if ($breakpoint.length) {
+			$item = $breakpoint;
+		}
+		var offset = $item.offset().top + $item.height();
+		var height = $body.height();
+		var pos = $main.scrollTop();
+		var target = Math.max(pos - (height - offset), 0);
+		setCurrent(model, target > 0 ? item.id_str : list[0].id_str);
+		if ($scrolling_elem === $main) {
+			smoothScrollTo(target);
+		}
+	}, 100);
+}
+
 function loadOldder() {
 	var model = getCurrent();
 	if (model.allLoaded) return;
@@ -1541,6 +1576,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 				data['media[]'] = PREFiX.image;
 				PREFiX.user()[ PREFiX.image ? 'uploadPhoto' : 'postTweet' ](data).
 				setupAjax({
+					lock: vm,
 					timeout: PREFiX.image ? 180000 : 30000,
 					onstart: function(e) {
 						if (PREFiX.image) {
@@ -1562,24 +1598,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 					showNotification('发表成功!');
 					vm.text = '';
 					setImage(null);
-					PREFiX.updateHomeTimeline(7, tweet.id).next(function() {
-						if (PREFiX.current === 'tl_model') {
-							var now = new Date;
-							waitFor(function() {
-								return tl_model.tweets.some(function(s) {
-										return tweet.id == s.id;
-									}) || ((new Date) - now > 5000);
-							}, function() {
-								if ($main[0].scrollTop < $main.height() / 2) {
-									setTimeout(function() {
-										goTop(true);
-									}, 100);
-								}
-							});
-						}
-					});
-				}).setupAjax({
-					lock: vm
+					PREFiX.updateHomeTimeline(7, tweet.id_str);
 				}).error(function(e) {
 					if (e.status && e.response) {
 						showNotification(e.response.errors[0].message);
@@ -1683,6 +1702,7 @@ tl_model.initialize = function() {
 			unshift(tl_model.tweets, buffered);
 		} else {
 			setTimeout(function() {
+				var scroll_top = $main.scrollTop();
 				insertKeepScrollTop(function() {
 					if (buffered.length >= 50) {
 						var now = Date.now();
@@ -1696,6 +1716,9 @@ tl_model.initialize = function() {
 						}
 					}
 					unshift(tl_model.tweets, buffered);
+					if (scroll_top <= 30) {
+						autoScroll(tl_model, buffered);
+					}
 					PREFiX.updateTitle();
 				});
 			}, 50);
@@ -1777,8 +1800,12 @@ mentions_model.initialize = function() {
 			unshift(mentions_model.tweets, buffered);
 		} else {
 			setTimeout(function() {
+				var scroll_top = $main.scrollTop();
 				insertKeepScrollTop(function() {
 					unshift(mentions_model.tweets, buffered);
+					if (scroll_top <= 30) {
+						autoScroll(mentions_model, buffered);
+					}
 					PREFiX.updateTitle();
 				});
 			}, 50);
@@ -1901,8 +1928,12 @@ directmsgs_model.initialize = function() {
 			unshift(directmsgs_model.messages, buffered);
 		} else {
 			setTimeout(function() {
+				var scroll_top = $main.scrollTop();
 				insertKeepScrollTop(function() {
 					unshift(directmsgs_model.messages, buffered);
+					if (scroll_top <= 30) {
+						autoScroll(directmsgs_model, buffered);
+					}
 					PREFiX.updateTitle();
 				});
 			}, 50);
