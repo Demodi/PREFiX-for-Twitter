@@ -2186,7 +2186,7 @@ $(function() {
 		setTimeout(showUsageTip, 100);
 		var $tip = $('#uploading-photo-tip');
 		var shown = lscache.get('uploading_photo_tip');
-		if (! shown) {
+		if (! shown && lscache.get('hide-following-tip')) {
 			$tip.show();
 			$('#hide-uploading-photo-tip').click(function(e) {
 				$tip.css({
