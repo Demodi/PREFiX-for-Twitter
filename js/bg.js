@@ -643,6 +643,9 @@ function update() {
 	next(function() {
 		updateTitle();
 		d.call();
+	}).error(function(e) {
+		var time = getShortTime(new Date);
+		console.log('Error thrown @ ' + time, e);
 	});
 
 	return d;
