@@ -1,0 +1,7 @@
+#context-timeline ul li .timestamp,
+#context-timeline ul li .timestamp span,
+.tweet-list .content .timestamp,
+.tweet-list .content .timestamp span,
+.tweet-list .breakpoint {
+	font-family: Calibri, "Calibri for PREFiX", "Hiragino Sans GB", "Hiragino Sans GB W3", "Microsoft Yahei", "WenQuanYi Micro Hei";
+}

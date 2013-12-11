@@ -631,6 +631,18 @@ function initMainUI() {
 		if (ratio > 1.4) {
 			$('h2').css('letter-spacing', '.5px');
 		}
+		if (ratio === 1.25) {
+			$('<link />').
+			prop('rel', 'stylesheet').
+			prop('href', 'css/font-fix.css').
+			appendTo('head');
+		}
+		if (ratio > 1 && ratio < 1.25) {
+			$('<link />').
+			prop('rel', 'stylesheet').
+			prop('href', 'css/font-fix-2.css').
+			appendTo('head');
+		}
 	}
 
 	if (! lscache.get('hide-following-tip')) {

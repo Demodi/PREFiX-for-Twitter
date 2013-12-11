@@ -4,27 +4,27 @@
 	font-weight: normal;
 	font-style: normal;
 }
-#context-timeline ul li .timestamp-client {
+#context-timeline ul li .timestamp {
 	height: 15px;
 }
-[platform="linux"] #context-timeline ul li.protected .timestamp-client {
+[platform="linux"] #context-timeline ul li.protected .timestamp {
 	background-position: right 5px !important;
 }
-[platform="mac"] #context-timeline ul .content .timestamp-client {
+[platform="mac"] #context-timeline ul .content .timestamp {
 	line-height: 20px;
 }
-[platform="mac"] #context-timeline ul li.protected .timestamp-client {
+[platform="mac"] #context-timeline ul li.protected .timestamp {
 	background-position: right 7px !important;
 }
-.status-list li .timestamp-client {
+.tweet-list li .timestamp {
 	height: 15px;
 }
-[platform="linux"] .status-list li.protected .timestamp-client {
+[platform="linux"] .tweet-list li.protected .timestamp {
 	background-position: right 4px !important;
 }
-[platform="mac"] .status-list .content .timestamp-client {
+[platform="mac"] .tweet-list .content .timestamp {
 	line-height: 20px;
 }
-[platform="mac"] .status-list li.protected .timestamp-client {
+[platform="mac"] .tweet-list li.protected .timestamp {
 	background-position: right 7px !important;
 }
