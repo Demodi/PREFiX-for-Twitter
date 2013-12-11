@@ -1610,7 +1610,13 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 					showNotification('发表成功!');
 					vm.text = '';
 					setImage(null);
-					PREFiX.updateHomeTimeline(7, tweet.id_str);
+					var remaining_hits = bg_win.rate_limit.default.getHomeTimeline;
+					if (bg_win.rate_limit.sub.getHomeTimeline) {
+						remaining_hits += bg_win.rate_limit.sub.getHomeTimeline;
+					}
+					if (remaining_hits >= 5) {
+						PREFiX.updateHomeTimeline(7, tweet.id_str);
+					}
 				}).error(function(e) {
 					if (e.status && e.response) {
 						showNotification(e.response.errors[0].message);
