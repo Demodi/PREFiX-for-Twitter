@@ -1,0 +1,18 @@
+[platform="linux"] #context-timeline ul li.protected .timestamp {
+	background-position: right 2px !important;
+}
+[platform="win"] #context-timeline ul li.protected .timestamp {
+	background-position: right 5px;
+}
+[platform="win"] .tweet-list .content .timestamp .chs ~ .en {
+	-webkit-transform: translateY(.5px);
+	transform: translateY(.5px);
+}
+[platform="win"] .tweet-list li.protected .timestamp {
+	background-position: right 3px;
+}
+[platform="linux"] #context-timeline ul li .content .timestamp .chs ~ .en,
+[platform="linux"] .tweet-list .content .timestamp .chs ~ .en {
+	-webkit-transform: translateY(.5px);
+	transform: translateY(.5px);
+}

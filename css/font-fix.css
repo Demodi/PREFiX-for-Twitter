@@ -8,13 +8,22 @@
 	height: 15px;
 }
 [platform="linux"] #context-timeline ul li.protected .timestamp {
-	background-position: right 5px !important;
+	background-position: right 7px !important;
+	height: 17px;
+	line-height: 21px;
 }
 [platform="mac"] #context-timeline ul .content .timestamp {
 	line-height: 20px;
 }
 [platform="mac"] #context-timeline ul li.protected .timestamp {
 	background-position: right 7px !important;
+}
+[platform="win"] #context-timeline ul li.protected .timestamp {
+	background-position: right 6px !important;
+}
+[platform="win"] #context-timeline ul .content .timestamp .chs {
+	-webkit-transform: scale(0.89) translateY(1.5px);
+	transform: scale(0.89) translateY(1.5px);
 }
 .tweet-list li .timestamp {
 	height: 15px;
@@ -27,4 +36,16 @@
 }
 [platform="mac"] .tweet-list li.protected .timestamp {
 	background-position: right 7px !important;
+}
+[platform="win"] .tweet-list li.protected .timestamp {
+	background-position: right 4px !important;
+}
+[platform="win"] .tweet-list li .content .timestamp .chs {
+	-webkit-transform: scale(0.89) translateY(1.5px);
+	transform: scale(0.89) translateY(1.5px);
+}
+[platform="linux"] #context-timeline ul .content .timestamp .chs ~ .en,
+[platform="linux"] .tweet-list li.protected .timestamp .chs ~ .en {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
 }
