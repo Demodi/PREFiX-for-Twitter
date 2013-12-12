@@ -1156,9 +1156,9 @@ Ripple.events.observe('process_tweet', function(tweet) {
 	var user = tweet.user || tweet.sender;
 	if (user) {
 		user.profile_image_url = user.profile_image_url.replace('_normal', '');
-		var image_http = new Image;
-		image_http.src = user.profile_image_url;
 		user.profile_image_url_https = user.profile_image_url_https.replace('_normal', '');
+		var image = new Image;
+		image.src = user.profile_image_url_https;
 	}
 
 	var text = tweet.text;
@@ -1170,7 +1170,7 @@ Ripple.events.observe('process_tweet', function(tweet) {
 		var media = tweet.entities.media;
 		if (media && media.length) {
 			var photo = { };
-			photo.url = media[0].media_url;
+			photo.url = media[0].media_url_https;
 			var width = media[0].sizes.small.w;
 			var height = media[0].sizes.small.h;
 			if (width > 100 || height > 100) {
