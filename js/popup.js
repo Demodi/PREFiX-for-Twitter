@@ -386,7 +386,8 @@ function initKeyboardControlEvents() {
 		} else if (e.keyCode === 84) {
 			var $repost = $view.find('a.repost');
 			if ($repost.length) {
-				if (! current.retweeted || e.shiftKey) {
+				if ((! current.retweeted && ! e.shiftKey) ||
+					(current.retweeted && e.shiftKey)) {
 					$repost[0].click();
 				}
 			}
