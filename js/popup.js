@@ -211,8 +211,8 @@ function initKeyboardControlEvents() {
 	$(window).keydown(function(e) {
 		if (e.ctrlKey || e.altKey || e.metaKey) return;
 		switch (e.keyCode) {
-			case 74 /* J */: case 75 /* K */:
-			case 72 /* H */: case 76 /* L */:
+			case 72 /* H */: case 74 /* J */:
+			case 75 /* K */: case 76 /* L */:
 				e.preventDefault();
 				break;
 			default:
@@ -226,14 +226,14 @@ function initKeyboardControlEvents() {
 		if (is_context_tl || is_photo) {
 			var key_matched = 0;
 			switch (e.keyCode) {
+				case 72:
+					key_matched = 36;
+					break;
 				case 74:
 					key_matched = 40;
 					break;
 				case 75:
 					key_matched = 38;
-					break;
-				case 72:
-					key_matched = 36;
 					break;
 				case 76:
 					key_matched = 35;
@@ -247,25 +247,8 @@ function initKeyboardControlEvents() {
 			}
 			return;
 		}
-		if (e.keyCode === 74) {
-			var $next_view = $current_view.next();
-			if (! $next_view.length) return;
-			var delta = $next_view.offset().top;
-			var current_pos = $main.scrollTop();
-			var height = $current_view.height();
-			var next_view_height = $next_view.height();
-			var target = Math.max(current_pos + height, delta + current_pos - $body.height() + next_view_height);
-			setCurrent(current_model, $next_view.attr('data-id'));
-		} else if (e.keyCode === 75) {
-			var $pre_view = $current_view.prev();
-			if (! $pre_view.length) return;
-			var delta = $pre_view.offset().top;
-			var current_pos = $main.scrollTop();
-			var height = $pre_view.height();
-			var target = Math.min(current_pos - height, delta + current_pos - min_pos);
-			target = Math.max(target, current_pos + delta + height - $body.height());
-			setCurrent(current_model, $pre_view.attr('data-id'));
-		} else if (e.keyCode === 72) {
+
+		if (e.keyCode === 72) {
 			var list = current_model.tweets || current_model.messages;
 			target = 0;
 			if ($scrolling_elem === $main) {
@@ -275,7 +258,24 @@ function initKeyboardControlEvents() {
 				}
 				setCurrent(current_model, list[0].id_str);
 			}
-
+		} else if (e.keyCode === 74) {
+			var $next_view = $current_view.nextAll('li[data-id]').first();
+			if (! $next_view.length) return;
+			var delta = $next_view.offset().top;
+			var current_pos = $main.scrollTop();
+			var height = $current_view.height();
+			var next_view_height = $next_view.height();
+			var target = Math.max(current_pos + height, delta + current_pos - $body.height() + next_view_height);
+			setCurrent(current_model, $next_view.attr('data-id'));
+		} else if (e.keyCode === 75) {
+			var $pre_view = $current_view.prevAll('li[data-id]').first();
+			if (! $pre_view.length) return;
+			var delta = $pre_view.offset().top;
+			var current_pos = $main.scrollTop();
+			var height = $pre_view.height();
+			var target = Math.min(current_pos - height, delta + current_pos - min_pos);
+			target = Math.max(target, current_pos + delta + height - $body.height());
+			setCurrent(current_model, $pre_view.attr('data-id'));
 		} else if (e.keyCode === 76) {
 			var list = current_model.tweets || current_model.messages;
 			target = $main[0].scrollHeight - $main.height();
@@ -285,13 +285,13 @@ function initKeyboardControlEvents() {
 	}).keydown(function(e) {
 		if (e.ctrlKey || e.altKey || e.metaKey) return;
 		switch (e.keyCode) {
-			case 86 /* V */: case 67 /* C */:
-			case 70 /* F */: case 81 /* Q */:
-			case 82 /* R */: case 68 /* D */:
 			case 32 /* Space */:
-			case 80 /* P */: case 85 /* U */:
-			case 84 /* T */:
-			case 77 /* M */: case 78 /* N */:
+			case 67 /* C */: case 68 /* D */:
+			case 70 /* F */: case 77 /* M */:
+			case 78 /* N */: case 80 /* P */:
+			case 81 /* Q */: case 82 /* R */:
+			case 83 /* S */: case 85 /* U */:
+			case 86 /* V */: case 84 /* T */:
 				e.preventDefault();
 				break;
 			default:
