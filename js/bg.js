@@ -1161,6 +1161,10 @@ Ripple.events.observe('process_tweet', function(tweet) {
 		image.src = user.profile_image_url_https;
 	}
 
+	if (tweet.source) {
+		tweet.source = $temp.html(tweet.source).text();
+	}
+
 	var text = tweet.text;
 	tweet.textWithoutTags = text;
 
