@@ -1430,6 +1430,7 @@ html.panel-mode #new-window {
 	position: relative;
 	height: 19px;
 	overflow: hidden;
+	word-break: break-all;
 }
 .tweet-list li .action-icons a {
 	background-repeat: no-repeat;
@@ -1518,19 +1519,13 @@ html.panel-mode #new-window {
 .tweet-list li:hover .action-icons {
 	opacity: 1;
 }
-.tweet-list li.protected .timestamp {
-	padding-right: 12px;
+.tweet-list li.protected .timestamp::after {
 	background: url('/images/protected.png') right center no-repeat;
-}
-[platform="linux"] .tweet-list li.protected .timestamp {
-	background-position: right 1px !important;
-}
-[platform="mac"] .tweet-list li .timestamp {
-	height: 18px;
-	margin: 0;
-}
-[platform="mac"] .tweet-list li.protected .timestamp {
-	background-position: right 5px !important;
+	padding-left: 3px;
+	height: 19px;
+	width: 9px;
+	float: right;
+	content: "";
 }
 .tweet-list .avatar {
 	float: left;

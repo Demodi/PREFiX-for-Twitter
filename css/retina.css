@@ -64,7 +64,7 @@ h1 b {
 	background-image: url('/images/conversation@2x.png');
 	background-size: 22px 36px;
 }
-.tweet-list li.protected .timestamp {
+.tweet-list li.protected .timestamp::after {
 	background-image: url('/images/protected@2x.png');
 	background-size: 9px 10px;
 }
