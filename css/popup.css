@@ -979,18 +979,9 @@ body.show-context-timeline #main {
 	width: 395px;
 }
 body.show-picture #picture-overlay,
-body.show-context-timeline #context-timeline {
+body.show-context-timeline #context-timeline,
+body.show-picture #picture-copy {
 	display: block;
-}
-#picture.run-animation {
-	-webkit-transition-property: opacity, left, top, width, height;
-	-webkit-transition-duration: 225ms;
-	-webkit-transition-timing-function: linear;
-	transition-property: opacity, left, top, width, height;
-	transition-duration: 225ms;
-	transition-timing-function: linear;
-	-webkit-transform-origin: center;
-	transform-origin: center;
 }
 #picture-overlay {
 	z-index: 200;
@@ -1010,12 +1001,40 @@ body.show-context-timeline #context-timeline {
 #picture-overlay::scrollbar-track:vertical {
 	margin: 0;
 }
+#picture-overlay .loading-tip {
+	text-shadow: none;
+	display: none;
+}
+#picture-overlay.loading .loading-tip {
+	display: inline-block;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	color: #aaa;
+	letter-spacing: 4px;
+	-webkit-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
 #picture {
 	position: absolute;
-	max-width: 400px;
 	box-shadow: 0 0 25px #000;
 	cursor: -webkit-zoom-out;
 	cursor: zoom-out;
+}
+#picture-copy {
+	position: fixed;
+	display: none;
+	bottom: -9999px;
+	left: 0;
+}
+#picture.run-animation {
+	-webkit-transition-property: opacity, left, top, width, height, -webkit-transform, margin-left;
+	-webkit-transition-duration: 225ms;
+	transition-property: opacity, left, top, width, height, -webkit-transform, margin-left;
+	transition-duration: 225ms;
+	transition-timing-function: linear;
+	-webkit-transform-origin: center;
+	transform-origin: center;
 }
 #picture-overlay .tip {
 	display: none;
@@ -1050,12 +1069,17 @@ body.show-context-timeline #context-timeline {
 #context-timeline::-webkit-scrollbar-track:vertical {
 	margin: 0;
 }
-#context-timeline.loading::after {
+#context-timeline .loading-tip {
+	text-shadow: none;
+	display: none;
+}
+#context-timeline.loading .loading-tip {
 	display: inline-block;
 	position: absolute;
 	left: 50%;
 	top: 50%;
-	content: "LOADING";
+	color: #aaa;
+	letter-spacing: 4px;
 	-webkit-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 }

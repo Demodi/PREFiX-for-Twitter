@@ -285,7 +285,24 @@ function initKeyboardControlEvents() {
 	}).keydown(function(e) {
 		if (e.ctrlKey || e.altKey || e.metaKey) return;
 
+		if (e.keyCode === 27 /* Esc */) {
+			if ($scrolling_elem !== $main) {
+				e.keyCode = 32;
+			}
+		}
+
 		switch (e.keyCode) {
+			case 68 /* D */: case 70 /* F */:
+			case 77 /* M */: case 78 /* N */:
+			case 81 /* Q */: case 83 /* S */:
+			case 84 /* T */: case 85 /* U */:
+				if ($scrolling_elem !== $main)
+					return;
+
+			case 82 /* R */:
+				if ($('body.show-context-timeline').length)
+					return;
+
 			case 32 /* Space */:
 			case 67 /* C */: case 68 /* D */:
 			case 70 /* F */: case 77 /* M */:
@@ -309,6 +326,10 @@ function initKeyboardControlEvents() {
 				$(window).trigger(e);
 			} else {
 				$textarea.focus();
+				if (compose-bar.type === 'repost') {
+					$textarea[0].selectionStart = 0;
+					$textarea[0].selectionEnd = 0;
+				}
 			}
 		} else if (e.keyCode === 67) {
 			if ($('body.show-context-timeline').length) {
@@ -373,6 +394,10 @@ function initKeyboardControlEvents() {
 				$repost[0].dispatchEvent(event);
 			}
 		} else if (e.keyCode === 82) {
+			if ($('body.show-picture').length) {
+				rotatePicture();
+				return;
+			}
 			var $reply = $view.find('a.reply');
 			if ($reply.length) {
 				$reply[0].click();
@@ -1029,24 +1054,33 @@ function showPicture(img_url) {
 	}
 	$picture.hide().removeClass('run-animation').css({
 		'width': '',
-		'height': ''
+		'height': '',
+		'margin-left': '',
+		'transform': '',
+		'left': '',
+		'top': ''
 	});
 	var $overlay = $scrolling_elem = $('#picture-overlay');
-	$overlay.removeClass('error');
+	$overlay.removeClass('error').addClass('loading');
 	$overlay.scrollTop(0);
 	$picture.off().on('error', function(e) {
-		$overlay.addClass('error');
+		$overlay.addClass('error').removeClass('loading');
 		canceled = true;
 	});
 	var canceled = false;
 	waitFor(function() {
-		return $picture[0].naturalWidth || canceled;
+		var height = $picture[0].naturalHeight;
+		if (height && height > $body.height() * 1.5) {
+			return true;
+		}
+		return $picture[0].complete || canceled;
 	}, function() {
+		$overlay.removeClass('loading');
 		if ($picture[0].naturalWidth > 400) {
 			$picture.css('width', '400px');
 		}
-		var width = parseInt($picture.css('width'), 10);
-		var height = parseInt($picture.css('height'), 10);
+		var width = $picture.width();
+		var height = $picture.height();
 		$picture.css(computePosition({
 			width: width / 2,
 			height: height / 2
@@ -1062,8 +1096,12 @@ function showPicture(img_url) {
 			height: height
 		})).
 		css({
-			opacity: 1,
-			animation: 'pictureSlideIn .3s both'
+			opacity: 1
+		});
+		$('#picture-wrapper').css({
+			animation: 'pictureSlideIn .3s both',
+			width: width,
+			height: height
 		});
 	});
 }
@@ -1071,19 +1109,78 @@ function showPicture(img_url) {
 function hidePicture() {
 	$scrolling_elem = $main;
 	var $picture = $('#picture');
-	$picture.
-	css(computePosition({
-		width: parseInt($picture.css('width'), 10) / 2,
-		height: parseInt($picture.css('height'), 10) / 2
-	})).
-	css({
-		opacity: .5,
-		animation: 'pictureSlideOut .3s both'
+	var width = $picture.width();
+	var height = $picture.height();
+	var transform = $picture[0].style.transform ||
+		$picture[0].style.webkitTransform;
+	var rotate_deg = 0;
+	if (transform && transform.indexOf('rotateZ') > -1) {
+		rotate_deg = +transform.match(/rotateZ\((\d+)deg\)/)[1];
+	}
+	if (rotate_deg % 180) {
+		var temp = width;
+		width = height;
+		height = temp;
+	}
+	var style = computePosition({
+		width: width / 2,
+		height: height / 2
+	});
+	style.width = $picture.width() / 2 + 'px';
+	style.height = $picture.height() / 2 + 'px';
+	style.opacity = .5;
+	style['margin-left'] = parseInt($picture.css('margin-left'), 10) / 2 + 'px';
+	$picture.css(style);
+	$('#picture-wrapper').css({
+		animation: 'pictureSlideOut .3s both',
+		width: width,
+		height: height
 	});
 	setTimeout(function() {
 		$('body').removeClass('show-picture');
 		$picture.removeClass('run-animation');
 	}, 350);
+}
+
+function rotatePicture() {
+	var $picture = $('#picture');
+	$('#picture-copy').remove();
+	var $picture_copy = $picture.clone().attr('style', '');
+	$picture_copy.prop('id', 'picture-copy');
+	$picture.after($picture_copy);
+	var transform = $picture[0].style.transform ||
+		$picture[0].style.webkitTransform;
+	var rotate_deg = 90;
+	if (transform && transform.indexOf('rotateZ') > -1) {
+		rotate_deg = +transform.match(/rotateZ\((\d+)deg\)/)[1];
+		rotate_deg += 90;
+	}
+	var rotate_value = 'rotateZ(' + rotate_deg + 'deg)';
+	var style = {
+		'margin-left': 0
+	};
+	if (rotate_deg % 180 === 0) {
+		if ($picture[0].naturalWidth > 400) {
+			$picture_copy.css('width', '400px');
+		}
+	} else {
+		if ($picture[0].naturalHeight > 400) {
+			$picture_copy.css('height', '400px');
+		}
+		if ($picture_copy.width() > 400) {
+			style['margin-left'] = (400 - $picture_copy.width()) / 2 + 'px';
+		}
+	}
+	var width = $picture_copy.width();
+	var height = $picture_copy.height();
+	$.extend(style, computePosition({
+		width: width,
+		height: height
+	}));
+	style.transform = rotate_value;
+	setTimeout(function() {
+		$picture.css(style);
+	});
 }
 
 var pre_count = {
@@ -1592,6 +1689,10 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 	}
 	vm.onkeydown = function(e) {
 		e.stopPropagation && e.stopPropagation();
+		if (e.keyCode === 27 /* Esc */) {
+			$textarea.blur();
+			return;
+		}
 		var value = $textarea.val().trim();
 		if ((! value && ! PREFiX.image) || vm.submitting) return;
 		if (e.keyCode === 13 && (e.ctrlKey || e.metaKey)) {
@@ -1614,6 +1715,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 				}).next(function() {
 					showNotification('发表成功!');
 					vm.text = '';
+					$textarea.blur();
 				}).error(function(e) {
 					if (e.status && e.response) {
 						showNotification(e.response.errors[0].message);
@@ -1652,6 +1754,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 					showNotification('发表成功!');
 					vm.text = '';
 					setImage(null);
+					$textarea.blur();
 					var remaining_hits = bg_win.rate_limit.default.getHomeTimeline;
 					if (bg_win.rate_limit.sub.getHomeTimeline) {
 						remaining_hits += bg_win.rate_limit.sub.getHomeTimeline;

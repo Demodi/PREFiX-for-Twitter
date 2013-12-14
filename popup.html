@@ -41,10 +41,12 @@
     </div>
     <div id="notification"></div>
     <div id="picture-overlay">
-      <img id="picture" src="" />
+      <div class="loading-tip slide-effect" data-id="1"><span>LOADING</span></div>
+      <div id="picture-wrapper"><img id="picture" src="" /></div>
       <span class="tip">网络错误或图片已被删除</span>
     </div>
   	<div id="context-timeline">
+      <div class="loading-tip slide-effect" data-id="2"><span>LOADING</span></div>
   		<ul ms-controller="context-timeline" ms-each-tweet="tweets">
         <li class="fix" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
           <div class="avatar">
