@@ -1035,10 +1035,12 @@ function cutStream() {
 	current.allLoaded = false;
 }
 
-function computePosition(data) {
+function computePosition(data, no_minus_left) {
 	var left = parseInt(($body[0].clientWidth - data.width) / 2, 10);
 	var top = parseInt(($body[0].clientHeight - data.height) / 2, 10);
-	data.left = Math.max(0, left);
+	if (no_minus_left) {
+		data.left = Math.max(0, left);
+	}
 	data.top = Math.max(0, top);
 	for (var key in data) {
 		data[key] += 'px';
@@ -1075,6 +1077,10 @@ function showPicture(img_url) {
 		}
 		return $picture[0].complete || canceled;
 	}, function() {
+		$('#picture-copy').remove();
+		var $picture_copy = $picture.clone();
+		$picture_copy.prop('id', 'picture-copy');
+		$picture.after($picture_copy);
 		$overlay.removeClass('loading');
 		if ($picture[0].naturalWidth > 400) {
 			$picture.css('width', '400px');
@@ -1084,7 +1090,7 @@ function showPicture(img_url) {
 		$picture.css(computePosition({
 			width: width / 2,
 			height: height / 2
-		})).
+		}, true)).
 		css({
 			opacity: .5,
 			display: 'block'
@@ -1094,13 +1100,13 @@ function showPicture(img_url) {
 		css(computePosition({
 			width: width,
 			height: height
-		})).
+		}, true)).
 		css({
 			opacity: 1
 		});
 		$('#picture-wrapper').css({
 			animation: 'pictureSlideIn .3s both',
-			width: width,
+			width: 400 + 'px',
 			height: height
 		});
 	});
@@ -1126,14 +1132,15 @@ function hidePicture() {
 		width: width / 2,
 		height: height / 2
 	});
+	style.left = (400 - ($picture.width() / 2)) / 2 + 'px';
 	style.width = $picture.width() / 2 + 'px';
 	style.height = $picture.height() / 2 + 'px';
 	style.opacity = .5;
-	style['margin-left'] = parseInt($picture.css('margin-left'), 10) / 2 + 'px';
+	style['margin-left'] = 0;
 	$picture.css(style);
 	$('#picture-wrapper').css({
 		animation: 'pictureSlideOut .3s both',
-		width: width,
+		width: '400px',
 		height: height
 	});
 	setTimeout(function() {
@@ -1144,10 +1151,9 @@ function hidePicture() {
 
 function rotatePicture() {
 	var $picture = $('#picture');
-	$('#picture-copy').remove();
-	var $picture_copy = $picture.clone().attr('style', '');
-	$picture_copy.prop('id', 'picture-copy');
-	$picture.after($picture_copy);
+	$picture.css('animation', '');
+	var $picture_copy = $('#picture-copy');
+	$picture_copy.attr('style', '');
 	var transform = $picture[0].style.transform ||
 		$picture[0].style.webkitTransform;
 	var rotate_deg = 90;
@@ -1159,26 +1165,34 @@ function rotatePicture() {
 	var style = {
 		'margin-left': 0
 	};
-	if (rotate_deg % 180 === 0) {
-		if ($picture[0].naturalWidth > 400) {
-			$picture_copy.css('width', '400px');
+	var width, height;
+	waitFor(function() {
+		return $picture_copy.width();
+	}, function() {
+		if (rotate_deg % 180 === 0) {
+			if ($picture[0].naturalWidth > 400) {
+				$picture_copy.css('width', '400px');
+			}
+		} else {
+			if ($picture[0].naturalHeight > 400) {
+				$picture_copy.css('height', '400px');
+			}
+			if ($picture[0].naturalWidth > 400) {
+				style['margin-left'] = (400 - $picture_copy.width()) / 2 + 'px';
+			}
 		}
-	} else {
-		if ($picture[0].naturalHeight > 400) {
-			$picture_copy.css('height', '400px');
-		}
-		if ($picture_copy.width() > 400) {
-			style['margin-left'] = (400 - $picture_copy.width()) / 2 + 'px';
-		}
-	}
-	var width = $picture_copy.width();
-	var height = $picture_copy.height();
-	$.extend(style, computePosition({
-		width: width,
-		height: height
-	}));
-	style.transform = rotate_value;
-	setTimeout(function() {
+		width = $picture_copy.width();
+		height = $picture_copy.height();
+		$('#picture-wrapper').css(rotate_deg % 180 === 0 ? {
+			width: width, height: height
+		} : {
+			width: height, height: width
+		});
+		$.extend(style, computePosition({
+			width: width,
+			height: height
+		}));
+		style.transform = rotate_value;
 		$picture.css(style);
 	});
 }
@@ -1255,22 +1269,28 @@ function insertKeepScrollTop(insert) {
 function autoScroll(model, list) {
 	list = fixTweetList(list);
 	var first_item = list[0];
-	var last_item = list.reverse()[0];
+	var last_item = list[list.length - 1];
+	var pre_target, target;
 	setTimeout(function() {
-		var $item = model.$elem.find('li[data-id="' + last_item.id_str + '"]');
-		if (! $item.length) return;
-		var $breakpoint = $item.next('.breakpoint');
-		if ($breakpoint.length) {
-			$item = $breakpoint;
-		}
-		var offset = $item.offset().top + $item.height();
-		var height = $body.height();
-		var pos = $main.scrollTop();
-		var target = Math.max(pos - (height - offset), 0);
-		setCurrent(model, target > 0 ? last_item.id_str : first_item.id_str);
-		if ($scrolling_elem === $main) {
-			smoothScrollTo(target);
-		}
+		waitFor(function() {
+			pre_target = target;
+			var $item = model.$elem.find('li[data-id="' + last_item.id_str + '"]');
+			if (! $item.length) return;
+			var $breakpoint = $item.next('.breakpoint');
+			if ($breakpoint.length) {
+				$item = $breakpoint;
+			}
+			var offset = $item.offset().top + $item.height();
+			var height = $body.height();
+			var pos = $main.scrollTop();
+			target = Math.max(pos - (height - offset), 0);
+			return pre_target !== undefined && pre_target === target;
+		}, function() {
+			setCurrent(model, target > 0 ? last_item.id_str : first_item.id_str);
+			if ($scrolling_elem === $main) {
+				smoothScrollTo(target);
+			}
+		});
 	}, 100);
 }
 
@@ -1873,7 +1893,8 @@ tl_model.initialize = function() {
 							return Math.abs(time - now) < 500;
 						});
 						if (is_breakpoint) {
-							var oldest_tweet = fixTweetList(buffered).reverse()[0];
+							buffered = fixTweetList(buffered);
+							var oldest_tweet = buffered[buffered.length - 1];
 							oldest_tweet.is_breakpoint = true;
 							oldest_tweet.loaded_at = 'Loaded @ ' + getShortTime(now) + '.';
 						}
