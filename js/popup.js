@@ -1361,6 +1361,7 @@ function loadOldder() {
 			PREFiX.getInstanceByRateLimit('searchTweets')({
 				q: k,
 				max_id: id,
+				count: PREFiX.settings.current.tweetsPerPage
 			}).setupAjax({
 				lock: loadOldder,
 				send: function() {
