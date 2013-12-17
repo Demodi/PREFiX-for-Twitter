@@ -309,6 +309,9 @@ function initSavedSearches() {
 						}).length;
 				}
 			});
+			var cache_amount = PREFiX.settings.current.tweetsPerPage;
+			cache_amount = Math.max(self.unread_count, cache_amount);
+			self.tweets.splice(cache_amount);
 	}
 	SavedSearchItem.prototype.stop = function() {
 		if (this.ajax) {
