@@ -113,7 +113,7 @@
 								</div>
 								<div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
 								<div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'@' + tweet.user.screen_name + '\'>' + tweet.user.name + '</span> @ ' + tweet.shortTime"></div>
-								<div class="photo" ms-if="!! tweet.photo" title="查看大图 (快捷键 V)">
+								<div class="photo" ms-if="!! (tweet.photo && tweet.photo.url)" title="查看大图 (快捷键 V)">
 									<img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
 								</div>
 							</div>
@@ -145,7 +145,7 @@
 								</div>
 								<div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
 								<div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'@' + tweet.user.screen_name + '\'>' + tweet.user.name + '</span> @ ' + tweet.shortTime"></div>
-								<div class="photo" ms-if="!! tweet.photo" title="查看大图 (快捷键 V)">
+								<div class="photo" ms-if="!! (tweet.photo && tweet.photo.url)" title="查看大图 (快捷键 V)">
 									<img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
 								</div>
 							</div>
@@ -171,7 +171,9 @@
 									<span class="timestamp" ms-html="message.relativeTime"></span>
 								</div>
 								<div class="tweet-content" ms-html="message.fixedText"></div>
-								<div ms-if="!! message.in_reply_to" ms-html="message.in_reply_to && message.in_reply_to.text" class="in-reply-to-message"></div>
+								<div class="photo" ms-if="!! (message.photo && message.photo.url)" title="查看大图 (快捷键 V)">
+									<img ms-src="message.photo && message.photo.url" ms-css-width="message.photo.thumb_size.width + 'px'" ms-css-height="message.photo.thumb_size.height + 'px'" ms-data-large-img="message.photo && message.photo.url_large" />
+								</div>
 							</div>
 						</div>
 					</li>
@@ -197,7 +199,7 @@
 								</div>
 								<div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText" ms-class-bold="tweet.is_unread"></div>
 								<div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'@' + tweet.user.screen_name + '\'>' + tweet.user.name + '</span> @ ' + tweet.shortTime"></div>
-								<div class="photo" ms-if="!! tweet.photo" title="查看大图 (快捷键 V)">
+								<div class="photo" ms-if="!! (tweet.photo && tweet.photo.url)" title="查看大图 (快捷键 V)">
 									<img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
 								</div>
 							</div>

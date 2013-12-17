@@ -21,6 +21,7 @@ $(function() {
 				$item.prop('checked', value);
 				break;
 			case 'select':
+			case 'text':
 				$item.val(value);
 				break;
 			case 'range':
@@ -137,6 +138,7 @@ $(function() {
 					value = $item.prop('checked');
 					break;
 				case 'select':
+				case 'text':
 					value = $item.val();
 					break;
 				case 'range':

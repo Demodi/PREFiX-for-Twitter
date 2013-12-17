@@ -688,6 +688,143 @@ function loadFriends() {
 	});
 }
 
+function processPhoto(tweet, photo) {
+	var width = photo.width;
+	var height = photo.height;
+	if (width > 100 || height > 100) {
+		if (width > height) {
+			var k = width / 100;
+			width = 100;
+			height = Math.round(height / k);
+		} else {
+			var k = height / 100;
+			height = 100;
+			width = Math.round(width / k);
+		}
+	}
+	photo.thumb_size = {
+		width: width,
+		height: height
+	};
+	var img_thumb = new Image;
+	img_thumb.src = photo.thumbnail_url || photo.url;
+	photo.url_large = isZoomAble(photo.url) ?
+		getLargeImage(photo.url) : photo.url;
+	if (photo.url_large !== img_thumb.src) {
+		var img_large = new Image;
+		img_large.src = photo.url_large;
+	}
+	tweet.photo = tweet.photo || { };
+	$.extend(tweet.photo, photo);
+	return photo;
+}
+
+var getOEmbed = (function() {
+	this.oEmbed_lib = [];
+
+	function OEmbed(url) {
+		this.url = url;
+		this.status = 'initialized';
+		this.fetch();
+		oEmbed_lib.push(this);
+	}
+
+	OEmbed.prototype.fetch = function() {
+		var self = this;
+		var url = this.url;
+		this.status = 'loading';
+		this.ajax = Ripple.ajax(
+			'http://api.embed.ly/1/oembed',
+			{
+				method: 'GET',
+				params: {
+					key: settings.current.embedlyKey,
+					url: url,
+					maxwidth: 100,
+					maxheight: 100,
+					format: 'json'
+				},
+				success: function(data) {
+					if (data && data.type === 'photo') {
+						self.status = 'completed';
+						self.data = data;
+					} else {
+						self.status = 'ignored';
+					}
+					lscache.set('oembed-' + url, self);
+				},
+				error: function(e) {
+					if (e.status) {
+						self.status = 'ignored';
+					} else {
+						self.status = 'error';
+					}
+					lscache.set('oembed-' + url, self);
+				}
+			}
+		);
+	}
+
+	OEmbed.prototype.done = function(callback) {
+		if (this.status === 'ignored')
+			return;
+		if (this.status === 'error') {
+			this.fetch();
+		}
+		if (this.status === 'loading') {
+			this.ajax.observe('success', function() {
+				setTimeout(callback);
+			});
+		} else if (this.status === 'completed') {
+			callback();
+		}
+	}
+
+	function process(tweet, oEmbed) {
+		tweet.oEmbedProcessed = true;
+		if (! oEmbed.data) return;
+		var data = oEmbed.data;
+		processPhoto(tweet, {
+			url: data.url,
+			thumbnail_url: data.thumbnail_url,
+			width: data.width,
+			height: data.height
+		});
+	}
+
+	return function(tweet) {
+		if (! settings.current.embedlyKey)
+			return;
+		if (tweet.oEmbedProcessed)
+			return;
+		if (! tweet.entities || ! tweet.entities.urls.length)
+			return;
+		tweet.entities.urls.forEach(function(item) {
+			var url = item.expanded_url;
+			var cached;
+			oEmbed_lib.some(function(oembed) {
+				if (oembed.url === url) {
+					cached = oembed;
+					return true;
+				}
+			});
+			ls_cached = lscache.get('oembed-' + url);
+			cached = cached || ls_cached;
+			if (cached) {
+				cached.__proto__ = OEmbed.prototype;
+				cached.done(function() {
+					process(tweet, cached);
+				});
+			} else {
+				var oEmbed = new OEmbed(url);
+				oEmbed.done(function() {
+					process(tweet, oEmbed);
+				});
+			}
+		});
+	}
+})();
+
 var init_interval;
 var _initData = function() { }
 function initData() {
@@ -1092,7 +1229,6 @@ function getLargeImage(raw){
     return raw;
 }
 
-
 function isZoomAble(src){
     if (src.indexOf('profile_images') != -1 ||
 		src.indexOf('instagr') != -1||
@@ -1178,32 +1314,9 @@ Ripple.events.observe('process_tweet', function(tweet) {
 		if (media && media.length) {
 			var photo = { };
 			photo.url = media[0].media_url_https;
-			var width = media[0].sizes.small.w;
-			var height = media[0].sizes.small.h;
-			if (width > 100 || height > 100) {
-				if (width > height) {
-					var k = width / 100;
-					width = 100;
-					height = Math.round(height / k);
-				} else {
-					var k = height / 100;
-					height = 100;
-					width = Math.round(width / k);
-				}
-			}
-			photo.thumb_size = {
-				width: width,
-				height: height
-			};
-			photo.url_large = isZoomAble(photo.url) ?
-				getLargeImage(photo.url) : photo.url;
-			var img_thumb = new Image;
-			img_thumb.src = photo.url;
-			if (photo.url_large !== photo.url) {
-				var img_large = new Image;
-				img_large.src = photo.url_large;
-			}
-			tweet.photo = photo;
+			photo.width = media[0].sizes.small.w;
+			photo.height = media[0].sizes.small.h;
+			processPhoto(tweet, photo);
 
 			var media_entity = media[0];
 			media_entity.type = 'url';
@@ -1217,6 +1330,21 @@ Ripple.events.observe('process_tweet', function(tweet) {
 				item.type = 'url';
 			});
 			entities.push.apply(entities, urls);
+
+			if (! media || ! media.length) {
+				tweet.photo = {
+					url: '',
+					url_large: '',
+					thumbnail_url: '',
+					thumb_size: {
+						width: 0,
+						height: 0
+					},
+					width: 0,
+					height: 0
+				};
+				getOEmbed(tweet);
+			}
 		}
 
 		var hashtags = tweet.entities.hashtags;
@@ -1378,7 +1506,8 @@ var settings = {
 		showSavedSearchCount: true,
 		createPopAtStartup: false,
 		volume: 1,
-		holdCtrlToSubmit: false
+		holdCtrlToSubmit: false,
+		embedlyKey: ''
 	},
 	load: function() {
 		var local_settings = lscache.get('settings') || { };

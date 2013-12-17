@@ -153,6 +153,10 @@ button {
 [type="checkbox"] {
 	margin-right: 5px !important;
 }
+[type="text"] {
+	width: 225px;
+	text-align: center;
+}
 [type="range"] {
 	margin: 0 8px;
 }
