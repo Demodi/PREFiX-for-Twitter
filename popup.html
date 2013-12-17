@@ -122,7 +122,7 @@
 							</div>
 						</div>
 					</li>
-					<li class="breakpoint" ms-if="status.is_breakpoint" ms-text="status.loaded_at"></li>
+					<li class="breakpoint" ms-if="tweet.is_breakpoint" ms-text="tweet.loaded_at"></li>
 				</ul>
 				<ul id="mentions" class="tweet-list fix" ms-controller="mentions" ms-each-tweet="tweets">
 					<li ms-data-id="tweet.id_str" ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
