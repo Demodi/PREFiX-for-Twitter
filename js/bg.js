@@ -1495,7 +1495,7 @@ var settings = {
 	current: { },
 	default: {
 		playSound: true,
-		smoothScroll: true,
+		smoothScroll: ! is_mac,
 		autoFlushCache: false,
 		cacheAmount: 75,
 		zoomRatio: '1',
