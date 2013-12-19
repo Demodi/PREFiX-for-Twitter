@@ -1499,7 +1499,7 @@ var settings = {
 		autoFlushCache: false,
 		cacheAmount: 75,
 		zoomRatio: '1',
-		drawAttention: true,
+		drawAttention: ! is_mac,
 		tweetsPerPage: 50,
 		showSavedSearchCount: true,
 		createPopAtStartup: false,
