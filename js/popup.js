@@ -708,24 +708,6 @@ function initMainUI() {
 		if (ratio > 1.4) {
 			$('h2').css('letter-spacing', '.5px');
 		}
-		if (ratio === 1.25) {
-			$('<link />').
-			prop('rel', 'stylesheet').
-			prop('href', 'css/font-fix.css').
-			appendTo('head');
-		}
-		if (ratio > 1 && ratio < 1.25) {
-			$('<link />').
-			prop('rel', 'stylesheet').
-			prop('href', 'css/font-fix-2.css').
-			appendTo('head');
-		}
-		if (ratio === 1.5) {
-			$('<link />').
-			prop('rel', 'stylesheet').
-			prop('href', 'css/font-fix-3.css').
-			appendTo('head');
-		}
 	}
 
 	if (! lscache.get('hide-following-tip')) {
@@ -878,6 +860,18 @@ function initMainUI() {
 		e.preventDefault();
 		e.stopPropagation();
 		createTab(e.currentTarget.href, e.shiftKey);
+	}).delegate('span.context', 'click', function(e) {
+		var $tweet = $(e.currentTarget).parents('li');
+		var tweet_id = $tweet.attr('data-id');
+		var model = getCurrent();
+		var tweet;
+		model.tweets.some(function(t) {
+			if (t.id_str === tweet_id) {
+				tweet = t;
+				return true;
+			}
+		});
+		showRelatedTweets.call(tweet, e);
 	}).delegate('[data-hashtag]', 'click', function(e) {
 		e.preventDefault();
 		e.stopPropagation();
@@ -1627,7 +1621,7 @@ function showRelatedTweets(e) {
 	$context_tl.removeClass('focusOutFromTop').addClass('focusInFromBottom loading');
 	$context_tl.scrollTop(0);
 	context_tl_model.tweets = [];
-	var tweet = this.$vmodel.tweet.$model;
+	var tweet = this.$model;
 	tweet = tweet.retweeted_status || tweet;
 	var tweets = [];
 	(function get() {

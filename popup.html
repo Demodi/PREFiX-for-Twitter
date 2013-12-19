@@ -117,9 +117,6 @@
 									<img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
 								</div>
 							</div>
-							<div ms-if="!! (tweet.retweeted_status || tweet).in_reply_to_status_id" class="context">
-								<span ms-click="showRelatedTweets" title="查看上下文消息 (快捷键 C)"></span>
-							</div>
 						</div>
 					</li>
 					<li class="breakpoint" ms-if="tweet.is_breakpoint" ms-text="tweet.loaded_at"></li>
@@ -148,9 +145,6 @@
 								<div class="photo" ms-if="!! (tweet.photo && tweet.photo.url)" title="查看大图 (快捷键 V)">
 									<img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
 								</div>
-							</div>
-							<div ms-if="!! (tweet.retweeted_status || tweet).in_reply_to_status_id" class="context">
-								<span ms-click="showRelatedTweets" title="查看上下文消息 (快捷键 C)"></span>
 							</div>
 						</div>
 					</li>
@@ -202,9 +196,6 @@
 								<div class="photo" ms-if="!! (tweet.photo && tweet.photo.url)" title="查看大图 (快捷键 V)">
 									<img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
 								</div>
-							</div>
-							<div ms-if="!! (tweet.retweeted_status || tweet).in_reply_to_status_id" class="context">
-								<span ms-click="showRelatedTweets" title="查看上下文消息 (快捷键 C)"></span>
 							</div>
 						</div>
 					</li>

@@ -1,9 +1,0 @@
-[platform="linux"] #context-timeline ul li.protected .timestamp {
-	background-position: right 2px !important;
-}
-[platform="win"] #context-timeline ul li.protected .timestamp {
-	background-position: right 5px;
-}
-.tweet-list li.protected .timestamp::after {
-	height: 20px;
-}

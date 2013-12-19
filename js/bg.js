@@ -1460,6 +1460,10 @@ Ripple.events.observe('process_tweet', function(tweet) {
 		});
 	}
 
+	if (tweet.in_reply_to_status_id) {
+		fixed_text.push('<span class="context" title="查看上下文消息 (快捷键 C)"></span>');
+	}
+
 	text = fixed_text.join('');
 	tweet.fixedText = text;
 
