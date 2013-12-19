@@ -1548,6 +1548,10 @@ html.panel-mode #new-window {
 	margin-left: 15px;
 	position: relative;
 	border: 1px solid rgba(255, 255, 255, .75);
+	width: 48px;
+	height: 48px;
+	background: #fff;
+	overflow: hidden;
 }
 .tweet-list .avatar::after {
 	position: absolute;
@@ -1562,8 +1566,6 @@ html.panel-mode #new-window {
 }
 .tweet-list .avatar img {
 	display: block;
-	width: 48px;
-	height: 48px;
 }
 .tweet-list .content {
 	float: right;

@@ -1642,8 +1642,11 @@ function showRelatedTweets(e) {
 	})();
 }
 
-function updateOEmbed() {
+function onNewTweetInserted() {
 	this.forEach(bg_win.getOEmbed);
+	this.forEach(function(tweet) {
+		bg_win.cropAvatar(tweet, (tweet.user || tweet.sender).profile_image_url_https);
+	});
 }
 
 var nav_model = avalon.define('navigation', function(vm) {
@@ -1876,7 +1879,7 @@ tl_model.tweets.$watch('length', function() {
 		return t.$model || t;
 	});
 });
-tl_model.tweets.$watch('length', updateOEmbed);
+tl_model.tweets.$watch('length', onNewTweetInserted);
 tl_model.initialize = function() {
 	$('#navigation-bar .home-timeline').addClass('current');
 	$('#title h2').text('Timeline');
@@ -1973,7 +1976,7 @@ mentions_model.tweets.$watch('length', function() {
 		return t.$model || t;
 	});
 });
-mentions_model.tweets.$watch('length', updateOEmbed);
+mentions_model.tweets.$watch('length', onNewTweetInserted);
 mentions_model.initialize = function() {
 	$('#navigation-bar .mentions').addClass('current');
 	$('#title h2').text('Mentions');
@@ -2102,7 +2105,7 @@ directmsgs_model.messages.$watch('length', function() {
 		return m.$model || m;
 	});
 });
-directmsgs_model.messages.$watch('length', updateOEmbed);
+directmsgs_model.messages.$watch('length', onNewTweetInserted);
 directmsgs_model.initialize = function() {
 	$('#navigation-bar .directmsgs').addClass('current');
 	$('#title h2').text('Direct Messages');
@@ -2180,7 +2183,7 @@ var searches_model = avalon.define('saved-searches', function(vm) {
 searches_model.$watch('keyword', function() {
 	PREFiX.keyword = searches_model.keyword;
 });
-searches_model.tweets.$watch('length', updateOEmbed);
+searches_model.tweets.$watch('length', onNewTweetInserted);
 searches_model.initialize = function() {
 	$('#navigation-bar .saved-searches').addClass('current');
 	$('#title h2').text('Discover');
@@ -2365,7 +2368,7 @@ context_tl_model.tweets.$watch('length', function(length) {
 		}.bind(this), i * 100);
 	});
 });
-context_tl_model.tweets.$watch('length', updateOEmbed);
+context_tl_model.tweets.$watch('length', onNewTweetInserted);
 
 $(function() {
 	initMainUI();

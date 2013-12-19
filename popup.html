@@ -102,7 +102,9 @@
 								<a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏 (快捷键 Shift + F)' : '收藏 (快捷键 F)'"></a>
 							</div>
 							<div class="avatar">
-								<a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name"><img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" /></a>
+								<a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name">
+									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" />
+								</a>
 							</div>
 							<div class="content">
 								<div class="info fix">
@@ -131,7 +133,9 @@
 								<a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏 (快捷键 Shift + F)' : '收藏 (快捷键 F)'"></a>
 							</div>
 							<div class="avatar">
-								<a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name"><img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" /></a>
+								<a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name">
+									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" />
+								</a>
 							</div>
 							<div class="content">
 								<div class="info fix">
@@ -157,7 +161,9 @@
 								<a ms-click="reply" class="reply" title="回复 (快捷键 R)"></a>
 							</div>
 							<div class="avatar">
-								<a ms-title="{{message.sender.name}} ({{message.sender.id}})"><img ms-src="message.sender.profile_image_url_https" /></a>
+								<a ms-title="{{message.sender.name}} ({{message.sender.id}})">
+									<img ms-src="message.sender.profile_image_url_https" ms-css-margin-left="message.avatar_margin.left" ms-css-margin-top="message.avatar_margin.top" ms-css-width="message.avatar_size.width" ms-css-height="message.avatar_size.height" />
+								</a>
 							</div>
 							<div class="content">
 								<div class="info fix">
@@ -182,7 +188,9 @@
 								<a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏 (快捷键 Shift + F)' : '收藏 (快捷键 F)'"></a>
 							</div>
 							<div class="avatar">
-								<a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name"><img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" /></a>
+								<a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name">
+									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" />
+								</a>
 							</div>
 							<div class="content">
 								<div class="info fix">

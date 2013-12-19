@@ -823,6 +823,96 @@ var getOEmbed = (function() {
 	}
 })();
 
+var cropAvatar = (function() {
+	var avatars = [];
+
+	function Avatar(url) {
+		this.url = url;
+		this.callbacks = [];
+		this.fetch();
+		avatars.push(this);
+	}
+
+	Avatar.prototype.fetch = function() {
+		var self = this;
+		this.status = 'loading';
+		var img = new Image;
+		img.src = this.url;
+		var timeout = setTimeout(function() {
+			self.status = 'error';
+		}, 15000);
+		waitFor(function() {
+			return (img.naturalWidth && img.naturalHeight) ||
+				self.status === 'error';
+		}, function() {
+			if (self.status === 'error')
+				return;
+			self.status = 'completed';
+			clearTimeout(timeout);
+			self.width = img.naturalWidth;
+			self.height = img.naturalHeight;
+			img.src = null;
+			img = null;
+			self.call();
+		});
+	}
+
+	Avatar.prototype.done = function(callback) {
+		if (this.status === 'error') {
+			this.fetch();
+		}
+		if (this.status === 'loading') {
+			this.callbacks.push(callback);
+		} else if (this.status === 'completed') {
+			this.call();
+		}
+	}
+
+	Avatar.prototype.call = function() {
+		var self = this;
+		var callbacks = this.callbacks.slice();
+		callbacks.forEach(function(callback, i) {
+			self.callbacks.splice(i, 1);
+			callback();
+		});
+	}
+
+	function process(tweet, avatar) {
+		tweet.avatarProcessed = true;
+		var width = avatar.width;
+		var height = avatar.height;
+		if (width > height) {
+			var k = height / 48;
+			height = 48;
+			width = Math.round(width / k);
+		} else {
+			var k = width / 48;
+			width = 48;
+			height = Math.round(height / k);
+		}
+		tweet.avatar_size.width = width + 'px';
+		tweet.avatar_size.height = height + 'px';
+		tweet.avatar_margin.left = (48 - width) / 2 + 'px';
+		tweet.avatar_margin.top = (48 - height) / 2 + 'px';
+	}
+
+	return function(tweet, url) {
+		if (tweet.avatarProcessed)
+			return;
+		var avatar;
+		avatars.some(function(a) {
+			if (a.url === url) {
+				avatar = a;
+				return true;
+			}
+		});
+		avatar = avatar || new Avatar(url);
+		avatar.done(function() {
+			process(tweet, avatar);
+		});
+	}
+})();
+
 var init_interval;
 var _initData = function() { }
 function initData() {
@@ -1296,6 +1386,17 @@ Ripple.events.observe('process_tweet', function(tweet) {
 		user.profile_image_url_https = user.profile_image_url_https.replace('_normal', '');
 		var image = new Image;
 		image.src = user.profile_image_url_https;
+
+		tweet.avatar_size = {
+			width: '48px',
+			height: '48px'
+		};
+		tweet.avatar_margin = {
+			left: '0',
+			top: '0'
+		};
+		tweet.avatarProcessed = false;
+		cropAvatar(tweet, image.src);
 	}
 
 	if (tweet.source) {
