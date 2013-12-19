@@ -740,8 +740,6 @@ var getOEmbed = (function() {
 				params: {
 					key: settings.current.embedlyKey,
 					url: url,
-					maxwidth: 100,
-					maxheight: 100,
 					format: 'json'
 				},
 				success: function(data) {
