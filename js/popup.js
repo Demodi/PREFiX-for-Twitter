@@ -635,6 +635,29 @@ function focusToEnd() {
 	$textarea[0].selectionStart = $textarea[0].selectionEnd = pos;
 }
 
+function deleteTweetFromAllLists(tweet_id) {
+	var lists = [
+		tl_model.tweets,
+		mentions_model.tweets,
+		PREFiX.homeTimeline.buffered,
+		PREFiX.homeTimeline.tweets,
+		PREFiX.mentions.buffered,
+		PREFiX.mentions.tweets
+	];
+	lists.forEach(function(list) {
+		var index = -1;
+		list.some(function(tweet, i) {
+			if (tweet.id_str === tweet_id) {
+				index = i;
+				return true;
+			}
+		});
+		if (index > -1) {
+			list.splice(index, 1);
+		}
+	});
+}
+
 function setImage(file) {
 	$textarea.css('text-indent', file ? '30px' : '');
 	var size;
@@ -1498,6 +1521,7 @@ function remove(e) {
 		$item.parents('li').
 		slideUp(function() {
 			self.$vmodel.$remove();
+			deleteTweetFromAllLists(tweet_id);
 			if (index >= 0) {
 				setCurrent(current_model, current_model.tweets[index].id_str);
 			}
