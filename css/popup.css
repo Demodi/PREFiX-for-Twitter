@@ -1578,7 +1578,7 @@ html.panel-mode #new-window {
 .tweet-list .content {
 	float: right;
 	margin-right: 15px;
-	width: 308px;
+	width: 304px;
 }
 .tweet-list .content > * {
 	line-height: 150%;
@@ -1597,7 +1597,7 @@ html.panel-mode #new-window {
 .tweet-list .content .timestamp {
 	float: right;
 	height: 19px;
-	font: 12px "Calibri for PREFiX", "Hiragino Sans GB", "Hiragino Sans GB W3", "Microsoft Yahei", "WenQuanYi Micro Hei";
+	font: 12px Calibri;
 }
 .tweet-list .tweet-content {
 	clear: both;
