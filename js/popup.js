@@ -1594,6 +1594,7 @@ function repost(e) {
 	tweet = tweet.retweeted_status || tweet;
 	var value = 'RT@' + tweet.user.screen_name + ' ' + tweet.text;
 	composebar_model.text = value;
+	composebar_model.id = tweet.in_reply_to_status_id_str || tweet.id_str;
 	$textarea.focus();
 	$textarea[0].selectionStart = $textarea[0].selectionEnd = 0;
 }
@@ -1753,7 +1754,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 			var data = {
 				status: vm.text.trim()
 			};
-			if (vm.type === 'reply') {
+			if (vm.type === 'reply' || vm.type === 'repost') {
 				data.in_reply_to_status_id = vm.id;
 			}
 			if (vm.type === 'send-dm') {
