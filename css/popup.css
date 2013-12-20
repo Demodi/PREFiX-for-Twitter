@@ -1116,6 +1116,12 @@ body.show-picture #picture-copy {
 #context-timeline ul li .info {
 	margin-bottom: 3px;
 }
+#context-timeline ul li .name {
+	font-weight: bold;
+}
+#context-timeline ul li .sub-name {
+	opacity: .75;
+}
 #context-timeline ul li .permanent-link {
 	color: #aaa !important;
 }
