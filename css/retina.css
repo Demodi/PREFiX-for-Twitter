@@ -1,3 +1,7 @@
+#context-timeline .close {
+	background-image: url('/images/close@2x.png');
+	background-size: 32px 32px;
+}
 #context-timeline ul li .status-content a[href^="https"]::before,
 .tweet-list .status-content a[href^="https"]::before {
 	content: url('/images/protected@2x.png');
