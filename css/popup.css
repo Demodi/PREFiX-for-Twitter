@@ -1619,7 +1619,7 @@ html.panel-mode #new-window {
 .tweet-list .context {
 	display: inline-block;
 	cursor: pointer;
-	margin: 0 0 -3px 3px;
+	margin: 0 0 -3.5px 3px;
 	width: 16px;
 	height: 16px;
 	background: url('/images/conversation.png') center top no-repeat;

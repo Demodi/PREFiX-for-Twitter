@@ -335,7 +335,7 @@ function initKeyboardControlEvents() {
 			if ($('body.show-context-timeline').length) {
 				$('#context-timeline').trigger('click');
 			} else {
-				$view.find('.context span').click();
+				$view.find('.context').click();
 			}
 		} else if (e.keyCode === 68 && e.shiftKey) {
 			var $remove = $view.find('a.remove');
