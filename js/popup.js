@@ -1868,6 +1868,8 @@ var tl_model = avalon.define('home-timeline', function(vm) {
 	vm.tweets = [];
 
 	vm.scrollTop = 0;
+
+	vm.screenNameFirst = PREFiX.settings.current.screenNameFirst;
 });
 tl_model.$watch('current', function(value) {
 	PREFiX.homeTimeline.current = value;
@@ -1965,6 +1967,8 @@ var mentions_model = avalon.define('mentions', function(vm) {
 	vm.tweets = [];
 
 	vm.scrollTop = 0;
+
+	vm.screenNameFirst = PREFiX.settings.current.screenNameFirst;
 });
 mentions_model.$watch('current', function(value) {
 	PREFiX.mentions.current = value;
@@ -2094,6 +2098,8 @@ var directmsgs_model = avalon.define('directmsgs', function(vm) {
 	vm.messages = [];
 
 	vm.scrollTop = 0;
+
+	vm.screenNameFirst = PREFiX.settings.current.screenNameFirst;
 });
 directmsgs_model.$watch('current', function(value) {
 	PREFiX.directmsgs.current = value;
@@ -2180,6 +2186,8 @@ var searches_model = avalon.define('saved-searches', function(vm) {
 	vm.keyword = PREFiX.keyword;
 
 	vm.tweets = [];
+
+	vm.screenNameFirst = PREFiX.settings.current.screenNameFirst;
 });
 searches_model.$watch('keyword', function() {
 	PREFiX.keyword = searches_model.keyword;
@@ -2224,9 +2232,15 @@ searches_model.initialize = function() {
 		searches_model.tweets = [];
 		searches_model.current = null;
 		var tweets;
-		var is_saved = bg_win.saved_searches_items.some(function(item) {
+		var is_saved = bg_win.saved_searches_items.some(function get(item) {
 			if (item.keyword !== keyword) return;
 			tweets = JSON.parse(JSON.stringify(item.tweets));
+			if (! tweets || ! tweets.length) {
+				setTimeout(function() {
+					get(item);
+				}, 100);
+				return;
+			}
 			lscache.set('saved-search-' + keyword + '-id', tweets[0].id_str);
 			item.unread_count = 0;
 			item.check();
@@ -2359,6 +2373,8 @@ searches_model.unload = function() {
 
 var context_tl_model = avalon.define('context-timeline', function(vm) {
 	vm.tweets = [];
+
+	vm.screenNameFirst = PREFiX.settings.current.screenNameFirst;
 });
 context_tl_model.tweets.$watch('length', function(length) {
 	if (! length) return;

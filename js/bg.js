@@ -1610,7 +1610,8 @@ var settings = {
 		createPopAtStartup: false,
 		volume: 1,
 		holdCtrlToSubmit: false,
-		embedlyKey: ''
+		embedlyKey: '',
+		screenNameFirst: false
 	},
 	load: function() {
 		var local_settings = lscache.get('settings') || { };
