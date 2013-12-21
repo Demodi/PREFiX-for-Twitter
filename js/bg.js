@@ -861,20 +861,17 @@ var cropAvatar = (function() {
 		if (this.status === 'error') {
 			this.fetch();
 		}
-		if (this.status === 'loading') {
-			this.callbacks.push(callback);
-		} else if (this.status === 'completed') {
+		this.callbacks.push(callback);
+		if (this.status === 'completed') {
 			this.call();
 		}
 	}
 
 	Avatar.prototype.call = function() {
-		var self = this;
-		var callbacks = this.callbacks.slice();
-		callbacks.forEach(function(callback, i) {
-			self.callbacks.splice(i, 1);
+		var callback;
+		while (callback = this.callbacks.shift()) {
 			callback();
-		});
+		}
 	}
 
 	function process(tweet, avatar) {
