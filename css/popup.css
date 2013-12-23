@@ -1564,7 +1564,7 @@ html.panel-mode #new-window {
 .tweet-list li.protected .timestamp::after {
 	background: url('/images/protected.png') right center no-repeat;
 	padding-left: 3px;
-	height: 19px;
+	height: 18px;
 	width: 9px;
 	float: right;
 	content: "";
