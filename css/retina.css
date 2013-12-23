@@ -32,6 +32,10 @@ h1 b {
 	background-image: url('/images/mentions@2x.png');
 	background-size: 24px;
 }
+#navigation-bar li.directmsgs {
+	background-image: url('/images/directmsgs@2x.png');
+	background-size: 24px;
+}
 #navigation-bar li.privatemsgs {
 	background-image: url('/images/privatemsg@2x.png');
 	background-size: 24px;

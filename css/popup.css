@@ -1278,7 +1278,7 @@ html.panel-mode #new-window {
 	animation: slide-in-from-right-2 ease-in-out .4s;
 }
 #navigation-bar li.directmsgs {
-	background-image: url('/images/privatemsg.png');
+	background-image: url('/images/directmsgs.png');
 	-webkit-animation: slide-in-from-right-3 ease-in-out .4s;
 	animation: slide-in-from-right-3 ease-in-out .4s;
 }
@@ -1656,16 +1656,6 @@ html.panel-mode #new-window {
 }
 .tweet-list .context:hover {
 	background-position: center bottom;
-}
-.tweet-list .in-reply-to-message {
-	clear: both;
-	padding: 5px 8px;
-	margin: 5px 0;
-	border-radius: 3px;
-	background: rgba(0, 0, 0, .5);
-	color: #fff;
-	text-shadow: 0 1px 0 #333;
-	box-shadow: 0 1px 2px #333 inset;
 }
 .tweet-list .breakpoint {
 	height: 48px;
