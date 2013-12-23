@@ -1064,13 +1064,11 @@ body.show-picture #picture-copy {
 	overflow-y: auto;
 	background: rgba(0, 0, 0, .85);
 	color: #fff;
-	text-shadow: 0 0 2px #ccc;
 }
 #context-timeline::-webkit-scrollbar-track:vertical {
 	margin: 0;
 }
 #context-timeline .loading-tip {
-	text-shadow: none;
 	display: none;
 }
 #context-timeline.loading .loading-tip {
@@ -1104,7 +1102,6 @@ body.show-picture #picture-copy {
 	font-weight: 300;
 	padding: 10px 0 5px 0;
 	margin: 16px 12px 9px 12px;
-	text-shadow: none;
 	border-bottom: 1px solid #333;
 	height: 21px;
 }
@@ -1112,7 +1109,6 @@ body.show-picture #picture-copy {
 	list-style: none;
 	margin: 0 12px 100px 12px;
 	padding: 0;
-	text-shadow: none;
 }
 #context-timeline ul li {
 	clear: both;
