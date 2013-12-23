@@ -1151,7 +1151,7 @@ body.show-picture #picture-copy {
 }
 #context-timeline ul li .timestamp,
 #context-timeline ul li .timestamp span {
-	font: 12px Calibri;
+	font: 12px Calibri, "Calibri for PREFiX";
 	color: #ccc !important;
 }
 #context-timeline ul li.protected .timestamp {
@@ -1615,7 +1615,7 @@ html.panel-mode #new-window {
 .tweet-list .content .timestamp {
 	float: right;
 	height: 19px;
-	font: 12px Calibri;
+	font: 12px Calibri, "Calibri for PREFiX";
 }
 .tweet-list .tweet-content {
 	clear: both;
@@ -1657,7 +1657,7 @@ html.panel-mode #new-window {
 	height: 48px;
 	text-align: center;
 	letter-spacing: 2px;
-	font: 13px "Calibri for PREFiX";
+	font: 13px Calibri, "Calibri for PREFiX";
 	line-height: 48px;
 	background: url('/images/tweet-bg.png') repeat;
 }
