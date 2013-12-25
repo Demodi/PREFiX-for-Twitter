@@ -1518,6 +1518,8 @@ html.panel-mode #new-window {
 }
 .tweet-list li .action-icons .remove {
 	left: 0;
+	top: inherit;
+	bottom: 0;
 	background-image: url('/images/remove.png');
 }
 .tweet-list li .action-icons .remove:hover {
@@ -1526,7 +1528,7 @@ html.panel-mode #new-window {
 	animation: shake ease-in-out .2s infinite;
 }
 .tweet-list li .action-icons .reply {
-	right: 75px;
+	right: 68px;
 	background-image: url('/images/reply.png');
 }
 .tweet-list li .action-icons .reply:hover {
@@ -1536,7 +1538,7 @@ html.panel-mode #new-window {
 	right: 0;
 }
 .tweet-list li .action-icons .repost {
-	right: 41px;
+	right: 34px;
 	background-image: url('/images/repost.png');
 }
 .tweet-list li .action-icons .repost:hover {
@@ -1546,7 +1548,7 @@ html.panel-mode #new-window {
 	background-position: left bottom;
 }
 .tweet-list li .action-icons .favourite {
-	right: 7px;
+	right: 0;
 	background-image: url('/images/favourite.png');
 	-webkit-transform-origin: center bottom;
 	transform-origin: center bottom;
