@@ -95,8 +95,8 @@
 				</span>
 			</div>
 			<div id="stream">
-				<ul id="home-timeline" class="tweet-list fix" ms-controller="home-timeline" ms-each-tweet="tweets">
-					<li ms-data-id="tweet.id_str" ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
+				<ul id="home-timeline" class="tweet-list fix" ms-controller="home-timeline" ms-each-tweet="tweets" ms-attr-replying="is_replying">
+					<li ms-data-id="tweet.id_str" ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected" ms-attr-current-replied="tweet.current_replied">
 						<div class="tweet fix">
 							<div class="action-icons">
 								<a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除 (快捷键 Shift + D)"></a>
@@ -126,8 +126,8 @@
 					</li>
 					<li class="breakpoint" ms-if="tweet.is_breakpoint" ms-text="tweet.loaded_at"></li>
 				</ul>
-				<ul id="mentions" class="tweet-list fix" ms-controller="mentions" ms-each-tweet="tweets">
-					<li ms-data-id="tweet.id_str" ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
+				<ul id="mentions" class="tweet-list fix" ms-controller="mentions" ms-each-tweet="tweets" ms-attr-replying="is_replying">
+					<li ms-data-id="tweet.id_str" ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected" ms-attr-current-replied="tweet.current_replied">
 						<div class="tweet fix">
 							<div class="action-icons">
 								<a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除 (快捷键 Shift + D)"></a>
@@ -182,8 +182,8 @@
 						</div>
 					</li>
 				</ul>
-				<ul id="saved-searches" class="tweet-list fix" ms-controller="saved-searches" ms-each-tweet="tweets">
-					<li ms-data-id="tweet.id_str" ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected">
+				<ul id="saved-searches" class="tweet-list fix" ms-controller="saved-searches" ms-each-tweet="tweets" ms-attr-replying="is_replying">
+					<li ms-data-id="tweet.id_str" ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected" ms-attr-current-replied="tweet.current_replied">
 						<div class="tweet fix">
 							<div class="action-icons">
 								<a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除 (快捷键 Shift + D)"></a>

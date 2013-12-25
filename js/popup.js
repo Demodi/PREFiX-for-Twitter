@@ -1545,6 +1545,17 @@ function remove(e) {
 	});
 }
 
+function cancelReply() {
+	var current_model = getCurrent();
+	current_model.is_replying = false;
+	current_model.tweets.some(function(tweet) {
+		if (tweet.current_replied) {
+			tweet.current_replied = false;
+			return true;
+		}
+	});
+}
+
 function reply() {
 	var tweet = this.$vmodel.tweet;
 	composebar_model.type = 'reply';
@@ -1573,6 +1584,10 @@ function reply() {
 	$textarea.focus();
 	$textarea[0].selectionStart = prefix.length;
 	$textarea[0].selectionEnd = value.length;
+	cancelReply();
+	var current_model = getCurrent();
+	current_model.is_replying = true;
+	tweet.current_replied = true;
 }
 
 function retweet(vm) {
@@ -1610,6 +1625,7 @@ function retweet(vm) {
 
 function repost(e) {
 	e.preventDefault();
+	cancelReply();
 	composebar_model.type = 'repost';
 	composebar_model.id = '';
 	var tweet = this.$vmodel.tweet;
@@ -1853,6 +1869,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 			vm.id = '';
 			vm.user = '';
 			vm.screen_name = '';
+			cancelReply();
 		}
 		$textarea.toggleClass('filled', !! value);
 		count();
@@ -1891,10 +1908,15 @@ var tl_model = avalon.define('home-timeline', function(vm) {
 
 	vm.scrollTop = 0;
 
+	vm.is_replying = PREFiX.homeTimeline.is_replying;
+
 	vm.screenNameFirst = PREFiX.settings.current.screenNameFirst;
 });
 tl_model.$watch('current', function(value) {
 	PREFiX.homeTimeline.current = value;
+});
+tl_model.$watch('is_replying', function(value) {
+	PREFiX.homeTimeline.is_replying = value;
 });
 tl_model.$watch('scrollTop', function(value) {
 	PREFiX.homeTimeline.scrollTop = value;
@@ -1990,10 +2012,15 @@ var mentions_model = avalon.define('mentions', function(vm) {
 
 	vm.scrollTop = 0;
 
+	vm.is_replying = PREFiX.mentions.is_replying;
+
 	vm.screenNameFirst = PREFiX.settings.current.screenNameFirst;
 });
 mentions_model.$watch('current', function(value) {
 	PREFiX.mentions.current = value;
+});
+mentions_model.$watch('is_replying', function(value) {
+	PREFiX.mentions.is_replying = value;
 });
 mentions_model.$watch('scrollTop', function(value) {
 	PREFiX.mentions.scrollTop = value;
@@ -2206,6 +2233,8 @@ var searches_model = avalon.define('saved-searches', function(vm) {
 	vm.showRelatedTweets = showRelatedTweets;
 
 	vm.keyword = PREFiX.keyword;
+
+	vm.is_replying = false;
 
 	vm.tweets = [];
 

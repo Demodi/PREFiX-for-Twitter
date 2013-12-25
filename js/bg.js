@@ -999,13 +999,15 @@ function unload() {
 		tweets: [],
 		buffered: [],
 		scrollTop: 0,
-		current: ''
+		current: '',
+		is_replying: false
 	};
 	PREFiX.mentions = { 
 		tweets: [],
 		buffered: [],
 		scrollTop: 0,
-		current: ''
+		current: '',
+		is_replying: false
 	};
 	PREFiX.directmsgs = { 
 		messages: [],
@@ -1377,6 +1379,8 @@ Ripple.events.observe('process_tweet', function(tweet) {
 		tweet.repostOnly = true;
 	}
 
+	tweet.current_replied = false;
+
 	var user = tweet.user || tweet.sender;
 	if (user) {
 		user.profile_image_url = user.profile_image_url.replace('_normal', '');
@@ -1700,13 +1704,15 @@ var PREFiX = this.PREFiX = {
 		tweets: [],
 		buffered: [],
 		scrollTop: 0,
-		current: ''
+		current: '',
+		is_replying: false
 	},
 	mentions: { 
 		tweets: [],
 		buffered: [],
 		scrollTop: 0,
-		current: ''
+		current: '',
+		is_replying: false
 	},
 	directmsgs: { 
 		messages: [],
