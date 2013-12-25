@@ -912,6 +912,36 @@ function initMainUI() {
 		e.preventDefault();
 		createTab(e.target.src, e.shiftKey);
 		hidePicture();
+	}).delegate('.info', 'mouseenter', function(e) {
+		var $info = $(e.currentTarget);
+		var original_width = $info.width();
+		$info.css('position', 'absolute');
+		var $action_icons = $info.parents('li').find('.action-icons a');
+		var full_width = $info.width() + ($action_icons.length * $action_icons.width()) + 5;
+		$info.css('position', '');
+		if (full_width <= original_width) return;
+		e.currentTarget.scrolling = true;
+		var scrolled = 0;
+		var direction;
+		function scroll() {
+			if (! e.currentTarget.scrolling) return;
+			var scrolled_end = scrolled === (full_width - original_width);
+			var scrolled_start = direction && ! scrolled;
+			e.currentTarget.timeout = setTimeout(scroll, scrolled_end || scrolled_start ? 1500: 20);
+			if (scrolled_end) {
+				direction = 1;
+			} else if (scrolled === 0) {
+				direction = -1;
+			}
+			scrolled += -direction;
+			$info.css('text-indent', '-' + scrolled + 'px');
+		}
+		scroll();
+	}).delegate('.info', 'mouseleave', function(e) {
+		var $info = $(e.currentTarget);
+		$info.css('text-indent', 0);
+		clearTimeout(e.currentTarget.timeout);
+		e.currentTarget.scrolling = false;
 	});
 
 	$('h1').click(function(e) {
