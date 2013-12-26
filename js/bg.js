@@ -430,7 +430,6 @@ function getDataSince(method, since_id, lock, extra_data, timeout) {
 }
 
 function updateTitle() {
-	var need_notify = false;
 	var title = [ 'PREFiX for Twitter' ];
 
 	var tl = PREFiX.homeTimeline;
@@ -641,7 +640,49 @@ function update() {
 
 	Deferred.parallel(dl).
 	hold(function() {
-		if (isNeedNotify()) playSound();
+		if (isNeedNotify()) {
+			playSound();
+			if (settings.current.notification) {
+				var is_dm = !! PREFiX.count.direct_messages;
+				var content = '您有 ';
+				content += PREFiX.count.direct_messages || PREFiX.count.mentions;
+				content += ' 条未读';
+				content += is_dm ? '私信' : '@消息';
+				if (! PREFiX.popupActive || (PREFiX.panelMode && ! PREFiX.is_popup_focused)) {
+					showNotification({
+						content: content,
+						id: 'notification'
+					}).addEventListener('click', function(e) {
+						this.cancel();
+						if (PREFiX.panelMode) {
+							var url = chrome.extension.getURL('/popup.html?new_window=true');
+							chrome.tabs.query({
+								url: url
+							}, function(tabs) {
+								tabs.forEach(function(tab) {
+									chrome.windows.update(tab.windowId, {
+										focused: true
+									});
+								});
+							});
+							var views = chrome.extension.getViews();
+							views.some(function(view) {
+								if (view.location.href == url) {
+									var selector = '#navigation-bar ';
+									selector += is_dm ? '.directmsgs' : '.mentions';
+									var elem = view.$(selector)[0];
+									var event = new Event('click');
+									elem.dispatchEvent(event);
+									return true;
+								}
+							});
+						} else {
+							createPopup();
+						}
+					});
+				}
+			}
+		}
 	}).
 	next(function() {
 		updateTitle();
@@ -1612,7 +1653,8 @@ var settings = {
 		volume: 1,
 		holdCtrlToSubmit: false,
 		embedlyKey: '',
-		screenNameFirst: false
+		screenNameFirst: false,
+		notification: true
 	},
 	load: function() {
 		var local_settings = lscache.get('settings') || { };

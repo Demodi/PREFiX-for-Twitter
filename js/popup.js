@@ -12,7 +12,6 @@ var $textarea;
 var $main;
 
 var is_panel_mode = false;
-var is_focused = true;
 var $scrolling_elem;
 
 var is_windows = navigator.platform.indexOf('Win') > -1;
@@ -20,6 +19,7 @@ var is_windows = navigator.platform.indexOf('Win') > -1;
 var loading = false;
 var is_on_top = true;
 PREFiX.popupActive = true;
+PREFiX.is_popup_focused = true;
 
 var lyric;
 
@@ -525,7 +525,7 @@ function getCurrent() {
 
 var last_draw_attention = new Date;
 function drawAttention() {
-	if (! is_panel_mode || is_focused) return;
+	if (! is_panel_mode || PREFiX.is_popup_focused) return;
 	var now = new Date;
 	if (now - last_draw_attention < 3000) return;
 	last_draw_attention = now;
@@ -721,11 +721,11 @@ function initMainUI() {
 	}
 
 	$(window).on('focus', function(e) {
-		is_focused = true;
+		PREFiX.is_popup_focused = true;
 		stopDrawingAttention();
 		markBreakpoint();
 	}).on('blur', function(e) {
-		is_focused = false;
+		PREFiX.is_popup_focused = false;
 	});
 
 	$textarea = $('#compose-bar textarea');
@@ -1984,7 +1984,7 @@ tl_model.initialize = function() {
 				drawAttention();
 			pre_count.timeline = tl.buffered.length;
 		}
-		if (! is_focused || $main[0].scrollTop > $body.height / 2)
+		if (! PREFiX.is_popup_focused || $main[0].scrollTop > $body.height / 2)
 			return;
 		var buffered = tl.buffered;
 		tl.buffered = [];
@@ -2087,7 +2087,7 @@ mentions_model.initialize = function() {
 				drawAttention();
 			pre_count.mentions = mentions.buffered.length;
 		}
-		if (! is_focused || $main[0].scrollTop)
+		if (! PREFiX.is_popup_focused || $main[0].scrollTop)
 			return;
 
 		var buffered = mentions.buffered;
@@ -2218,7 +2218,7 @@ directmsgs_model.initialize = function() {
 				drawAttention();
 			pre_count.directmsgs = directmsgs.buffered.length;
 		}
-		if (! is_focused || $main[0].scrollTop)
+		if (! PREFiX.is_popup_focused || $main[0].scrollTop)
 			return;
 
 		var buffered = directmsgs.buffered;
@@ -2509,6 +2509,8 @@ onunload = function() {
 		};
 		lscache.set('popup_pos', pos);
 	}
+	PREFiX.panelMode = false;
+	PREFiX.is_popup_focused = false;
 }
 
 if (location.search == '?new_window=true') {
@@ -2516,6 +2518,11 @@ if (location.search == '?new_window=true') {
 	$('html').addClass('panel-mode');
 	initFixSize(400, 600);
 	$(applyViewHeight);
+	PREFiX.panelMode = true;
+} else {
+	PREFiX.panelMode = false;
 }
 
 chrome.runtime.sendMessage({ });
+
+bg_win.hideAllNotifications();
