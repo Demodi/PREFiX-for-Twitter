@@ -912,7 +912,7 @@ function initMainUI() {
 		e.preventDefault();
 		createTab(e.target.src, e.shiftKey);
 		hidePicture();
-	}).delegate('.info', 'mouseenter', function(e) {
+	}).delegate('#stream .info', 'mouseenter', function(e) {
 		var $info = $(e.currentTarget);
 		var original_width = $info.width();
 		$info.css('position', 'absolute');
@@ -936,7 +936,7 @@ function initMainUI() {
 			$info.css('text-indent', '-' + scrolled + 'px');
 		}
 		scroll();
-	}).delegate('.info', 'mouseleave', function(e) {
+	}).delegate('#stream .info', 'mouseleave', function(e) {
 		var $info = $(e.currentTarget);
 		$info.css('text-indent', 0);
 		clearTimeout(e.currentTarget.timeout);
