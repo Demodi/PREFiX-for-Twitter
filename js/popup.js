@@ -37,7 +37,7 @@ function setViewHeight(height) {
 
 function applyViewHeight() {
 	var height = getViewHeight();
-	$('body, #picture-overlay, #context-timeline').height(height);
+	$('body, #picture-overlay, #context-timeline, #drop-area').height(height);
 	$main.height(height - parseInt($main.css('top'), 10));
 }
 
@@ -916,8 +916,7 @@ function initMainUI() {
 		var $info = $(e.currentTarget);
 		var original_width = $info.width();
 		$info.css('position', 'absolute');
-		var $action_icons = $info.parents('li').find('.action-icons a');
-		var full_width = $info.width() + ($action_icons.length * $action_icons.width()) + 5;
+		var full_width = $info.width() + 95;
 		$info.css('position', '');
 		if (full_width <= original_width) return;
 		e.currentTarget.scrolling = true;
