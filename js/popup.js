@@ -1164,7 +1164,7 @@ function showPicture(img_url) {
 			height: height / 1.5
 		}, true)).
 		css({
-			opacity: 0,
+			opacity: .05,
 			display: 'block'
 		}).
 		show().
@@ -1208,7 +1208,7 @@ function hidePicture() {
 	style.width = $picture.width() / 1.5 + 'px';
 	style.height = $picture.height() / 1.5 + 'px';
 	style.opacity = 0;
-	style['margin-left'] = 0;
+	style['margin-left'] = .05;
 	$picture.css(style);
 	$('#picture-wrapper').css({
 		animation: 'pictureSlideOut 225ms both',
