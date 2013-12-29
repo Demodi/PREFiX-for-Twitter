@@ -1675,6 +1675,8 @@ html.panel-mode #new-window {
 .photo img {
 	cursor: -webkit-zoom-in;
 	cursor: zoom-in;
+	max-width: 120px;
+	max-height: 120px;
 }
 .tweet-list .context {
 	display: inline-block;

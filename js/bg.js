@@ -732,14 +732,14 @@ function loadFriends() {
 function processPhoto(tweet, photo) {
 	var width = photo.width;
 	var height = photo.height;
-	if (width > 100 || height > 100) {
+	if (width > 120 || height > 120) {
 		if (width > height) {
-			var k = width / 100;
-			width = 100;
+			var k = width / 120;
+			width = 120;
 			height = Math.round(height / k);
 		} else {
-			var k = height / 100;
-			height = 100;
+			var k = height / 120;
+			height = 120;
 			width = Math.round(width / k);
 		}
 	}
