@@ -774,6 +774,37 @@ var getOEmbed = (function() {
 		var self = this;
 		var url = this.url;
 		this.status = 'loading';
+		var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
+		var result = url.match(instagram_re);
+		if (result) {
+			var d = new Deferred;
+			this.ajax = d;
+			url = result[0] + 'media/';
+			url = url.replace('instagr.am', 'instagram.com');
+			var large_url = url + '?size=l';
+			var thumbnail_url = url + '?size=t';
+			var image = new Image;
+			image.src = large_url;
+			waitFor(function() {
+				return image.naturalWidth;
+			}, function() {
+				self.data = {
+					url: large_url,
+					width: image.naturalWidth,
+					height: image.naturalHeight,
+					type: 'photo',
+					thumbnail_url: thumbnail_url
+				};
+				self.status = 'completed';
+				lscache.set('oembed-' + url, self);
+				image.src = '';
+				image = null;
+				setTimeout(function() {
+					d.call();
+				});
+			});
+			return;
+		}
 		this.ajax = Ripple.ajax(
 			'http://api.embed.ly/1/oembed',
 			{
@@ -811,7 +842,7 @@ var getOEmbed = (function() {
 			this.fetch();
 		}
 		if (this.status === 'loading') {
-			this.ajax.observe('success', function() {
+			this.ajax.next(function() {
 				setTimeout(callback);
 			});
 		} else if (this.status === 'completed') {
@@ -1347,7 +1378,7 @@ function getLargeImage(raw){
 
 	//Recent Photos
 	raw = raw.replace(':thumb', ''); //twimg
-	raw = raw.replace('?size=t', ''); //Instagram
+	raw = raw.replace('?size=t', '?size=l'); //Instagram
 	raw = raw.replace('size=medium', '');
 
 	if (/^https?:\/\/pbs\.twimg\.com\/[^\.]+\.(jpg|png)$/.test(raw)) {
