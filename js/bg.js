@@ -760,12 +760,28 @@ function processPhoto(tweet, photo) {
 	return photo;
 }
 
+function getNaturalDimentions(url, callback) {
+	var image = new Image;
+	image.src = url;
+	waitFor(function() {
+		return image.naturalWidth;
+	}, function() {
+		callback({
+			width: image.naturalWidth,
+			height: image.naturalHeight
+		});
+		image.src = '';
+		image = null;
+	});
+}
+
 var getOEmbed = (function() {
 	this.oEmbed_lib = [];
 
 	function OEmbed(url) {
 		this.url = url;
 		this.status = 'initialized';
+		this.callbacks = [];
 		this.fetch();
 		oEmbed_lib.push(this);
 	}
@@ -777,32 +793,58 @@ var getOEmbed = (function() {
 		var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
 		var result = url.match(instagram_re);
 		if (result) {
-			var d = new Deferred;
-			this.ajax = d;
 			url = result[0] + 'media/';
 			url = url.replace('instagr.am', 'instagram.com');
 			var large_url = url + '?size=l';
 			var thumbnail_url = url + '?size=t';
-			var image = new Image;
-			image.src = large_url;
-			waitFor(function() {
-				return image.naturalWidth;
-			}, function() {
+			getNaturalDimentions(large_url, function(dimention) {
 				self.data = {
 					url: large_url,
-					width: image.naturalWidth,
-					height: image.naturalHeight,
+					width: dimention.width,
+					height: dimention.height,
 					type: 'photo',
 					thumbnail_url: thumbnail_url
 				};
 				self.status = 'completed';
 				lscache.set('oembed-' + url, self);
-				image.src = '';
-				image = null;
 				setTimeout(function() {
-					d.call();
+					self.call();
 				});
 			});
+			return;
+		}
+		var fanfou_re = /https?:\/\/fanfou\.com\/photo\//;
+		var result = url.match(fanfou_re);
+		if (result) {
+			Ripple.ajax(
+				url,
+				{
+					method: 'GET',
+					accepts: 'xml',
+					success: function(html) {
+						var $html = $(html);
+						var large_url = $html.find('#photo img').attr('src');
+						if (large_url) {
+							getNaturalDimentions(large_url, function(dimention) {
+								self.data = {
+									url: large_url,
+									width: dimention.width,
+									height: dimention.height,
+									type: 'photo'
+								};
+								self.status = 'completed';
+								lscache.set('oembed-' + url, self);
+								setTimeout(function() {
+									self.call();
+								});
+							});
+						} else {
+							self.status = 'ignored';
+							lscache.set('oembed-' + url, self);
+						}
+					}
+				}
+			);
 			return;
 		}
 		this.ajax = Ripple.ajax(
@@ -822,6 +864,7 @@ var getOEmbed = (function() {
 						self.status = 'ignored';
 					}
 					lscache.set('oembed-' + url, self);
+					self.call();
 				},
 				error: function(e) {
 					if (e.status) {
@@ -835,6 +878,13 @@ var getOEmbed = (function() {
 		);
 	}
 
+	OEmbed.prototype.call = function() {
+		var callback;
+		while (callback = this.callbacks.shift()) {
+			callback();
+		}
+	}
+
 	OEmbed.prototype.done = function(callback) {
 		if (this.status === 'ignored')
 			return;
@@ -842,9 +892,7 @@ var getOEmbed = (function() {
 			this.fetch();
 		}
 		if (this.status === 'loading') {
-			this.ajax.next(function() {
-				setTimeout(callback);
-			});
+			this.callbacks.push(callback);
 		} else if (this.status === 'completed') {
 			callback();
 		}
@@ -862,6 +910,46 @@ var getOEmbed = (function() {
 		});
 	}
 
+	var photo_res = [
+		/\.(?:jpg|jpeg|gif|png|bmp|webp)/i,
+		/twitpic\.com\//,
+		/https?:\/\/img\.ly\//,
+		/tinypic\.com\//,
+		/flickr\.com\/photos\/|flic.kr\//,
+		/instagram\.com|instagr\.am/,
+		/yfrog\./,
+		/https?:\/\/twitgoo\.com\//,
+		/https?:\/\/(?:s\w+|i\w+|media)\.photobucket\.com\/(?:albums|image)\//,
+		/https?:\/\/facebook\.com|fb\.me/,
+		/https?:\/\/path\.com\//,
+		/tumblr\.com\//,
+		/imgur\.com\//,
+		/https?:\/\/picasaweb\.google\.com\//,
+		/https?:\/\/(?:www\.mobypicture\.com\/user|moby\.to)\//,
+		/https?:\/\/meadd\.com\//,
+		/deviantart\.(?:com|net)|https?:\/\/fav\.me\//,
+		/https?:\/\/(?:www\.)?fotopedia\.com\//,
+		/https?:\/\/fanfou\.com\/photo\//,
+		/https?:\/\/(?:imgs\.|www\.|)xkcd\.com\//,
+		/https?:\/\/(?:www\.|)23hq\.com\//,
+		/https?:\/\/drbl\.in\/|dribbble\.com\/shots\//,
+		/\.smugmug\.com\//,
+		/https?:\/\/(?:www\.)?fotopedia\.com\//,
+		/https?:\/\/photozou\.jp\/photo\//,
+		/https?:\/\/(?:img\.)?skitch\.com\//,
+		/https?:\/\/(?:www\.)?questionablecontent\.net\//,
+		/twitrpix\.com\//,
+		/https?:\/\/(?:www\.)?(?:someecards\.com|some\.ly)\/|/,
+		/https?:\/\/pikchur\.com\//,
+		/https?:\/\/mlkshk\.com\/p\//,
+		/https?:\/\/(?:pics\.)?lockerz\.com\/s\//,
+		/https?:\/\/d\.pr\/i\//,
+		/https?:\/\/www\.eyeem\.com\/[pau]\//,
+		/https?:\/\/(?:giphy\.com\/gifs|gph\.is)\//,
+		/https?:\/\/frontback\.me\/p\//,
+		/https?:\/\/(?:bit\.ly|goo\.gl|v\.gd|is\.gd|tinyurl\.com|to\.ly|yep\.it|j\.mp|ow\.ly)\//,
+	];
+
 	return function(tweet) {
 		if (! settings.current.embedlyKey)
 			return;
@@ -871,6 +959,10 @@ var getOEmbed = (function() {
 			return;
 		tweet.entities.urls.forEach(function(item) {
 			var url = item.expanded_url;
+			var is_photo_link = photo_res.some(function(re) {
+				return re.test(url);
+			});
+			if (! is_photo_link) return;
 			var cached;
 			oEmbed_lib.some(function(oembed) {
 				if (oembed.url === url) {
