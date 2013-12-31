@@ -1066,7 +1066,6 @@ var getOEmbed = (function() {
 					}
 					$link.text(display_url);
 					tweet.fixedText = $temp.html();
-					console.log(oEmbed.url)
 				});
 			}
 		});
