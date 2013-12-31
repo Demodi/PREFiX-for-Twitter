@@ -126,8 +126,6 @@ var getFullTime = Ripple.helpers.generateTimeFormater(function(table) {
 	];
 });
 
-var re = new RegExp;
-re.compile('[「\u4E00-\u9FA5\uf900-\ufa2d」]', 'g');
 function fixTweetList(tweets) {
 	var $text = $('<div />');
 	tweets.forEach(function(tweet) {
