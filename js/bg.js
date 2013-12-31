@@ -966,6 +966,21 @@ var getOEmbed = (function() {
 			width: data.width,
 			height: data.height
 		});
+		if (oEmbed.longUrl) {
+			setTimeout(function() {
+				var text = tweet.fixedText;
+				$temp.html(text);
+				var $link = $temp.find('[href="' + oEmbed.url + '"]');
+				$link.prop('title', oEmbed.longUrl);
+				$link.prop('href', oEmbed.longUrl);
+				var display_url = oEmbed.longUrl.replace(/^https?:\/\//, '');
+				if (display_url.length > 25) {
+					display_url = display_url.substring(0, 25) + '...';
+				}
+				$link.text(display_url);
+				tweet.fixedText = $temp.html();
+			});
+		}
 	}
 
 	var photo_res = [
