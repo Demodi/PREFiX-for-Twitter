@@ -104,6 +104,52 @@ function getInstanceByRateLimit(method) {
 	}
 }
 
+function initUrlExpand() {
+	var short_url_services = lscache.get('short_url_services');
+	if (short_url_services) {
+		var re = '^https?:\\/\\/';
+		re += '(?:' + Object.keys(short_url_services).join('|') + ')';
+		re += '\\/\\S+';
+		re = re.replace(/\./g, '\\.');
+		PREFiX.shortUrlRe = new RegExp(re);
+		return;
+	}
+	Ripple.ajax.get('http://api.longurl.org/v2/services', {
+		params: {
+			format: 'json'
+		},
+		success: function(data) {
+			lscache.set('short_url_services', data);
+			initUrlExpand();
+		},
+		error: function(e) {
+			setTimeout(initUrlExpand, 60000);
+		}
+	});
+}
+
+var cachedShortUrls = { };
+function expandUrl(url) {
+	var d = new Deferred;
+	if (cachedShortUrls[url]) {
+		setTimeout(function() {
+			d.call(cachedShortUrls[url]);
+		});
+	} else {
+		Ripple.ajax.get('http://api.longurl.org/v2/expand', {
+			params: {
+				url: url,
+				format: 'json'
+			}
+		}).next(function(data) {
+			var long_url = data['long-url'];
+			cachedShortUrls[url] = long_url;
+			d.call(long_url);
+		});
+	}
+	return d;
+}
+
 function user() {
 	if (! PREFiX.accessToken) return;
 	var account_instances = [];
@@ -786,10 +832,20 @@ var getOEmbed = (function() {
 		oEmbed_lib.push(this);
 	}
 
-	OEmbed.prototype.fetch = function() {
+	OEmbed.prototype.fetch = function fetch() {
 		var self = this;
-		var url = this.url;
+		var url = this.longUrl || this.url;
 		this.status = 'loading';
+
+		short_url_re = PREFiX.shortUrlRe || short_url_re;
+		if (short_url_re.test(url)) {
+			expandUrl(url).next(function(long_url) {
+				self.longUrl = long_url;
+				fetch.call(self);
+			});
+			return;
+		}
+
 		var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
 		var result = url.match(instagram_re);
 		if (result) {
@@ -813,6 +869,7 @@ var getOEmbed = (function() {
 			});
 			return;
 		}
+
 		var fanfou_re = /https?:\/\/fanfou\.com\/photo\//;
 		var result = url.match(fanfou_re);
 		if (result) {
@@ -847,6 +904,7 @@ var getOEmbed = (function() {
 			);
 			return;
 		}
+
 		this.ajax = Ripple.ajax(
 			'http://api.embed.ly/1/oembed',
 			{
@@ -946,9 +1004,10 @@ var getOEmbed = (function() {
 		/https?:\/\/d\.pr\/i\//,
 		/https?:\/\/www\.eyeem\.com\/[pau]\//,
 		/https?:\/\/(?:giphy\.com\/gifs|gph\.is)\//,
-		/https?:\/\/frontback\.me\/p\//,
-		/https?:\/\/(?:bit\.ly|goo\.gl|v\.gd|is\.gd|tinyurl\.com|to\.ly|yep\.it|j\.mp|ow\.ly)\//,
+		/https?:\/\/frontback\.me\/p\//
 	];
+
+	var short_url_re = /https?:\/\/(?:bit\.ly|goo\.gl|v\.gd|is\.gd|tinyurl\.com|to\.ly|yep\.it|j\.mp)\//;
 
 	return function(tweet) {
 		if (! settings.current.embedlyKey)
@@ -1195,6 +1254,8 @@ function unload() {
 
 function initialize() {
 	settings.load();
+
+	initUrlExpand();
 
 	if (PREFiX.accessToken) {
 		// 更新账户信息
