@@ -1031,7 +1031,7 @@ var getOEmbed = (function() {
 			var is_short_url = short_url_re.test(url);
 			var is_photo_link = isPhotoLink(url) || is_short_url;
 			if (! is_photo_link) return;
-			var cached;
+			var cached, oEmbed;
 			oEmbed_lib.some(function(oembed) {
 				if (oembed.url === url) {
 					cached = oembed;
@@ -1045,8 +1045,9 @@ var getOEmbed = (function() {
 				cached.done(function() {
 					process(tweet, cached);
 				});
+				oEmbed = cached;
 			} else {
-				var oEmbed = new OEmbed(url);
+				oEmbed = new OEmbed(url);
 				oEmbed.done(function() {
 					process(tweet, oEmbed);
 				});
