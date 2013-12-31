@@ -3,6 +3,8 @@ var ct = chrome.tabs;
 var root_url = ce.getURL('');
 var popup_url = ce.getURL('popup.html');
 
+var short_url_re = /https?:\/\/(?:bit\.ly|goo\.gl|v\.gd|is\.gd|tinyurl\.com|to\.ly|yep\.it|j\.mp)\//;
+
 var rate_limit = {
 	default: { },
 	sub: { }
@@ -846,6 +848,9 @@ var getOEmbed = (function() {
 			return;
 		}
 
+		if (! isPhotoLink(url))
+			return;
+
 		var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
 		var result = url.match(instagram_re);
 		if (result) {
@@ -966,21 +971,6 @@ var getOEmbed = (function() {
 			width: data.width,
 			height: data.height
 		});
-		if (oEmbed.longUrl) {
-			setTimeout(function() {
-				var text = tweet.fixedText;
-				$temp.html(text);
-				var $link = $temp.find('[href="' + oEmbed.url + '"]');
-				$link.prop('title', oEmbed.longUrl);
-				$link.prop('href', oEmbed.longUrl);
-				var display_url = oEmbed.longUrl.replace(/^https?:\/\//, '');
-				if (display_url.length > 25) {
-					display_url = display_url.substring(0, 25) + '...';
-				}
-				$link.text(display_url);
-				tweet.fixedText = $temp.html();
-			});
-		}
 	}
 
 	var photo_res = [
@@ -1012,7 +1002,7 @@ var getOEmbed = (function() {
 		/https?:\/\/(?:img\.)?skitch\.com\//,
 		/https?:\/\/(?:www\.)?questionablecontent\.net\//,
 		/twitrpix\.com\//,
-		/https?:\/\/(?:www\.)?(?:someecards\.com|some\.ly)\/|/,
+		/https?:\/\/(?:www\.)?(?:someecards\.com|some\.ly)\//,
 		/https?:\/\/pikchur\.com\//,
 		/https?:\/\/mlkshk\.com\/p\//,
 		/https?:\/\/(?:pics\.)?lockerz\.com\/s\//,
@@ -1022,7 +1012,11 @@ var getOEmbed = (function() {
 		/https?:\/\/frontback\.me\/p\//
 	];
 
-	var short_url_re = /https?:\/\/(?:bit\.ly|goo\.gl|v\.gd|is\.gd|tinyurl\.com|to\.ly|yep\.it|j\.mp)\//;
+	function isPhotoLink(url) {
+		return photo_res.some(function(re) {
+				return re.test(url);
+			});
+	}
 
 	return function(tweet) {
 		if (! settings.current.embedlyKey)
@@ -1031,11 +1025,11 @@ var getOEmbed = (function() {
 			return;
 		if (! tweet.entities || ! tweet.entities.urls.length)
 			return;
+		short_url_re = PREFiX.shortUrlRe || short_url_re;
 		tweet.entities.urls.forEach(function(item) {
 			var url = item.expanded_url;
-			var is_photo_link = photo_res.some(function(re) {
-				return re.test(url);
-			});
+			var is_short_url = short_url_re.test(url);
+			var is_photo_link = isPhotoLink(url) || is_short_url;
 			if (! is_photo_link) return;
 			var cached;
 			oEmbed_lib.some(function(oembed) {
@@ -1055,6 +1049,24 @@ var getOEmbed = (function() {
 				var oEmbed = new OEmbed(url);
 				oEmbed.done(function() {
 					process(tweet, oEmbed);
+				});
+			}
+			if (is_short_url) {
+				waitFor(function() {
+					return oEmbed.longUrl;
+				}, function() {
+					var text = tweet.fixedText;
+					$temp.html(text);
+					var $link = $temp.find('[href="' + oEmbed.url + '"]');
+					$link.prop('title', oEmbed.longUrl);
+					$link.prop('href', oEmbed.longUrl);
+					var display_url = oEmbed.longUrl.replace(/^https?:\/\//, '');
+					if (display_url.length > 25) {
+						display_url = display_url.substring(0, 25) + '...';
+					}
+					$link.text(display_url);
+					tweet.fixedText = $temp.html();
+					console.log(oEmbed.url)
 				});
 			}
 		});
