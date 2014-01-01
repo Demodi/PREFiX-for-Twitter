@@ -901,76 +901,66 @@ var getOEmbed = (function() {
 
 		var result = url.match(fanfou_re);
 		if (result) {
-			Ripple.ajax(
-				url,
-				{
-					method: 'GET',
-					accepts: 'xml',
-					success: function(html) {
-						var $html = $(html);
-						var large_url = $html.find('#photo img').attr('src');
-						$html.length = 0;
-						$html = null;
-						if (large_url) {
-							getNaturalDimentions(large_url, function(dimentions) {
-								self.data = {
-									url: large_url,
-									width: dimentions.width,
-									height: dimentions.height,
-									type: 'photo'
-								};
-								self.status = 'completed';
-								lscache.set('oembed-' + url, self);
-								setTimeout(function() {
-									self.call();
-								});
-							});
-						} else {
-							self.status = 'ignored';
-							lscache.set('oembed-' + url, self);
-						}
-					}
+			Ripple.ajax.get(url).
+			next(function(html) {
+				var $html = $(html);
+				var large_url = $html.find('#photo img').attr('src');
+				$html.length = 0;
+				$html = null;
+				if (large_url) {
+					getNaturalDimentions(large_url, function(dimentions) {
+						self.data = {
+							url: large_url,
+							width: dimentions.width,
+							height: dimentions.height,
+							type: 'photo'
+						};
+						self.status = 'completed';
+						lscache.set('oembed-' + url, self);
+						setTimeout(function() {
+							self.call();
+						});
+					});
+				} else {
+					self.status = 'ignored';
+					lscache.set('oembed-' + url, self);
 				}
-			);
+			});
 			return;
 		}
 
 		var result = url.match(twitpic_re);
 		if (result) {
+			var full_url = url;
 			if (! /\/full$/.test(url)) {
-				url += '/full';
-				url = url.replace('//', '/');
+				full_url += '/full';
+				full_url = full_url.replace('//', '/');
 			}
-			Ripple.ajax(
-				url,
-				{
-					method: 'GET',
-					success: function(html) {
-						var $html = $(html);
-						var large_url = $html.find('#media-full img').attr('src');
-						$html.length = 0;
-						$html = null;
-						if (large_url) {
-							getNaturalDimentions(large_url, function(dimentions) {
-								self.data = {
-									url: large_url,
-									width: dimentions.width,
-									height: dimentions.height,
-									type: 'photo'
-								};
-								self.status = 'completed';
-								lscache.set('oembed-' + url, self);
-								setTimeout(function() {
-									self.call();
-								});
-							});
-						} else {
-							self.status = 'ignored';
-							lscache.set('oembed-' + url, self);
-						}
-					}
+			Ripple.ajax.get(full_url).
+			next(function(html) {
+				var $html = $(html);
+				var large_url = $html.find('#media-full img').attr('src');
+				$html.length = 0;
+				$html = null;
+				if (large_url) {
+					getNaturalDimentions(large_url, function(dimentions) {
+						self.data = {
+							url: large_url,
+							width: dimentions.width,
+							height: dimentions.height,
+							type: 'photo'
+						};
+						self.status = 'completed';
+						lscache.set('oembed-' + url, self);
+						setTimeout(function() {
+							self.call();
+						});
+					});
+				} else {
+					self.status = 'ignored';
+					lscache.set('oembed-' + url, self);
 				}
-			);
+			});
 			return;
 		}
 
