@@ -909,6 +909,8 @@ var getOEmbed = (function() {
 					success: function(html) {
 						var $html = $(html);
 						var large_url = $html.find('#photo img').attr('src');
+						$html.length = 0;
+						$html = null;
 						if (large_url) {
 							getNaturalDimentions(large_url, function(dimentions) {
 								self.data = {
@@ -946,6 +948,8 @@ var getOEmbed = (function() {
 					success: function(html) {
 						var $html = $(html);
 						var large_url = $html.find('#media-full img').attr('src');
+						$html.length = 0;
+						$html = null;
 						if (large_url) {
 							getNaturalDimentions(large_url, function(dimentions) {
 								self.data = {
@@ -967,6 +971,45 @@ var getOEmbed = (function() {
 					}
 				}
 			);
+			return;
+		}
+
+		var result = url.match(imgly_re);
+		if (result) {
+			Ripple.ajax.get(url).
+			next(function(html) {
+				var $html = $(html);
+				var full_url = $html.find('#button-fullview a').attr('href');
+				$html.length = 0;
+				$html = null;
+				if (! /^http/.test(full_url)) {
+					full_url = 'http://img.ly' + full_url;
+				}
+				Ripple.ajax.get(full_url).next(function(html) {
+					var $html = $(html);
+					var large_url = $html.find('#image-full img').attr('src');
+					$html.length = 0;
+					$html = null;
+					if (large_url) {
+						getNaturalDimentions(large_url, function(dimentions) {
+							self.data = {
+								url: large_url,
+								width: dimentions.width,
+								height: dimentions.height,
+								type: 'photo'
+							};
+							self.status = 'completed';
+							lscache.set('oembed-' + url, self);
+							setTimeout(function() {
+								self.call();
+							});
+						});
+					} else {
+						self.status = 'ignored';
+						lscache.set('oembed-' + url, self);
+					}
+				})
+			});
 			return;
 		}
 
@@ -1051,12 +1094,13 @@ var getOEmbed = (function() {
 	var fanfou_re = /https?:\/\/fanfou\.com\/photo\//;
 	var weibo_re = /https?:\/\/[w0-9]+\.sinaimg\.cn\/\S+\.jpg/;
 	var twitpic_re = /https?:\/\/(?:www\.)?twitpic\.com\//;
+	var imgly_re = /https?:\/\/img\.ly\//;
 
 	var photo_res = [
 		weibo_re,
 		/\.(?:jpg|jpeg|gif|png|bmp|webp)/i,
 		twitpic_re,
-		/https?:\/\/img\.ly\//,
+		imgly_re,
 		/tinypic\.com\//,
 		/flickr\.com\/photos\/|flic.kr\//,
 		instagram_re,
