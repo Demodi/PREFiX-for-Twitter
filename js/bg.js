@@ -862,14 +862,34 @@ var getOEmbed = (function() {
 			url = url.replace('instagr.am', 'instagram.com');
 			var large_url = url + '?size=l';
 			var thumbnail_url = url + '?size=t';
-			getNaturalDimentions(large_url, function(dimention) {
+			getNaturalDimentions(large_url, function(dimentions) {
 				self.data = {
 					url: large_url,
-					width: dimention.width,
-					height: dimention.height,
+					width: dimentions.width,
+					height: dimentions.height,
 					type: 'photo',
 					thumbnail_url: thumbnail_url
 				};
+				self.status = 'completed';
+				lscache.set('oembed-' + url, self);
+				setTimeout(function() {
+					self.call();
+				});
+			});
+			return;
+		}
+
+		var result = url.match(weibo_re);
+		if (result) {
+			url = url.replace(/\/(?:mw1024|bmiddle|thumbnail)\//, '/large/');
+			getNaturalDimentions(url, function(dimentions) {
+				self.data = {
+					url: url,
+					width: dimentions.width,
+					height: dimentions.height,
+					type: 'photo',
+					thumbnail_url: url.replace('/large/', '/thumbnail/')
+				}
 				self.status = 'completed';
 				lscache.set('oembed-' + url, self);
 				setTimeout(function() {
@@ -890,11 +910,11 @@ var getOEmbed = (function() {
 						var $html = $(html);
 						var large_url = $html.find('#photo img').attr('src');
 						if (large_url) {
-							getNaturalDimentions(large_url, function(dimention) {
+							getNaturalDimentions(large_url, function(dimentions) {
 								self.data = {
 									url: large_url,
-									width: dimention.width,
-									height: dimention.height,
+									width: dimentions.width,
+									height: dimentions.height,
 									type: 'photo'
 								};
 								self.status = 'completed';
@@ -992,8 +1012,10 @@ var getOEmbed = (function() {
 
 	var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
 	var fanfou_re = /https?:\/\/fanfou\.com\/photo\//;
+	var weibo_re = /https?:\/\/[w0-9]+\.sinaimg\.cn\/\S+\.jpg/
 
 	var photo_res = [
+		weibo_re,
 		/\.(?:jpg|jpeg|gif|png|bmp|webp)/i,
 		/twitpic\.com\//,
 		/https?:\/\/img\.ly\//,
