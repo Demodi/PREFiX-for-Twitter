@@ -933,6 +933,43 @@ var getOEmbed = (function() {
 			return;
 		}
 
+		var result = url.match(twitpic_re);
+		if (result) {
+			if (! /\/full$/.test(url)) {
+				url += '/full';
+				url = url.replace('//', '/');
+			}
+			Ripple.ajax(
+				url,
+				{
+					method: 'GET',
+					success: function(html) {
+						var $html = $(html);
+						var large_url = $html.find('#media-full img').attr('src');
+						if (large_url) {
+							getNaturalDimentions(large_url, function(dimentions) {
+								self.data = {
+									url: large_url,
+									width: dimentions.width,
+									height: dimentions.height,
+									type: 'photo'
+								};
+								self.status = 'completed';
+								lscache.set('oembed-' + url, self);
+								setTimeout(function() {
+									self.call();
+								});
+							});
+						} else {
+							self.status = 'ignored';
+							lscache.set('oembed-' + url, self);
+						}
+					}
+				}
+			);
+			return;
+		}
+
 		if (! settings.current.embedlyKey) {
 			this.status = 'error';
 			return;
@@ -1012,12 +1049,13 @@ var getOEmbed = (function() {
 
 	var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
 	var fanfou_re = /https?:\/\/fanfou\.com\/photo\//;
-	var weibo_re = /https?:\/\/[w0-9]+\.sinaimg\.cn\/\S+\.jpg/
+	var weibo_re = /https?:\/\/[w0-9]+\.sinaimg\.cn\/\S+\.jpg/;
+	var twitpic_re = /https?:\/\/(?:www\.)?twitpic\.com\//;
 
 	var photo_res = [
 		weibo_re,
 		/\.(?:jpg|jpeg|gif|png|bmp|webp)/i,
-		/twitpic\.com\//,
+		twitpic_re,
 		/https?:\/\/img\.ly\//,
 		/tinypic\.com\//,
 		/flickr\.com\/photos\/|flic.kr\//,
@@ -1083,6 +1121,7 @@ var getOEmbed = (function() {
 			});
 			ls_cached = lscache.get('oembed-' + url);
 			cached = cached || ls_cached;
+			cached = false;
 			if (cached) {
 				cached.__proto__ = OEmbed.prototype;
 				cached.done(function() {
