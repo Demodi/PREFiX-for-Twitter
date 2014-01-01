@@ -672,6 +672,12 @@ function update() {
 		return d.error(function(e) {
 			var prefix = 'PREFiX for Twitter - ';
 			var default_error = prefix + '网络连接断开或内部错误';
+			var error;
+			if (e && Ripple.helpers.isString(e.response)) {
+				error = e.response;
+			} else if (e && e.response && e.response.errors) {
+				error = (e.response.errors[0] || { }).message;
+			}
 			chrome.browserAction.setBadgeText({
 				text: ' '
 			});
@@ -679,8 +685,7 @@ function update() {
 				color: [ 255, 0, 0, 200 ]
 			});
 			chrome.browserAction.setTitle({
-				title: e && e.response ?
-					prefix + e.response.errors[0].message : default_error
+				title: error ? prefix + error : default_error
 			});
 			throw e;
 		});
