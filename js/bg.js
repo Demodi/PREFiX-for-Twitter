@@ -856,7 +856,6 @@ var getOEmbed = (function() {
 		if (! isPhotoLink(url))
 			return;
 
-		var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
 		var result = url.match(instagram_re);
 		if (result) {
 			url = result[0] + 'media/';
@@ -880,7 +879,6 @@ var getOEmbed = (function() {
 			return;
 		}
 
-		var fanfou_re = /https?:\/\/fanfou\.com\/photo\//;
 		var result = url.match(fanfou_re);
 		if (result) {
 			Ripple.ajax(
@@ -912,6 +910,11 @@ var getOEmbed = (function() {
 					}
 				}
 			);
+			return;
+		}
+
+		if (! settings.current.embedlyKey) {
+			this.status = 'error';
 			return;
 		}
 
@@ -987,13 +990,16 @@ var getOEmbed = (function() {
 		});
 	}
 
+	var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
+	var fanfou_re = /https?:\/\/fanfou\.com\/photo\//;
+
 	var photo_res = [
 		/\.(?:jpg|jpeg|gif|png|bmp|webp)/i,
 		/twitpic\.com\//,
 		/https?:\/\/img\.ly\//,
 		/tinypic\.com\//,
 		/flickr\.com\/photos\/|flic.kr\//,
-		/instagram\.com|instagr\.am/,
+		instagram_re,
 		/yfrog\./,
 		/https?:\/\/twitgoo\.com\//,
 		/https?:\/\/(?:s\w+|i\w+|media)\.photobucket\.com\/(?:albums|image)\//,
@@ -1006,7 +1012,7 @@ var getOEmbed = (function() {
 		/https?:\/\/meadd\.com\//,
 		/deviantart\.(?:com|net)|https?:\/\/fav\.me\//,
 		/https?:\/\/(?:www\.)?fotopedia\.com\//,
-		/https?:\/\/fanfou\.com\/photo\//,
+		fanfou_re,
 		/https?:\/\/(?:imgs\.|www\.|)xkcd\.com\//,
 		/https?:\/\/(?:www)?\.asofterworld\.com\//,
 		/https?:\/\/www\.qwantz\.com\//,
@@ -1035,8 +1041,6 @@ var getOEmbed = (function() {
 	}
 
 	return function(tweet) {
-		if (! settings.current.embedlyKey)
-			return;
 		if (tweet.oEmbedProcessed)
 			return;
 		if (! tweet.entities || ! tweet.entities.urls.length)
