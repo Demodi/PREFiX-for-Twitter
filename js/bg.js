@@ -920,7 +920,14 @@ var getOEmbed = (function() {
 					format: 'json'
 				},
 				success: function(data) {
-					if (data && data.type === 'photo') {
+					data = data || { };
+					if (data.type !== 'photo' && data.thumbnail_url) {
+						data.type = 'photo';
+						data.width = data.width || data.thumbnail_width;
+						data.height = data.height || data.thumbnail_height;
+						data.url = data.url || data.thumbnail_url;
+					}
+					if (data.type === 'photo') {
 						self.status = 'completed';
 						self.data = data;
 					} else {
@@ -1053,20 +1060,22 @@ var getOEmbed = (function() {
 				});
 			}
 			if (is_short_url) {
-				waitFor(function() {
-					return oEmbed.longUrl;
-				}, function() {
-					var text = tweet.fixedText;
-					$temp.html(text);
-					var $link = $temp.find('[href="' + oEmbed.url + '"]');
-					$link.prop('title', oEmbed.longUrl);
-					$link.prop('href', oEmbed.longUrl);
-					var display_url = oEmbed.longUrl.replace(/^https?:\/\//, '');
-					if (display_url.length > 25) {
-						display_url = display_url.substring(0, 25) + '...';
-					}
-					$link.text(display_url);
-					tweet.fixedText = $temp.html();
+				setTimeout(function() {
+					waitFor(function() {
+						return oEmbed.longUrl;
+					}, function() {
+						var text = tweet.fixedText;
+						$temp.html(text);
+						var $link = $temp.find('[href="' + oEmbed.url + '"]');
+						$link.prop('title', oEmbed.longUrl);
+						$link.prop('href', oEmbed.longUrl);
+						var display_url = oEmbed.longUrl.replace(/^https?:\/\//, '');
+						if (display_url.length > 25) {
+							display_url = display_url.substring(0, 25) + '...';
+						}
+						$link.text(display_url);
+						tweet.fixedText = $temp.html();
+					});
 				});
 			}
 		});
