@@ -922,10 +922,12 @@ var getOEmbed = (function() {
 				success: function(data) {
 					data = data || { };
 					if (data.type !== 'photo' && data.thumbnail_url) {
-						data.type = 'photo';
-						data.width = data.width || data.thumbnail_width;
-						data.height = data.height || data.thumbnail_height;
-						data.url = data.url || data.thumbnail_url;
+						if (! data.width && ! data.height) {
+							data.type = 'photo';
+							data.width = data.thumbnail_width;
+							data.height = data.thumbnail_height;
+							data.url = data.thumbnail_url;
+						}
 					}
 					if (data.type === 'photo') {
 						self.status = 'completed';
@@ -994,13 +996,15 @@ var getOEmbed = (function() {
 		/https?:\/\/path\.com\//,
 		/tumblr\.com\//,
 		/imgur\.com\//,
-		/https?:\/\/picasaweb\.google\.com\//,
+		/https?:\/\/picasaweb\.google\.com/,
 		/https?:\/\/(?:www\.mobypicture\.com\/user|moby\.to)\//,
 		/https?:\/\/meadd\.com\//,
 		/deviantart\.(?:com|net)|https?:\/\/fav\.me\//,
 		/https?:\/\/(?:www\.)?fotopedia\.com\//,
 		/https?:\/\/fanfou\.com\/photo\//,
 		/https?:\/\/(?:imgs\.|www\.|)xkcd\.com\//,
+		/https?:\/\/(?:www)?\.asofterworld\.com\//,
+		/https?:\/\/www\.qwantz\.com\//,
 		/https?:\/\/(?:www\.|)23hq\.com\//,
 		/https?:\/\/drbl\.in\/|dribbble\.com\/shots\//,
 		/\.smugmug\.com\//,
@@ -1035,6 +1039,7 @@ var getOEmbed = (function() {
 		short_url_re = PREFiX.shortUrlRe || short_url_re;
 		tweet.entities.urls.forEach(function(item) {
 			var url = item.expanded_url;
+			if (! url.split('/')[3]) return;
 			var is_short_url = short_url_re.test(url);
 			var is_photo_link = isPhotoLink(url) || is_short_url;
 			if (! is_photo_link) return;
