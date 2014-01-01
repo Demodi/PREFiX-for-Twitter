@@ -1474,7 +1474,7 @@ var Notifications = Notifications || webkitNotifications;
 var notifications = [];
 
 function showNotification(options) {
-	var notification = Notifications.createNotification(options.icon || '/icons/128.png',
+	var notification = Notifications.createNotification(options.icon || '/icons/40.png',
 		options.title || 'PREFiX for Twitter', options.content);
 
 	if (options.id) {
