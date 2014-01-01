@@ -1008,7 +1008,7 @@ var getOEmbed = (function() {
 		/https?:\/\/(?:www\.|)23hq\.com\//,
 		/https?:\/\/drbl\.in\/|dribbble\.com\/shots\//,
 		/\.smugmug\.com\//,
-		/https?:\/\/(?:www\.)?fotopedia\.com\//,
+		/fotopedia\.com\//,
 		/https?:\/\/photozou\.jp\/photo\//,
 		/https?:\/\/(?:img\.)?skitch\.com\//,
 		/https?:\/\/(?:www\.)?questionablecontent\.net\//,
@@ -1578,6 +1578,10 @@ function getLargeImage(raw){
 	if (/^https?:\/\/pbs\.twimg\.com\/[^\.]+\.(jpg|png)$/.test(raw)) {
 		raw += ':large';
 	}
+
+	if (raw.indexOf('fotopedia.com') > -1) {
+		raw = raw.replace('-image.jpg', '-hd.jpg');
+	}
 	
     return raw;
 }
@@ -1589,7 +1593,8 @@ function isZoomAble(src){
 		src.indexOf('twimg') != -1 ||
 		src.indexOf('twitpic') != -1 ||
 		src.indexOf('plixi') != -1 ||
-		src.indexOf('twitgoo') != -1) {
+		src.indexOf('twitgoo') != -1 ||
+		src.indexOf('fotopedia.com') != -1) {
         return true;
     }
     return false;
