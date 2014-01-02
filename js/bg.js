@@ -809,6 +809,7 @@ function processPhoto(tweet, photo) {
 		img_large.src = photo.url_large;
 	}
 	tweet.photo = tweet.photo || { };
+	if (tweet.photo.url) return;
 	$.extend(tweet.photo, photo);
 	return photo;
 }
@@ -1805,20 +1806,18 @@ Ripple.events.observe('process_tweet', function(tweet) {
 			});
 			entities.push.apply(entities, urls);
 
-			if (! media || ! media.length) {
-				tweet.photo = {
-					url: '',
-					url_large: '',
-					thumbnail_url: '',
-					thumb_size: {
-						width: 0,
-						height: 0
-					},
+			tweet.photo = tweet.photo || {
+				url: '',
+				url_large: '',
+				thumbnail_url: '',
+				thumb_size: {
 					width: 0,
 					height: 0
-				};
-				getOEmbed(tweet);
-			}
+				},
+				width: 0,
+				height: 0
+			};
+			getOEmbed(tweet);
 		}
 
 		var hashtags = tweet.entities.hashtags;
