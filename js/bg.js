@@ -860,7 +860,7 @@ var getOEmbed = (function() {
 		var result = url.match(instagram_re);
 		if (result) {
 			var image_url = result[0] + 'media/';
-			image_url = large_url.replace('instagr.am', 'instagram.com');
+			image_url = image_url.replace('instagr.am', 'instagram.com');
 			loadImage({
 				url: self.url,
 				large_url: image_url + '?size=l',
