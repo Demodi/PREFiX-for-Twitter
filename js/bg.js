@@ -858,43 +858,25 @@ var getOEmbed = (function() {
 
 		var result = url.match(instagram_re);
 		if (result) {
-			url = result[0] + 'media/';
-			url = url.replace('instagr.am', 'instagram.com');
-			var large_url = url + '?size=l';
-			var thumbnail_url = url + '?size=t';
-			getNaturalDimentions(large_url, function(dimentions) {
-				self.data = {
-					url: large_url,
-					width: dimentions.width,
-					height: dimentions.height,
-					type: 'photo',
-					thumbnail_url: thumbnail_url
-				};
-				self.status = 'completed';
-				lscache.set('oembed-' + url, self);
-				setTimeout(function() {
-					self.call();
-				});
+			var image_url = result[0] + 'media/';
+			image_url = large_url.replace('instagr.am', 'instagram.com');
+			loadImage({
+				url: self.url,
+				large_url: image_url + '?size=l',
+				thumbnail_url: image_url + '?size=t',
+				oEmbed: self
 			});
 			return;
 		}
 
 		var result = url.match(weibo_re);
 		if (result) {
-			url = url.replace(/\/(?:mw1024|bmiddle|thumbnail)\//, '/large/');
-			getNaturalDimentions(url, function(dimentions) {
-				self.data = {
-					url: url,
-					width: dimentions.width,
-					height: dimentions.height,
-					type: 'photo',
-					thumbnail_url: url.replace('/large/', '/thumbnail/')
-				}
-				self.status = 'completed';
-				lscache.set('oembed-' + url, self);
-				setTimeout(function() {
-					self.call();
-				});
+			var large_url = url.replace(/\/(?:mw1024|bmiddle|thumbnail)\//, '/large/');
+			loadImage({
+				url: self.url,
+				large_url: large_url,
+				thumbnail_url: large_url.replace('/large/', '/thumbnail/'),
+				oEmbed: self
 			});
 			return;
 		}
@@ -908,18 +890,10 @@ var getOEmbed = (function() {
 				$html.length = 0;
 				$html = null;
 				if (large_url) {
-					getNaturalDimentions(large_url, function(dimentions) {
-						self.data = {
-							url: large_url,
-							width: dimentions.width,
-							height: dimentions.height,
-							type: 'photo'
-						};
-						self.status = 'completed';
-						lscache.set('oembed-' + url, self);
-						setTimeout(function() {
-							self.call();
-						});
+					loadImage({
+						url: self.url,
+						large_url: large_url,
+						oEmbed: self
 					});
 				} else {
 					self.status = 'ignored';
@@ -943,18 +917,10 @@ var getOEmbed = (function() {
 				$html.length = 0;
 				$html = null;
 				if (large_url) {
-					getNaturalDimentions(large_url, function(dimentions) {
-						self.data = {
-							url: large_url,
-							width: dimentions.width,
-							height: dimentions.height,
-							type: 'photo'
-						};
-						self.status = 'completed';
-						lscache.set('oembed-' + url, self);
-						setTimeout(function() {
-							self.call();
-						});
+					loadImage({
+						url: self.url,
+						large_url: large_url,
+						oEmbed: self
 					});
 				} else {
 					self.status = 'ignored';
@@ -981,24 +947,38 @@ var getOEmbed = (function() {
 					$html.length = 0;
 					$html = null;
 					if (large_url) {
-						getNaturalDimentions(large_url, function(dimentions) {
-							self.data = {
-								url: large_url,
-								width: dimentions.width,
-								height: dimentions.height,
-								type: 'photo'
-							};
-							self.status = 'completed';
-							lscache.set('oembed-' + url, self);
-							setTimeout(function() {
-								self.call();
-							});
+						loadImage({
+							url: self.url,
+							large_url: large_url,
+							oEmbed: self
 						});
 					} else {
 						self.status = 'ignored';
 						lscache.set('oembed-' + url, self);
 					}
 				})
+			});
+			return;
+		}
+
+		var result = url.match(lofter_re);
+		if (result) {
+			Ripple.ajax.get(url).
+			next(function(html) {
+				var $html = $(html);
+				var large_url = $html.find('[bigimgsrc]').attr('bigimgsrc');
+				$html.length = 0;
+				$html = null;
+				if (large_url) {
+					loadImage({
+						url: self.url,
+						large_url: large_url,
+						oEmbed: self
+					});
+				} else {
+					self.status = 'ignored';
+					lscache.set('oembed-' + url, self);
+				}
 			});
 			return;
 		}
@@ -1080,11 +1060,30 @@ var getOEmbed = (function() {
 		});
 	}
 
+	function loadImage(options) {
+		var oEmbed = options.oEmbed;
+		getNaturalDimentions(options.large_url, function(dimentions) {
+			oEmbed.data = {
+				url: options.large_url,
+				width: dimentions.width,
+				height: dimentions.height,
+				type: 'photo',
+				thumbnail_url: options.thumbnail_url
+			};
+			oEmbed.status = 'completed';
+			lscache.set('oembed-' + options.url, oEmbed);
+			setTimeout(function() {
+				oEmbed.call();
+			});
+		});
+	}
+
 	var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
 	var fanfou_re = /https?:\/\/fanfou\.com\/photo\//;
 	var weibo_re = /https?:\/\/[w0-9]+\.sinaimg\.cn\/\S+\.jpg/;
 	var twitpic_re = /https?:\/\/(?:www\.)?twitpic\.com\//;
 	var imgly_re = /https?:\/\/img\.ly\//;
+	var lofter_re = /\.lofter\.com\/post\/[a-zA-Z0-9_]+/;
 
 	var photo_res = [
 		weibo_re,
@@ -1107,6 +1106,7 @@ var getOEmbed = (function() {
 		/deviantart\.(?:com|net)|https?:\/\/fav\.me\//,
 		/https?:\/\/(?:www\.)?fotopedia\.com\//,
 		fanfou_re,
+		lofter_re,
 		/https?:\/\/(?:imgs\.|www\.|)xkcd\.com\//,
 		/https?:\/\/(?:www)?\.asofterworld\.com\//,
 		/https?:\/\/www\.qwantz\.com\//,
@@ -1155,7 +1155,6 @@ var getOEmbed = (function() {
 			});
 			ls_cached = lscache.get('oembed-' + url);
 			cached = cached || ls_cached;
-			cached = false;
 			if (cached) {
 				cached.__proto__ = OEmbed.prototype;
 				cached.done(function() {
