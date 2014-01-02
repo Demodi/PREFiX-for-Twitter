@@ -491,10 +491,12 @@ function showUsageTip() {
 	pos = Math.min(pos, usage_tips.length);
 	var tip = usage_tips[pos];
 	var $usage_tip = $('#usage-tip');
-	if (! tip) {
-		$usage_tip.remove();
-		return;
-	}
+	if (tip === undefined) {
+ 		$usage_tip.remove();
+ 		return;
+ 	}
+	lscache.set('usage_tip_pos', ++pos);
+	if (! tip) return;
 	$('#hide-usage-tip').click(function(e) {
 		lscache.set('usage_tip_pos', usage_tips.length);
 		$title.removeClass('show-usage-tip');
