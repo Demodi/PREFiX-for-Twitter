@@ -72,6 +72,7 @@
 		</div>
 		<div id="header">
 			<div id="top-bar" class="fix">
+				<span id="back" title="返回 (快捷键 Backspace)"></span>
 				<h1 title="点击回到顶部或刷新 (快捷键 H)"><b>PREFiX</b><span id="back-to-top"></span></h1>
 				<span id="new-window" title="弹出到新窗口 (快捷键 P)"></span>
 				<ul id="navigation-bar" ms-controller="navigation">
@@ -111,7 +112,7 @@
 							</div>
 							<div class="content">
 								<div class="info fix">
-									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name" ms-title="(tweet.retweeted_status || tweet).is_self ? '查看我的消息' : '发送私信给 @' + (tweet.retweeted_status || tweet).user.screen_name + ' (快捷键 D)'"></a>
+									<a class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-userid="(tweet.retweeted_status || tweet).user.id_str" title="查看 TA 的消息 (快捷键 S)"></a>
 									<span class="sub-name" ms-text="screenNameFirst ? (tweet.retweeted_status || tweet).user.name : ('@' + (tweet.retweeted_status || tweet).user.screen_name)"></span>
 									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
 									<span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
@@ -142,7 +143,7 @@
 							</div>
 							<div class="content">
 								<div class="info fix">
-									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name" ms-title="(tweet.retweeted_status || tweet).is_self ? '查看我的消息' : '发送私信给 @' + (tweet.retweeted_status || tweet).user.screen_name + ' (快捷键 D)'"></a>
+									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-userid="(tweet.retweeted_status || tweet).user.id_str" title="查看 TA 的消息 (快捷键 S)"></a>
 									<span class="sub-name" ms-text="screenNameFirst ? (tweet.retweeted_status || tweet).user.name : ('@' + (tweet.retweeted_status || tweet).user.screen_name)"></span>
 									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
 									<span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
@@ -170,7 +171,7 @@
 							</div>
 							<div class="content">
 								<div class="info fix">
-									<a ms-href="'https://twitter.com/' + message.sender.id" class="name" ms-text="screenNameFirst ? ('@' + message.sender.screen_name) : message.sender.name" ms-data-send-dm="message.sender.id_str + ':' + message.sender.screen_name"  ms-title="'发送私信给 @' + message.sender.screen_name + ' (快捷键 D)'"></a>
+									<a ms-href="'https://twitter.com/' + message.sender.id" class="name" ms-text="screenNameFirst ? ('@' + message.sender.screen_name) : message.sender.name" ms-data-userid="message.sender.id_str" title="查看 TA 的消息 (快捷键 S)"></a>
 									<span class="sub-name" ms-text="screenNameFirst ? message.sender.name : ('@' + message.sender.screen_name)"></span>
 									<span class="timestamp" ms-html="message.relativeTime"></span>
 								</div>
@@ -198,12 +199,61 @@
 							</div>
 							<div class="content">
 								<div class="info fix">
-									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-send-dm="(tweet.retweeted_status || tweet).user.id_str + ':' + (tweet.retweeted_status || tweet).user.screen_name" ms-title="(tweet.retweeted_status || tweet).is_self ? '查看我的消息' : '发送私信给 @' + (tweet.retweeted_status || tweet).user.screen_name + ' (快捷键 D)'"></a>
+									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-userid="(tweet.retweeted_status || tweet).user.id_str" title="查看 TA 的消息 (快捷键 S)"></a>
 									<span class="sub-name" ms-text="screenNameFirst ? (tweet.retweeted_status || tweet).user.name : ('@' + (tweet.retweeted_status || tweet).user.screen_name)"></span>
 									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
 									<span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
 								</div>
 								<div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText" ms-class-bold="tweet.is_unread"></div>
+								<div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'' + (screenNameFirst ? tweet.user.name : ('@' + tweet.user.screen_name)) + '\'>' + (screenNameFirst ? ('@' + tweet.user.screen_name) : tweet.user.name) + '</span> @ ' + tweet.shortTime"></div>
+								<div class="photo" ms-if="!! (tweet.photo && tweet.photo.url)" title="查看大图 (快捷键 V)">
+									<img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />
+								</div>
+							</div>
+						</div>
+					</li>
+				</ul>
+				<ul id="user-timeline" class="tweet-list fix" ms-controller="user-timeline" ms-each-tweet="tweets" ms-attr-replying="is_replying">
+					<div ms-if="$first" id="user-profile">
+						<li id="name-avatar" class="fix">
+							<div class="left">
+								<p class="name"><b>{{ screenNameFirst ? '@' + tweet.user.screen_name : tweet.user.name }}</b> ({{ screenNameFirst ? tweet.user.name : '@' + tweet.user.screen_name }}) <span ms-if="! tweet.is_self" id="relationship">{{ tweet.user.following ? '已关注' : '关注 TA' }}</span></p>
+								<p class="statistics">{{ tweet.user.friends_count }} 好友 / {{ tweet.user.followers_count }} 关注者 / {{ tweet.user.statuses_count }} 条消息</p>
+							</div>
+							<div class="right avatar">
+								<a ms-href="https://twitter.com/{{ tweet.user.screen_name }}" title="打开 TA 的个人主页">
+									<img ms-src="tweet.user.profile_image_url_https" ms-css-margin-left="tweet.avatar_margin.left" ms-css-margin-top="tweet.avatar_margin.top" ms-css-width="tweet.avatar_size.width" ms-css-height="tweet.avatar_size.height" />
+								</a>
+							</div>
+						</li>
+						<li>
+							<div class="tweet-content" title="个人简介">
+								<p>{{ tweet.user.description }}</p>
+							</div>
+						</li>
+						<li ms-if="!! tweet.user.error">{{ tweet.user.error }}</li>
+					</div>
+					<li ms-if="!! tweet.id" ms-data-id="tweet.id_str" ms-class-my-tweet="(tweet.retweeted_status || tweet).is_self" ms-class-protected="(tweet.retweeted_status || tweet).user.protected" ms-attr-current-replied="tweet.current_replied">
+						<div class="tweet fix">
+							<div class="action-icons">
+								<a ms-if="tweet.is_self && ! tweet.retweeted_status" ms-dblclick="remove" class="remove" title="双击删除 (快捷键 Shift + D)"></a>
+								<a ms-click="reply" class="reply" title="回复 (快捷键 R)"></a>
+								<a ms-click="retweet" ms-on-contextmenu="repost" class="repost" ms-class="retweeted: tweet.retweeted" ms-title="tweet.repostOnly ? '引用转发 (快捷键 Q)' : '左击 ' + (tweet.retweeted ? 'Unretweet (快捷键 Shift + T)' : 'Retweet (快捷键 T)') +  ' / 右击引用转发 (快捷键 Q)'"></a>
+								<a ms-click="toggleFavourite" ms-class="favourited: (tweet.retweeted_status || tweet).favorited" class="favourite" ms-title="(tweet.retweeted_status || tweet).favorited ? '取消收藏 (快捷键 Shift + F)' : '收藏 (快捷键 F)'"></a>
+							</div>
+							<div class="avatar">
+								<a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name">
+									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" />
+								</a>
+							</div>
+							<div class="content">
+								<div class="info fix">
+									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-userid="(tweet.retweeted_status || tweet).user.id_str" title="查看 TA 的消息 (快捷键 S)"></a>
+									<span class="sub-name" ms-text="screenNameFirst ? (tweet.retweeted_status || tweet).user.name : ('@' + (tweet.retweeted_status || tweet).user.screen_name)"></span>
+									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
+									<span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
+								</div>
+								<div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
 								<div class="retweeted-by" ms-if="!! tweet.retweeted_status" ms-html="'Retweeted by <span title=\'' + (screenNameFirst ? tweet.user.name : ('@' + tweet.user.screen_name)) + '\'>' + (screenNameFirst ? ('@' + tweet.user.screen_name) : tweet.user.name) + '</span> @ ' + tweet.shortTime"></div>
 								<div class="photo" ms-if="!! (tweet.photo && tweet.photo.url)" title="查看大图 (快捷键 V)">
 									<img ms-src="tweet.photo && tweet.photo.url" ms-css-width="tweet.photo.thumb_size.width + 'px'" ms-css-height="tweet.photo.thumb_size.height + 'px'" ms-data-large-img="tweet.photo && tweet.photo.url_large" />

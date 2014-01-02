@@ -1913,7 +1913,8 @@ Ripple.events.observe('process_tweet', function(tweet) {
 				case 'mention':
 					text_to_add = '@<a href="http://twitter.com/' +
 						entity.screen_name + '" title="' + entity.name +
-						' (@' + entity.screen_name + ')"">' +
+						' (@' + entity.screen_name + ')"  data-userid="' +
+						entity.id_str + '">' +
 						entity.screen_name + '</a>';
 					break;
 				default:

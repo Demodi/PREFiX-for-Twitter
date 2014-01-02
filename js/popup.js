@@ -14,6 +14,8 @@ var $main;
 var is_panel_mode = false;
 var $scrolling_elem;
 
+var last_model = PREFiX.current;
+
 var is_windows = navigator.platform.indexOf('Win') > -1;
 
 var loading = false;
@@ -177,15 +179,23 @@ function findModel(model, id) {
 }
 
 function setCurrent(model, id) {
-	var $view = findView(model, id);
-	if ($view.length) {
-		model.current = id;
-		model.$elem.children().removeClass('current');
-		model.$elem.find('a.focused').removeClass('focused');
-		$view.addClass('current');
-	} else {
-		model.current = null;
-	}
+	var now = Date.now();
+	var canceled = false;
+	var $view;
+	waitFor(function() {
+		$view = findView(model, id);
+		if (Date.now() - now > 5000) {
+			canceled = true;
+		}
+		return $view.length || canceled;
+	}, function() {
+		if ($view.length) {
+			model.current = id;
+			model.$elem.children().removeClass('current');
+			model.$elem.find('a.focused').removeClass('focused');
+			$view.addClass('current');
+		}
+	});
 }
 
 function initKeyboardControl() {
@@ -292,6 +302,7 @@ function initKeyboardControlEvents() {
 		}
 
 		switch (e.keyCode) {
+			case 8 /* Backspace*/:
 			case 68 /* D */: case 70 /* F */:
 			case 77 /* M */: case 78 /* N */:
 			case 81 /* Q */: case 83 /* S */:
@@ -303,13 +314,14 @@ function initKeyboardControlEvents() {
 				if ($('body.show-context-timeline').length)
 					return;
 
+			case 8 /* Backspace*/:
 			case 32 /* Space */:
-			case 67 /* C */: case 68 /* D */:
-			case 70 /* F */: case 77 /* M */:
-			case 78 /* N */: case 80 /* P */:
-			case 81 /* Q */: case 82 /* R */:
-			case 83 /* S */: case 85 /* U */:
-			case 86 /* V */: case 84 /* T */:
+			case 67 /* C */: case 70 /* F */:
+			case 77 /* M */: case 78 /* N */:
+			case 80 /* P */: case 81 /* Q */:
+			case 82 /* R */: case 83 /* S */:
+			case 85 /* U */: case 86 /* V */:
+			case 84 /* T */:
 				e.preventDefault();
 				break;
 			default:
@@ -320,10 +332,11 @@ function initKeyboardControlEvents() {
 		var $view = findView(current_model, current_model.current);
 		var current = findModel(current_model, current_model.current);
 
-		if (e.keyCode === 32 && ! e.shiftKey) {
+		if (e.keyCode === 8) {
+			$('#back').click();
+		} else if (e.keyCode === 32 && ! e.shiftKey) {
 			if ($scrolling_elem !== $main) {
-				e.keyCode = 8;
-				$(window).trigger(e);
+				hideAllOverlays(e);
 			} else {
 				$textarea.focus();
 				if (compose-bar.type === 'repost') {
@@ -343,12 +356,6 @@ function initKeyboardControlEvents() {
 				var event = new Event('dblclick');
 				$remove[0].dispatchEvent(event);
 			}
-		} else if (e.keyCode === 68) {
-			var $name = $view.find('a.name');
-			$name.trigger({
-				type: 'click',
-				shiftKey: e.shiftKey
-			});
 		} else if (e.keyCode === 70) {
 			var $fav = $view.find('a.favourite');
 			if (e.shiftKey && current.favorited) {
@@ -403,11 +410,16 @@ function initKeyboardControlEvents() {
 				$reply[0].click();
 			}
 		} else if (e.keyCode === 83) {
-			var $avatar = $view.find('.avatar a');
-			$avatar.trigger({
-				type: 'click',
-				shiftKey: e.shiftKey
-			});
+			if (e.shiftKey) {
+				var $avatar = $view.find('.avatar a');
+				$avatar.trigger({
+					type: 'click',
+					shiftKey: true
+				});
+			} else {
+				var $name = $view.find('.name');
+				$name.trigger('click');
+			}
 		} else if (e.keyCode === 84) {
 			var $repost = $view.find('a.repost');
 			if ($repost.length) {
@@ -547,10 +559,10 @@ function updateRelativeTime() {
 	if (! current || (! current.tweets && ! current.messages))
 		return;
 	(current.tweets || current.messages).forEach(function(t) {
-		t.relativeTime = getRelativeTime(t.created_at);
+		t.relativeTime = t.created_at && getRelativeTime(t.created_at);
 		var retweeted = t.retweeted_status;
 		if (retweeted) {
-			retweeted.relativeTime = getRelativeTime(retweeted.created_at);
+			retweeted.relativeTime = retweeted.created_at && getRelativeTime(retweeted.created_at);
 		}
 	});
 }
@@ -635,6 +647,11 @@ function focusToEnd() {
 	$textarea[0].selectionStart = $textarea[0].selectionEnd = pos;
 }
 
+function resetHeader() {
+	$('#back').css('animation', 'leftOut .4s both');
+	$('h1').css('animation', 'topIn .4s both');
+}
+
 function deleteTweetFromAllLists(tweet_id) {
 	var lists = [
 		tl_model.tweets,
@@ -656,6 +673,16 @@ function deleteTweetFromAllLists(tweet_id) {
 			list.splice(index, 1);
 		}
 	});
+}
+
+function hideAllOverlays(e) {
+	if ($('body.show-picture').length) {
+		e.preventDefault();
+		hidePicture();
+	} else if ($('body.show-context-timeline').length) {
+		e.preventDefault();
+		$('#context-timeline').trigger('click');
+	}
 }
 
 function setImage(file) {
@@ -864,24 +891,19 @@ function initMainUI() {
 			markBreakpoint();
 	}, 100));
 
-	$('#app').delegate('[data-send-dm]', 'click', function(e) {
-		e.stopImmediatePropagation();
-		e.preventDefault();
-		var data = $(this).data('send-dm').split(':');
-		var id = data[0];
-		if (id === PREFiX.account.id_str) {
-			searches_model.show_my_timeline = true;
-			$('#navigation-bar .saved-searches').trigger('click');
-		} else {
-			sendDM(id, data[1]);
-		}
-	}).delegate('a', 'click', function(e) {
+	$('#app').delegate('a', 'click', function(e) {
 		if (e.currentTarget.href.indexOf('http://') !== 0 &&
 			e.currentTarget.href.indexOf('https://') !== 0)
 			return;
 		e.preventDefault();
 		e.stopPropagation();
-		createTab(e.currentTarget.href, e.shiftKey);
+		if (! e.currentTarget.dataset.userid || e.shiftKey) {
+			createTab(e.currentTarget.href, e.shiftKey);
+		}
+	}).delegate('[data-userid]', 'click', function(e) {
+		if (e.shiftKey) return;
+		PREFiX.userid = this.dataset.userid;
+		nav_model.showUserTimeline();
 	}).delegate('span.context', 'click', function(e) {
 		var $tweet = $(e.currentTarget).parents('li');
 		var tweet_id = $tweet.attr('data-id');
@@ -941,6 +963,34 @@ function initMainUI() {
 		$info.css('text-indent', 0);
 		clearTimeout(e.currentTarget.timeout);
 		e.currentTarget.scrolling = false;
+	}).delegate('#relationship', 'click', function(e) {
+		var $this = $(e.currentTarget);
+		if ($this.text() === '关注 TA') {
+			PREFiX.user().follow({
+				user_id: PREFiX.userid
+			}).next(function(user) {
+				$this.text(user.following ? '已关注' : '已发出关注请求');
+				$this.prop('title', '取消关注');
+			});
+		} else if ($this.text() === '已关注') {
+			PREFiX.user().unfollow({
+				user_id: PREFiX.userid
+			}).next(function(user) {
+				$this.text('关注 TA').prop('title', '');
+			})
+		}
+	});
+
+	$('#back').click(function(e) {
+		if (last_model === 'usertl_model') {
+			last_model = 'tl_model';
+		}
+		$main.scrollTop(0);
+		setTimeout(function() {
+			resetHeader();
+			PREFiX.current = nav_model.current = last_model;
+			window[last_model].initialize();
+		});
 	});
 
 	$('h1').click(function(e) {
@@ -1060,15 +1110,6 @@ function initMainUI() {
 		smoothScrollTo(e.keyCode === 34 ?
 			current_pos + height : current_pos - height);
 	}).on('keydown', function(e) {
-		if (e.keyCode !== 8) return;
-		if ($('body.show-context-timeline').length) {
-			e.preventDefault();
-			$('#context-timeline').trigger('click');
-		} else if ($('body.show-picture').length) {
-			e.preventDefault();
-			hidePicture();
-		}
-	}).on('keydown', function(e) {
 		if (e.keyCode !== 116) return;
 		e.preventDefault();
 		PREFiX.update();
@@ -1078,6 +1119,7 @@ function initMainUI() {
 	mentions_model.$elem = $('#mentions');
 	directmsgs_model.$elem = $('#directmsgs');
 	searches_model.$elem = $('#saved-searches');
+	usertl_model.$elem = $('#user-timeline');
 
 	resetLoadingEffect();
 
@@ -1397,30 +1439,6 @@ function loadOldder() {
 				list.push.apply(list, tweets);
 				updateRelativeTime();
 			});
-		} else if (k === '##MY_TIMELINE##') {
-			PREFiX.getInstanceByRateLimit('getUserTimeline')({
-				max_id: oldest_tweet.id_str,
-				count: PREFiX.settings.current.tweetsPerPage
-			}).setupAjax({
-				lock: loadOldder,
-				send: function() {
-					loading = true;
-				},
-				oncomplete: function() {
-					loading = false;
-				}
-			}).next(function(tweets) {
-				if (tweets && tweets.length) {
-					if (tweets[0].id_str === id) {
-						tweets.splice(0, 1);
-					}
-				}
-				if (tweets && ! tweets.length) {
-					//model.allLoaded = true;
-				} else {
-					push(searches_model.tweets, tweets);
-				}
-			});
 		} else {
 			if (k === null) {
 				k = searches_model.keyword;
@@ -1452,6 +1470,23 @@ function loadOldder() {
 				}
 			});
 		}
+	} else if (model === usertl_model) {
+		var oldest_tweet = usertl_model.tweets[usertl_model.tweets.length - 1];
+		if (! oldest_tweet) return;
+		PREFiX.user().getUserTimeline({
+			id: PREFiX.userid,
+			max_id: oldest_tweet.id_str,
+		}).setupAjax({
+			lock: loadOldder,
+			send: function() {
+				loading = true;
+			},
+			oncomplete: function() {
+				loading = false;
+			}
+		}).next(function(tweets) {
+			push(usertl_model.tweets, tweets);
+		});
 	} else if (model.tweets) {
 		var oldest_tweet = model.tweets[model.tweets.length - 1];
 		if (! oldest_tweet) return;
@@ -1723,29 +1758,34 @@ var nav_model = avalon.define('navigation', function(vm) {
 		if (loading) return;
 		if (vm.current == 'tl_model' && $main.scrollTop())
 			return goTop(e);
-		PREFiX.current = vm.current = 'tl_model';
+		last_model = PREFiX.current = vm.current = 'tl_model';
 		tl_model.initialize();
 	}
 	vm.showMentions = function(e) {
 		if (loading) return;
 		if (vm.current == 'mentions_model' && $main.scrollTop())
 			return goTop(e);
-		PREFiX.current = vm.current = 'mentions_model';
+		last_model = PREFiX.current = vm.current = 'mentions_model';
 		mentions_model.initialize();
 	}
 	vm.showdirectmsgs = function(e) {
 		if (loading) return;
 		if (vm.current == 'directmsgs_model' && $main.scrollTop())
 			return goTop(e);
-		PREFiX.current = vm.current = 'directmsgs_model';
+		last_model = PREFiX.current = vm.current = 'directmsgs_model';
 		directmsgs_model.initialize();
 	}
 	vm.showSavedSearches = function(e) {
 		if (loading) return;
 		if (vm.current == 'searches_model' && $main.scrollTop())
 			return goTop(e);
-		PREFiX.current = vm.current = 'searches_model';
+		last_model = PREFiX.current = vm.current = 'searches_model';
 		searches_model.initialize();
+	}
+	vm.showUserTimeline = function(e) {
+		if (loading) return;
+		PREFiX.current = vm.current = 'usertl_model';
+		usertl_model.initialize();
 	}
 	vm.$watch('current', function(new_value, old_value) {
 		if (old_value == 'directmsgs_model') {
@@ -1758,6 +1798,10 @@ var nav_model = avalon.define('navigation', function(vm) {
 			$('#topic-selector').show();
 		}
 		getCurrent().allLoaded = false;
+		if (old_value == 'usertl_model') {
+			resetHeader();
+		}
+		$('#title').show();
 		window[old_value] && window[old_value].unload();
 		$('#navigation-bar li').removeClass('current');
 		$('#stream > ul').removeClass('current');
@@ -2280,18 +2324,6 @@ searches_model.initialize = function() {
 
 	$main.scrollTop(0);
 
-	function showMyTimeline() {
-		$('#topic-selector').prop('disabled', true);
-		searches_model.tweets = [];
-		searches_model.current = null;
-		PREFiX.getInstanceByRateLimit('getUserTimeline')().next(function(tweets) {
-			unshift(searches_model.tweets, tweets);
-			initKeyboardControl();
-		}).hold(function() {
-			$('#topic-selector').prop('disabled', false);
-		});
-	}
-
 	function showFavorites() {
 		$('#topic-selector').prop('disabled', true);
 		searches_model.tweets = [];
@@ -2366,11 +2398,6 @@ searches_model.initialize = function() {
 		$selector.prop('id', 'topic-selector');
 		$selector.prop('tabIndex', 2);
 
-		var $my_tl = $('<option />');
-		$my_tl.text('我的消息');
-		$my_tl.prop('value', '##MY_TIMELINE##');
-		$selector.append($my_tl);
-
 		var $fav = $('<option />');
 		$fav.text('我的收藏');
 		$fav.prop('value', '##MY_FAVORITES##');
@@ -2393,11 +2420,7 @@ searches_model.initialize = function() {
 		$selector.appendTo('#title');
 
 		$selector.on('change', function(e) {
-			if (this.value === '##MY_TIMELINE##') {
-				searches_model.keyword = '';
-				delete searches_model.show_my_timeline;
-				showMyTimeline();
-			} else if (this.value === '##MY_FAVORITES##') {
+			if (this.value === '##MY_FAVORITES##') {
 				searches_model.keyword = '';
 				showFavorites();
 			} else if (this.value === '##SEARCH##') {
@@ -2420,9 +2443,7 @@ searches_model.initialize = function() {
 	});
 
 	var $selector = $('#topic-selector');
-	if (searches_model.show_my_timeline) {
-		$selector.val('##MY_TIMELINE##');
-	} else if (searches_model.search_keyword) {
+	if (searches_model.search_keyword) {
 		$selector.val('##SEARCH##');
 	} else if (last) {
 		$selector.val(searches_model.keyword);
@@ -2450,6 +2471,78 @@ searches_model.initialize = function() {
 searches_model.unload = function() {
 	clearInterval(this.interval);
 }
+
+var usertl_model = avalon.define('user-timeline', function(vm) {
+	vm.remove = remove;
+
+	vm.reply = reply;
+
+	vm.repost = repost;
+
+	vm.retweet = retweet('usertl_model');
+
+	vm.toggleFavourite = toggleFavourite;
+
+	vm.showRelatedTweets = showRelatedTweets;
+
+	vm.tweets = [];
+
+	vm.is_replying = false;
+
+	vm.screenNameFirst = PREFiX.settings.current.screenNameFirst;
+});
+usertl_model.initialize = function() {
+	$('#title').hide();
+	$('#user-timeline').addClass('current');
+	$('h1, #back').attr('style', '');
+	$body.addClass('show-back-button');
+
+	PREFiX.user().getUser({
+		user_id: PREFiX.userid
+	}).next(function(user) {
+		user.error = '';
+		var following = user.following;
+		var $relationship = $('#relationship');
+		if (user.protected && ! user.following) {
+			user.error = '该用户没有公开 TA 的消息. ';
+		} else if (! user.status) {
+			user.error = '该用户还没有发表消息. '
+		}
+		if (user.status) {
+			PREFiX.user().getUserTimeline({
+				user_id: PREFiX.userid
+			}).next(function(tweets) {
+				unshift(usertl_model.tweets, tweets);
+				setTimeout(initKeyboardControl);
+				if (following) {
+					PREFiX.user().lookupFriendship({
+						user_id: PREFiX.userid
+					}).
+					next(function(result) {
+						if (result[0].connections.indexOf('followed_by') > -1) {
+							$('#relationship').text('互相关注');
+						} else {
+							$relationship.prop('title', '取消关注');
+						}
+					});
+				}
+			});
+		} else {
+			var tweets = [ { id: 0, id_str: '', user: user } ];
+			usertl_model.tweets = tweets;
+			$relationship.prop('title', following ? '取消关注' : '');
+		}
+		if (user.error) {
+			$('#loading').hide();
+		}
+	})
+
+	usertl_model.tweets = [];
+	$main.scrollTop(0);
+	usertl_model.current = null;
+	usertl_model.is_replying = false;
+}
+usertl_model.unload = function() { }
 
 var context_tl_model = avalon.define('context-timeline', function(vm) {
 	vm.tweets = [];
