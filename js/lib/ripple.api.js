@@ -178,49 +178,6 @@
 	} });
 
 
-	/* Streaming */
-
-	// https://dev.twitter.com/docs/api/1.1/post/statuses/filter
-	N({
-		name: 'filter',
-		action: 'statuses/filter',
-		baseAPIUrl: 'https://stream.twitter.com/1.1/',
-		method: 'POST'
-	}, { success: _processTweets });
-
-	// https://dev.twitter.com/docs/api/1.1/get/statuses/sample
-	N({
-		name: 'getSample',
-		action: 'statuses/sample',
-		baseAPIUrl: 'https://stream.twitter.com/1.1/',
-		method: 'POST'
-	}, { success: _processTweets });
-
-	// https://dev.twitter.com/docs/api/1.1/get/statuses/firehose
-	N({
-		name: 'getFirehose',
-		action: 'statuses/firehose',
-		baseAPIUrl: 'https://stream.twitter.com/1.1/',
-		method: 'POST'
-	}, { success: _processTweets });
-
-	// https://dev.twitter.com/docs/api/1.1/get/user
-	N({
-		name: 'getUserStream',
-		action: 'user',
-		baseAPIUrl: 'https://userstream.twitter.com/1.1/',
-		method: 'POST'
-	});
-
-	// https://dev.twitter.com/docs/api/1.1/get/site
-	N({
-		name: 'getSiteStream',
-		action: 'site',
-		baseAPIUrl: 'https://sitestream.twitter.com/1.1/',
-		method: 'POST'
-	});
-
-
 	/* Direct Messages */
 
 	// https://dev.twitter.com/docs/api/1.1/get/direct_messages
