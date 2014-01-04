@@ -64,13 +64,31 @@
 								<label><input type="checkbox" key="playSound" />有新的未读 @ 消息或未读私信时播放提示音</label>
 							</li>
 							<li>
-								<label><input type="checkbox" key="notification" />有新的提醒时显示桌面通知</label>
-							</li>
-							<li>
 								<label><input type="checkbox" key="drawAttention" />Timeline 上有新消息时闪烁任务栏图标 (禁用后有新@和私信时仍会闪烁)</label>
 							</li>
 							<li>
 								<label><input type="checkbox" key="showSavedSearchCount" />关注的话题有新消息时在图标上显示统计数字</label>
+							</li>
+						</ul>
+						<ul>
+							<h3>桌面通知</h3>
+							<li>
+								<label><input type="checkbox" key="notification" foldable-src="notification" />启用桌面通知</label>
+							</li>
+							<li foldable-tgt="notification">
+								<label><input type="checkbox" key="notif_mention" foldable-tgt="notification" />当我被 @ 时显示桌面通知</label>
+							</li>
+							<li foldable-tgt="notification">
+								<label><input type="checkbox" key="notif_directmsg" foldable-tgt="notification" />当收到私信时显示桌面通知</label>
+							</li>
+							<li foldable-tgt="notification">
+								<label><input type="checkbox" key="notif_retweet" foldable-tgt="notification" />当我的消息被锐推时显示桌面通知</label>
+							</li>
+							<li foldable-tgt="notification">
+								<label><input type="checkbox" key="notif_follower" foldable-tgt="notification" />当有新关注者时显示桌面通知</label>
+							</li>
+							<li foldable-tgt="notification">
+								<label><input type="checkbox" key="notif_favourite" foldable-tgt="notification" />当我的消息被收藏时显示桌面通知</label>
 							</li>
 						</ul>
 						<ul>

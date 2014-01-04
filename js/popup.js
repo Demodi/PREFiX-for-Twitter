@@ -654,6 +654,36 @@ function resetHeader() {
 	$('h1').css('animation', 'topIn .4s both');
 }
 
+function markTweetAsFavourited(tweet_id) {
+	var lists = [
+		tl_model.tweets,
+		mentions_model.tweets
+	];
+	lists.forEach(function(list) {
+		list.some(function(tweet, i) {
+			if (tweet.id_str === tweet_id) {
+				tweet.favorited = true;
+				return true;
+			}
+		});
+	});
+}
+
+function markTweetAsUnfavourited(tweet_id) {
+	var lists = [
+		tl_model.tweets,
+		mentions_model.tweets
+	];
+	lists.forEach(function(list) {
+		list.some(function(tweet, i) {
+			if (tweet.id_str === tweet_id) {
+				tweet.favorited = false;
+				return true;
+			}
+		});
+	});
+}
+
 function deleteTweetFromAllLists(tweet_id) {
 	var lists = [
 		tl_model.tweets,
@@ -663,18 +693,31 @@ function deleteTweetFromAllLists(tweet_id) {
 		PREFiX.mentions.buffered,
 		PREFiX.mentions.tweets
 	];
-	lists.forEach(function(list) {
-		var index = -1;
-		list.some(function(tweet, i) {
-			if (tweet.id_str === tweet_id) {
+	var current_model = getCurrent();
+	var current = current_model.current;
+	var index;
+	if (current_model.tweets && current && current === tweet_id) {
+		current_model.tweets.some(function(tweet, i) {
+			if (tweet.id_str === current) {
 				index = i;
 				return true;
 			}
 		});
-		if (index > -1) {
-			list.splice(index, 1);
+		if (index === current_model.tweets.length - 1) {
+			index--;
 		}
+	}
+	lists.forEach(function(list) {
+		list.some(function(tweet, i) {
+			if (tweet.id_str === tweet_id) {
+				list.splice(i, 1);
+				return true;
+			}
+		});
 	});
+	if (index >= 0) {
+		setCurrent(current_model, current_model.tweets[index].id_str);
+	}
 }
 
 function hideAllOverlays(e) {
@@ -1709,13 +1752,14 @@ function toggleFavourite(e) {
 	var tweet = self.$vmodel.tweet;
 	tweet = tweet.retweeted_status || tweet;
 	$(self).css('animation', '');
-	showNotification(tweet.favorited ? '取消收藏..' : '正在收藏..')
-	PREFiX.user()[tweet.favorited ? 'unfavorite' : 'favorite']({
+	var favorited = tweet.favorited;
+	showNotification(favorited ? '取消收藏..' : '正在收藏..')
+	PREFiX.user()[favorited ? 'unfavorite' : 'favorite']({
 		id: tweet.id_str
 	}).setupAjax({
 		lock: self
 	}).next(function() {
-		tweet.favorited = ! tweet.favorited;
+		tweet.favorited = ! favorited;
 		showNotification(tweet.favorited ? '收藏成功!' : '取消收藏成功!');
 		$(self).css('animation', 'spring .5s linear');
 	});
@@ -1924,9 +1968,12 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 					if (bg_win.rate_limit.sub.getHomeTimeline) {
 						remaining_hits += bg_win.rate_limit.sub.getHomeTimeline;
 					}
-					if (remaining_hits >= 5) {
+					var now = Date.now();
+					var stream_active = now - PREFiX.streamingApiActived < 30000;
+					if (remaining_hits >= 5 && ! stream_active) {
 						PREFiX.updateHomeTimeline(7, tweet.id_str);
 					}
+
 				}).error(function(e) {
 					if (e.status && e.response) {
 						showNotification(e.response.errors[0].message);

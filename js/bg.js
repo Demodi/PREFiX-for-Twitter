@@ -2,6 +2,7 @@ var ce = chrome.extension;
 var ct = chrome.tabs;
 var root_url = ce.getURL('');
 var popup_url = ce.getURL('popup.html');
+var panel_url = ce.getURL('/popup.html?new_window=true');
 
 var short_url_re = /https?:\/\/(?:bit\.ly|goo\.gl|v\.gd|is\.gd|tinyurl\.com|to\.ly|yep\.it|j\.mp)\//;
 
@@ -27,7 +28,7 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 		getSubAccessToken(request.code);
 	} else {
 		chrome.tabs.query({
-			url: chrome.extension.getURL('/popup.html?new_window=true')
+			url: panel_url
 		}, function(tabs) {
 			tabs.forEach(function(tab) {
 				if (! sender.tab) {
@@ -106,6 +107,26 @@ function getInstanceByRateLimit(method) {
 	}
 }
 
+function getPanelWindow(callback) {
+	var views = chrome.extension.getViews();
+	views.some(function(view) {
+		if (view.location.href == panel_url) {
+			callback(view);
+			return true;
+		}
+	});
+}
+
+function getPopup(callback) {
+	var views = chrome.extension.getViews();
+	views.some(function(view) {
+		if (view.location.href.indexOf(popup_url) === 0) {
+			callback(view);
+			return true;
+		}
+	});
+}
+
 function initUrlExpand() {
 	var short_url_services = lscache.get('short_url_services');
 	if (short_url_services) {
@@ -162,6 +183,62 @@ function user() {
 	}
 	var total = account_instances.length;
 	return account_instances[Math.round(Math.random() * (total - 1))];
+}
+
+function batchProcess(callback) {
+	var views = ce.getViews();
+	views.forEach(callback);
+}
+
+function markTweetAsFavourited(tweet_id) {
+	var lists = [
+		PREFiX.homeTimeline.buffered,
+		PREFiX.homeTimeline.tweets,
+		PREFiX.mentions.buffered,
+		PREFiX.mentions.tweets
+	];
+	lists.forEach(function(list) {
+		list.some(function(tweet, i) {
+			if (tweet.id_str === tweet_id) {
+				tweet.favorited = true;
+				return true;
+			}
+		});
+	});
+}
+
+function markTweetAsUnfavourited(tweet_id) {
+	var lists = [
+		PREFiX.homeTimeline.buffered,
+		PREFiX.homeTimeline.tweets,
+		PREFiX.mentions.buffered,
+		PREFiX.mentions.tweets
+	];
+	lists.forEach(function(list) {
+		list.some(function(tweet, i) {
+			if (tweet.id_str === tweet_id) {
+				tweet.favorited = false;
+				return true;
+			}
+		});
+	});
+}
+
+function deleteTweetFromAllLists(tweet_id) {
+	var lists = [
+		PREFiX.homeTimeline.buffered,
+		PREFiX.homeTimeline.tweets,
+		PREFiX.mentions.buffered,
+		PREFiX.mentions.tweets
+	];
+	lists.forEach(function(list) {
+		list.some(function(tweet, i) {
+			if (tweet.id_str === tweet_id) {
+				list.splice(i, 1);
+				return true;
+			}
+		});
+	});
 }
 
 function onInputStarted() {
@@ -477,6 +554,23 @@ function getDataSince(method, since_id, lock, extra_data, timeout) {
 		});
 }
 
+function flushCache() {
+	if (! settings.current.autoFlushCache)
+		return;
+	var tl = PREFiX.homeTimeline;
+	if (! PREFiX.popupActive && tl.scrollTop < 30) {
+		var buffered_count = tl.buffered.length;
+		var read_count = tl.tweets.length;
+		var cache_amount = settings.current.cacheAmount;
+		if (buffered_count + read_count > cache_amount) {
+			tl.tweets.splice(Math.max(0, cache_amount - buffered_count));
+			if (buffered_count > cache_amount) {
+				tl.buffered.splice(cache_amount);
+			}
+		}
+	}
+}
+
 function updateTitle() {
 	var title = [ 'PREFiX for Twitter' ];
 
@@ -558,6 +652,11 @@ function updateBrowserAction() {
 	});
 }
 
+function resetUpdateInterval() {
+	clearInterval(PREFiX.interval);
+	PREFiX.interval = setInterval(update, 60000);
+}
+
 function setRefreshingState() {
 	chrome.browserAction.setBadgeText({
 		text: '...'
@@ -595,19 +694,7 @@ function updateHomeTimeline(retry_chances, new_tweet_id) {
 					}
 				}
 				unshift(tl.buffered, tweets);
-				if (! settings.current.autoFlushCache)
-					return;
-				if (! PREFiX.popupActive && tl.scrollTop < 30) {
-					var buffered_count = tl.buffered.length;
-					var read_count = tl.tweets.length;
-					var cache_amount = settings.current.cacheAmount;
-					if (buffered_count + read_count > cache_amount) {
-						tl.tweets.splice(Math.max(0, cache_amount - buffered_count));
-						if (buffered_count > cache_amount) {
-							tl.buffered.splice(cache_amount);
-						}
-					}
-				}
+				flushCache();
 		});
 	}
 
@@ -656,11 +743,259 @@ function updateDirectMsgs() {
 	return deferred_dm;
 }
 
+function initStreamingAPI() {
+	var processed_index = -1;
+	var friends = [];
+	function notify(options) {
+		if (! settings.current.notification)
+			return;
+		var is_mention_or_dm = [ 'mention', 'directmsg' ].indexOf(options.type) > -1;
+		if (is_mention_or_dm) {
+			if (PREFiX.popupActive && (! PREFiX.panelMode || PREFiX.is_popup_focused))
+				return;
+		}
+		if (options.type === 'mention' && ! settings.current.notif_mention)
+			return;
+		if (options.type === 'directmsg' && ! settings.current.notif_directmsg)
+			return;
+		if (options.type === 'retweet' && ! settings.current.notif_retweet)
+			return;
+		if (options.type === 'friend' && ! settings.current.notif_follower)
+			return;
+		if (options.type === 'favourite' && ! settings.current.notif_favourite)
+			return;
+		showNotification(options).addEventListener('click', function(e) {
+			this.cancel();
+			if (options.url) {
+				createTab(options.url);
+			}
+			if (! is_mention_or_dm)
+				return;
+			if (PREFiX.panelMode) {
+				chrome.tabs.query({
+					url: panel_url
+				}, function(tabs) {
+					tabs.forEach(function(tab) {
+						chrome.windows.update(tab.windowId, {
+							focused: true
+						});
+					});
+				});
+				getPanelWindow(function(view) {
+					var selector = '#navigation-bar ';
+					if (options.type === 'mention') {
+						selector += '.mentions';
+					} else if (options.type === 'directmsg') {
+						selector += '.directmsgs';
+					}
+					var elem = view.$(selector)[0];
+					var event = new Event('click');
+					elem.dispatchEvent(event);
+				});
+			} else {
+				createPopup();
+			}
+		});
+	}
+	function process(data) {
+		if (! data || ! data.trim().length)
+			return;
+		PREFiX.streamingApiActived = Date.now();
+		try {
+			data = JSON.parse(data);
+		} catch (e) {
+			console.log('failed to parse data', data);
+			throw e;
+		}
+
+		if (data.delete) {
+			setTimeout(function() {
+				if (data.delete.status) {
+					batchProcess(function(view) {
+						view.deleteTweetFromAllLists(data.delete.status.id_str);
+					});
+					updateTitle();
+				}
+			}, 2000);
+		} else if (data.disconnect) {
+			stopStreamingAPI();
+		} else if (data.limit) {
+		} else if (data.scrub_geo) {
+		} else if (data.warning) {
+		} else if (data.status_withheld) {
+		} else if (data.user_withheld) {
+		} else if (data.friends) {
+			update();
+			friends = data.friends;
+		} else if (data.friends_str) {
+			update();
+			friends = data.friends_str;
+		} else if (data.direct_message) {
+			var dm = data.direct_message;
+			Ripple.events.trigger('process_tweet', dm);
+			if (dm.recipient_id_str === PREFiX.account.id_str) {
+				unshift(PREFiX.directmsgs.buffered, [ dm ])
+				if (isNeedNotify()) {
+					playSound();
+				}
+				notify({
+					type: 'directmsg',
+					title: '收到 ' + getName(dm.sender) + '发来的私信',
+					content: dm.textWithoutTags,
+					icon: dm.sender.profile_image_url_https
+				});
+				updateTitle();
+			}
+		} else if (data.event) {
+			var ev = data.event
+			if (ev === 'blocked') {
+			} else if (ev === 'unblocked') {
+			} else if (ev === 'favorite') {
+				Ripple.events.trigger('process_tweet', data.target_object);
+				if (data.source.id_str === PREFiX.account.id_str) {
+					batchProcess(function(view) {
+						view.markTweetAsFavourited(data.target_object.id_str);
+					});
+				} else {
+					notify({
+						type: 'favourite',
+						title: getName(data.source) + '收藏了你的消息',
+						content: data.target_object.textWithoutTags,
+						icon: data.source.profile_image_url_https
+					});
+				}
+			} else if (ev === 'unfavorite') {
+				if (data.source.id_str === PREFiX.account.id_str) {
+					batchProcess(function(view) {
+						view.markTweetAsUnfavourited(data.target_object.id_str);
+					});
+				}
+			} else if (ev === 'follow') {
+				if (data.source.id_str === PREFiX.account.id_str) {
+					friends.push(data.target.id_str);
+				} else {
+					notify({
+						type: 'friend',
+						title: getName(data.source) + '关注了你',
+						content: data.source.description,
+						url: 'https://twitter.com/' + data.source.screen_name,
+						icon: data.source.profile_image_url_https
+					});
+				}
+			} else if (ev === 'unfollow') {
+				var i = friends.indexOf(data.target.id_str);
+				friends.splice(i, 1);
+			} else if (ev === 'user_update') {
+				PREFiX.account = data.target;
+				lscache.set('account_details', data.target);
+			} else if (ev === 'list_created') {
+			} else if (ev === 'list_destroyed') {
+			} else if (ev === 'list_updated') {
+			} else if (ev === 'list_member_added') {
+			} else if (ev === 'list_member_removed') {
+			} else if (ev === 'list_user_subscribed') {
+			} else if (ev === 'list_user_unsubscribed') {
+			} else {
+			}
+		} else {
+			Ripple.events.trigger('process_tweet', data);
+			if (data.photo && data.photo.url) {
+				data.textWithoutTags += '[Photo]'
+			}
+			var user_id = data.user.id_str;
+			var is_retweeted_from_me = false;
+			if (data.retweeted_status && data.retweeted_status.is_self) {
+				is_retweeted_from_me = true;
+			}
+			if (is_retweeted_from_me) {
+				notify({
+					type: 'retweet',
+					title: getName(data.user) + '锐推了你的消息',
+					content: data.retweeted_status.textWithoutTags,
+					icon: data.user.profile_image_url_https
+				});
+			} else {
+				if (data.retweeted_status &&
+					friends.indexOf(data.retweeted_status.user.id_str) > -1) {
+					return;
+				}
+				if (friends.indexOf(user_id) > -1 || ! friends.length ||
+					user_id === PREFiX.account.id_str) {
+					unshift(PREFiX.homeTimeline.buffered, [ data ]);
+					flushCache();
+				}
+				var mentioned = data.entities.user_mentions.some(function(mention) {
+					return mention.id_str === PREFiX.account.id_str;
+				});
+				if (mentioned && ! data.is_self && ! data.retweeted_status) {
+					unshift(PREFiX.mentions.buffered, [ data ]);
+					if (isNeedNotify()) {
+						playSound();
+					}
+					notify({
+						type: 'mention',
+						title: getName(data.user) + '提到了你',
+						content: data.textWithoutTags,
+						icon: data.user.profile_image_url_https
+					});
+				}
+				updateTitle();
+			}
+		}
+	}
+	PREFiX.streamingAjax = getDefaultInstance().streamingAPI({
+		method: 'GET',
+		action: 'https://userstream.twitter.com/1.1/user.json',
+		params: {
+			stringify_friend_ids: true
+		},
+		callback: function(e) {
+			var data = this.responseText;
+			if (! data) return;
+			resetUpdateInterval();
+			var parsed_data = data.split('\r\n');
+			for (var i = processed_index + 1; true; i++) {
+				if (parsed_data[i + 1] !== undefined) {
+					processed_index = i;
+					try {
+						process(parsed_data[i]);
+					} catch (e) { }
+				} else {
+					break;
+				}
+			}
+		}
+	}).hold(function(e) {
+		if (PREFiX.account) {
+			console.log('error thrown connecting to streaming api', e)
+			if (! e || e.exceptionType === 'onabort') {
+				initStreamingAPI();
+			} else {
+				setTimeout(initStreamingAPI, 60 * 1000);
+			}
+		}
+	});
+}
+
+function stopStreamingAPI() {
+	if (PREFiX.streamingAjax) {
+		PREFiX.streamingAjax.cancel();
+		PREFiX.streamingAjax = null;
+	}
+}
+
+function getName(user) {
+	var title = [ user.name, '@' + user.screen_name ];
+	if (settings.current.screenNameFirst) {
+		title.reverse();
+	}
+	return title.join(' (') + ') ';
+}
+
 function update() {
 	var d = new Deferred;
 
-	clearInterval(PREFiX.interval);
-	PREFiX.interval = setInterval(update, 60000);
+	resetUpdateInterval();
 
 	setRefreshingState();
 
@@ -1320,6 +1655,7 @@ function load() {
 								PREFiX.directmsgs.messages = fixTweetList(messages);
 							}
 							clearInterval(init_interval);
+							initStreamingAPI();
 						});
 					}
 					setTimeout(initData);
@@ -1351,6 +1687,7 @@ function unload() {
 	clearInterval(update_browser_action_interval);
 	PREFiX.loaded = false;
 	PREFiX.account = null;
+	stopStreamingAPI();
 	PREFiX.current = 'tl_model';
 	PREFiX.compose = {
 		text: '',
@@ -1717,7 +2054,7 @@ function replaceEmoji(text) {
 Ripple.events.observe('process_tweet', function(tweet) {
 	if (! tweet) return;
 	if (tweet.user) {
-		tweet.is_self = tweet.user.id === PREFiX.account.id;
+		tweet.is_self = tweet.user.id_str === PREFiX.account.id_str;
 	}
 	var created_at = tweet.created_at;
 	tweet.fullTime = (function() {
@@ -1983,11 +2320,16 @@ var settings = {
 		tweetsPerPage: 50,
 		showSavedSearchCount: true,
 		createPopAtStartup: false,
-		volume: 1,
+		volume: .75,
 		holdCtrlToSubmit: false,
 		embedlyKey: '',
 		screenNameFirst: false,
-		notification: true
+		notification: true,
+		notif_mention: true,
+		notif_directmsg: true,
+		notif_follower: true,
+		notif_favourite: true,
+		notif_retweet: true
 	},
 	load: function() {
 		var local_settings = lscache.get('settings') || { };
@@ -2054,6 +2396,7 @@ var PREFiX = this.PREFiX = {
 	updateMentions: updateMentions,
 	updateDirectMsgs: updateDirectMsgs,
 	updateTitle: updateTitle,
+	streamingAjax: null,
 	getDataSince: getDataSince,
 	loaded: false,
 	interval: null,
