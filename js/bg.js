@@ -648,6 +648,7 @@ function updateBrowserAction() {
 	chrome.browserAction.getTitle({ }, function(title) {
 		var re = /刷新|错误|Rate limit/i;
 		if (re.test(title)) return;
+		isNeedNotify();
 		updateTitle();
 	});
 }
@@ -814,6 +815,7 @@ function initStreamingAPI() {
 					batchProcess(function(view) {
 						view.deleteTweetFromAllLists(data.delete.status.id_str);
 					});
+					isNeedNotify();
 					updateTitle();
 				}
 			}, 2000);
@@ -844,6 +846,7 @@ function initStreamingAPI() {
 					content: dm.textWithoutTags,
 					icon: dm.sender.profile_image_url_https
 				});
+				isNeedNotify();
 				updateTitle();
 			}
 		} else if (data.event) {
@@ -939,6 +942,7 @@ function initStreamingAPI() {
 						icon: data.user.profile_image_url_https
 					});
 				}
+				isNeedNotify();
 				updateTitle();
 			}
 		}
