@@ -206,6 +206,15 @@ function initKeyboardControl() {
 	}, function() {
 		if (! model.current) {
 			model.current = list[0].id_str;
+		} else if (! findView(model, model.current).length) {
+			var elems = [].slice.call(model.$elem.find('li[data-id]'));
+			var scroll_top = $main.scrollTop();
+			elems.some(function(elem) {
+				if (elem.offsetTop >= scroll_top) {
+					model.current = elem.dataset.id;
+					return true;
+				}
+			});
 		}
 		setCurrent(model, model.current);
 	});
@@ -269,6 +278,10 @@ function initKeyboardControlEvents() {
 				setCurrent(current_model, list[0].id_str);
 			}
 		} else if (e.keyCode === 74) {
+			if (! $current_view.length) {
+				initKeyboardControl();
+				return;
+			}
 			var $next_view = $current_view.nextAll('li[data-id]').first();
 			if (! $next_view.length) return;
 			var delta = $next_view.offset().top;
