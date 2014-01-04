@@ -2624,34 +2624,36 @@ context_tl_model.tweets.$watch('length', function(length) {
 context_tl_model.tweets.$watch('length', onNewTweetInserted);
 
 $(function() {
-	initMainUI();
-	setTimeout(function() {
-		$textarea.focus();
-		if (! PREFiX.compose.text) {
-			$textarea.blur();
-		} else if (PREFiX.compose.type === 'repost') {
-			$textarea[0].selectionStart = $textarea[0].selectionEnd = 0;
-		}
-		getCurrent().initialize();
-		initKeyboardControlEvents();
-		setTimeout(showUsageTip, 100);
-		var $tip = $('#uploading-photo-tip');
-		var shown = lscache.get('uploading_photo_tip');
-		if (! shown && lscache.get('hide-following-tip')) {
-			$tip.show();
-			$('#hide-uploading-photo-tip').click(function(e) {
-				$tip.css({
-					'animation-name': 'wobbleOut',
-					'animation-duration': 400
-				}).delay(400).hide(0, function() {
-					$(this).remove();
-					lscache.set('uploading_photo_tip', true);
+	require('avalon.live', function() {
+		initMainUI();
+		setTimeout(function() {
+			$textarea.focus();
+			if (! PREFiX.compose.text) {
+				$textarea.blur();
+			} else if (PREFiX.compose.type === 'repost') {
+				$textarea[0].selectionStart = $textarea[0].selectionEnd = 0;
+			}
+			getCurrent().initialize();
+			initKeyboardControlEvents();
+			setTimeout(showUsageTip, 100);
+			var $tip = $('#uploading-photo-tip');
+			var shown = lscache.get('uploading_photo_tip');
+			if (! shown && lscache.get('hide-following-tip')) {
+				$tip.show();
+				$('#hide-uploading-photo-tip').click(function(e) {
+					$tip.css({
+						'animation-name': 'wobbleOut',
+						'animation-duration': 400
+					}).delay(400).hide(0, function() {
+						$(this).remove();
+						lscache.set('uploading_photo_tip', true);
+					});
 				});
-			});
-		} else {
-			$tip.remove();
-	 	}
-	}, 100);
+			} else {
+				$tip.remove();
+			}
+		}, 100);
+	});
 });
 
 onunload = function() {
