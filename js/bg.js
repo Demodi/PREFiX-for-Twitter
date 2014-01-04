@@ -1513,7 +1513,7 @@ var getOEmbed = (function() {
 						var $link = $temp.find('[href="' + oEmbed.url + '"]');
 						$link.prop('title', oEmbed.longUrl);
 						$link.prop('href', oEmbed.longUrl);
-						var display_url = oEmbed.longUrl.replace(/^https?:\/\//, '');
+						var display_url = oEmbed.longUrl.replace(/^https?:\/\/(?:www\.)?/, '');
 						if (display_url.length > 25) {
 							display_url = display_url.substring(0, 25) + '...';
 						}
