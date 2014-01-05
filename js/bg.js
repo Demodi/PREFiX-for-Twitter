@@ -1354,6 +1354,17 @@ var getOEmbed = (function() {
 			return;
 		}
 
+		var result = url.match(twipple_re);
+		if (result) {
+			var large_url = url.replace('p.twipple.jp', 'p.twpl.jp/show/orig');
+			loadImage({
+				url: self.url,
+				large_url: large_url,
+				oEmbed: self
+			});
+			return;
+		}
+
 		if (! settings.current.embedlyKey) {
 			this.status = 'error';
 			return;
@@ -1456,6 +1467,7 @@ var getOEmbed = (function() {
 	var imgly_re = /https?:\/\/img\.ly\//;
 	var lofter_re = /\.lofter\.com\/post\/[a-zA-Z0-9_]+/;
 	var imgur_re = /imgur\.com\//;
+	var twipple_re = /https?:\/\/p\.twipple\.jp\/\S+/;
 
 	var photo_res = [
 		weibo_re,
@@ -1466,6 +1478,7 @@ var getOEmbed = (function() {
 		/flickr\.com\/photos\/|flic.kr\//,
 		instagram_re,
 		/yfrog\./,
+		twipple_re,
 		/https?:\/\/twitgoo\.com\//,
 		/https?:\/\/(?:s\w+|i\w+|media)\.photobucket\.com\/(?:albums|image)\//,
 		/https?:\/\/facebook\.com|fb\.me/,
