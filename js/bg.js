@@ -268,20 +268,25 @@ function prepareSuggestions() {
 					});
 				});
 			}
+			if (tweet.entities && tweet.entities.urls) {
+				tweet.entities.urls.forEach(function(item) {
+					text = text.replace(item.url, '<url>' + item.display_url + '</url>');
+				});
+			}
 			users[tweet.user.screen_name] = users[tweet.user.screen_name] || 0;
 
 			var user = tweet.user.screen_name;
 
 			var cont = '@' + user + getSpaces(++users[user]);
 
-			var desc = '<dim>' + tweet.user.name + ' (@' + user + '): </dim>';
-			desc += tweet.photo ? '<url>[Photo]</url> ' : '';
+			var desc = '<dim>' + getName(tweet.user) + ': </dim>';
+			desc += tweet.photo && tweet.photo.url ? '<url>[Photo]</url> ' : '';
 			desc += text + '<dim> - ';
 			if (_tweet !== tweet) {
-				desc += 'Retweeted by ' + _tweet.user.name + ' ';
+				desc += 'Retweeted by ' + getName(_tweet.user);
 			}
 			desc += getRelativeTime(_tweet.created_at);
-			desc += ' via ' + tweet.source + '</dim>';
+			desc += ' via ' + _tweet.source + '</dim>';
 
 			return {
 				content: cont,
