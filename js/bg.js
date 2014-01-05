@@ -1154,7 +1154,7 @@ function processPhoto(tweet, photo) {
 	}
 	tweet.photo = tweet.photo || { };
 	if (tweet.photo.url) return;
-	$.extend(tweet.photo, photo);
+	$.extend(true, tweet.photo, photo);
 	return photo;
 }
 
@@ -1328,6 +1328,32 @@ var getOEmbed = (function() {
 			return;
 		}
 
+		var result = url.match(imgur_re);
+		if (result) {
+			Ripple.ajax.get(url).
+			next(function(html) {
+				html = html.replace(/(src|href)="\/\//g, function(_, $1) {
+					return $1 + '="http://';
+				});
+				var $html = $(html);
+				var large_url = $html.find('#image a').prop('href');
+				large_url = large_url || $html.find('#image img').prop('src');
+				$html.length = 0;
+				$html = null;
+				if (large_url) {
+					loadImage({
+						url: self.url,
+						large_url: large_url,
+						oEmbed: self
+					});
+				} else {
+					self.status = 'ignored';
+					lscache.set('oembed-' + url, self);
+				}
+			});
+			return;
+		}
+
 		if (! settings.current.embedlyKey) {
 			this.status = 'error';
 			return;
@@ -1429,6 +1455,7 @@ var getOEmbed = (function() {
 	var twitpic_re = /https?:\/\/(?:www\.)?twitpic\.com\//;
 	var imgly_re = /https?:\/\/img\.ly\//;
 	var lofter_re = /\.lofter\.com\/post\/[a-zA-Z0-9_]+/;
+	var imgur_re = /imgur\.com\//;
 
 	var photo_res = [
 		weibo_re,
@@ -1444,7 +1471,7 @@ var getOEmbed = (function() {
 		/https?:\/\/facebook\.com|fb\.me/,
 		/https?:\/\/path\.com\//,
 		/tumblr\.com\//,
-		/imgur\.com\//,
+		imgur_re,
 		/https?:\/\/picasaweb\.google\.com/,
 		/https?:\/\/(?:www\.mobypicture\.com\/user|moby\.to)\//,
 		/https?:\/\/meadd\.com\//,
