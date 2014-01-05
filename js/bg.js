@@ -1365,6 +1365,28 @@ var getOEmbed = (function() {
 			return;
 		}
 
+		var result = url.match(tinypic_re);
+		if (result) {
+			Ripple.ajax.get(url).
+			next(function(html) {
+				var $html = $(html);
+				var large_url = $html.find('#imgFrame a').prop('href');
+				$html.length = 0;
+				$html = null;
+				if (large_url) {
+					loadImage({
+						url: self.url,
+						large_url: large_url,
+						oEmbed: self
+					});
+				} else {
+					self.status = 'ignored';
+					lscache.set('oembed-' + url, self);
+				}
+			});
+			return;
+		}
+
 		if (! settings.current.embedlyKey) {
 			this.status = 'error';
 			return;
@@ -1468,13 +1490,14 @@ var getOEmbed = (function() {
 	var lofter_re = /\.lofter\.com\/post\/[a-zA-Z0-9_]+/;
 	var imgur_re = /imgur\.com\//;
 	var twipple_re = /https?:\/\/p\.twipple\.jp\/\S+/;
+	var tinypic_re = /tinypic\.com\//;
 
 	var photo_res = [
 		weibo_re,
 		/\.(?:jpg|jpeg|gif|png|bmp|webp)/i,
 		twitpic_re,
 		imgly_re,
-		/tinypic\.com\//,
+		tinypic_re,
 		/flickr\.com\/photos\/|flic.kr\//,
 		instagram_re,
 		/yfrog\./,
