@@ -1741,7 +1741,9 @@ function retweet(vm) {
 				id: tweet.id_str
 			}).next(function(tweet) {
 				tweet = tweet.retweeted_status;
-				$vm.tweets.splice($vmodel.$index, 1, tweet);
+				var index = $vmodel.$index;
+				$vm.tweets.removeAt(index);
+				$vm.tweets.splice(index, 0, tweet);
 				setCurrent(getCurrent(), tweet.id_str);
 				showNotification('取消锐推成功!');
 			});
@@ -1749,7 +1751,9 @@ function retweet(vm) {
 			PREFiX.user().retweet({
 				id: (tweet.retweeted_status || tweet).id_str
 			}).next(function(tweet) {
-				$vm.tweets.splice($vmodel.$index, 1, tweet);
+				var index = $vmodel.$index;
+				$vm.tweets.removeAt(index);
+				$vm.tweets.splice(index, 0, tweet);
 				setCurrent(getCurrent(), tweet.id_str);
 				showNotification('锐推成功!');
 			});
