@@ -2293,6 +2293,69 @@ Ripple.events.observe('process_tweet', function(tweet) {
 	tweet.loaded_at = null;
 	tweet.loaded_at_relative = '';
 
+	var prop_to_del = [
+		'contributors',
+		'coordinates',
+		'favorite_count',
+		'filter_level',
+		'geo',
+		'in_reply_to_screen_name',
+		'in_reply_to_status_id',
+		'in_reply_to_user_id',
+		'in_reply_to_user_id_str',
+		'lang',
+		'place',
+		'scopes',
+		'retweet_count',
+		'truncated',
+		'possibly_sensitive',
+		'withheld_copyright',
+		'withheld_in_countries',
+		'withheld_scope'
+	];
+
+	var user_prop_to_del = [
+		'contributors_enabled',
+		'default_profile',
+		'default_profile_image',
+		'entities',
+		'favourites_count',
+		'follow_request_sent',
+		'geo_enabled',
+		'is_translator',
+		'lang',
+		'listed_count',
+		'notifications',
+		'profile_background_color',
+		'profile_background_image_url',
+		'profile_background_image_url_https',
+		'profile_background_tile',
+		'profile_banner_url',
+		'profile_link_color',
+		'profile_sidebar_border_color',
+		'profile_sidebar_fill_color',
+		'profile_text_color',
+		'profile_use_background_image',
+		'show_all_inline_media',
+		'time_zone',
+		'url',
+		'verified',
+		'withheld_in_countries',
+		'withheld_scope'
+	];
+
+	[
+		{ obj: tweet, prop: prop_to_del },
+		{ obj: tweet.user, prop: user_prop_to_del }
+	].
+	forEach(function(item) {
+		if (item.obj) {
+			item.prop.forEach(function(key) {
+				delete item.obj[key];
+			});
+		}
+	})
+
 	if (tweet.retweeted_status) {
 		arguments.callee(tweet.retweeted_status);
 		tweet.photo = tweet.retweeted_status.photo;
