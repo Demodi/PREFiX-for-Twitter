@@ -677,7 +677,7 @@ function markTweetAsFavourited(tweet_id) {
 		mentions_model.tweets
 	];
 	lists.forEach(function(list) {
-		list.some(function(tweet, i) {
+		list.some(function(tweet) {
 			if (tweet.id_str === tweet_id) {
 				tweet.favorited = true;
 				return true;
@@ -692,7 +692,7 @@ function markTweetAsUnfavourited(tweet_id) {
 		mentions_model.tweets
 	];
 	lists.forEach(function(list) {
-		list.some(function(tweet, i) {
+		list.some(function(tweet) {
 			if (tweet.id_str === tweet_id) {
 				tweet.favorited = false;
 				return true;
