@@ -356,7 +356,7 @@ function initKeyboardControlEvents() {
 				hideAllOverlays(e);
 			} else {
 				$textarea.focus();
-				if (compose-bar.type === 'repost') {
+				if (composebar_model.type === 'repost') {
 					$textarea[0].selectionStart = 0;
 					$textarea[0].selectionEnd = 0;
 				}
