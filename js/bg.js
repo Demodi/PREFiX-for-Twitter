@@ -1216,6 +1216,7 @@ var getOEmbed = (function() {
 
 		var result = url.match(pinsta_re);
 		if (result) {
+			var id = result[1];
 			Ripple.ajax.get(url).
 			next(function(html) {
 				var $html = $(html);
@@ -1226,8 +1227,13 @@ var getOEmbed = (function() {
 					if (code.indexOf('var mediaJson') > -1) {
 						code = code.match(/var mediaJson = ([^;]+);/)[1];
 						var media_json = JSON.parse(code);
-						large_url = media_json[0].images.standard_resolution;
-						thumbnail_url = media_json[0].images.thumbnail;
+						media_json.some(function(item) {
+							if (item.id === id) {
+								large_url = item.images.standard_resolution;
+								thumbnail_url = item.images.thumbnail;
+								return true;
+							}
+						});
 						return true;
 					}
 				});
@@ -1517,7 +1523,7 @@ var getOEmbed = (function() {
 	}
 
 	var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
-	var pinsta_re = /https?:\/\/pinsta\.me\/p\/[a-zA-Z0-9_]+/;
+	var pinsta_re = /https?:\/\/pinsta\.me\/p\/([a-zA-Z0-9_]+)/;
 	var fanfou_re = /https?:\/\/fanfou\.com\/photo\//;
 	var weibo_re = /https?:\/\/[w0-9]+\.sinaimg\.cn\/\S+\.jpg/;
 	var twitpic_re = /https?:\/\/(?:www\.)?twitpic\.com\//;
