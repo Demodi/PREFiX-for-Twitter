@@ -2573,6 +2573,7 @@ var usertl_model = avalon.define('user-timeline', function(vm) {
 
 	vm.screenNameFirst = PREFiX.settings.current.screenNameFirst;
 });
+usertl_model.tweets.$watch('length', onNewTweetInserted);
 usertl_model.initialize = function() {
 	$('#title').hide();
 	$('#user-timeline').addClass('current');
