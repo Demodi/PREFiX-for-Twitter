@@ -160,11 +160,24 @@ function smoothScrollTo(destination) {
 	});
 }
 
+function getFirstItemInScreen(model) {
+	var elems = [].slice.call(model.$elem.find('li[data-id]'));
+	var scroll_top = $main.scrollTop();
+	elems.some(function(elem) {
+		if (elem.offsetTop >= scroll_top) {
+			model.current = elem.dataset.id;
+			return true;
+		}
+	});
+	return model.current;
+}
+
 function findView(model, id) {
 	if (id) {
 		return model.$elem.find('[data-id=' + id + ']');
 	} else {
-		return model.$elem.children().first();
+		id = getFirstItemInScreen(model);
+		return findView(model, id)
 	}
 }
 
@@ -208,17 +221,8 @@ function initKeyboardControl() {
 	waitFor(function() {
 		return list.length;
 	}, function() {
-		if (! model.current) {
-			model.current = list[0].id_str;
-		} else if (! findView(model, model.current).length) {
-			var elems = [].slice.call(model.$elem.find('li[data-id]'));
-			var scroll_top = $main.scrollTop();
-			elems.some(function(elem) {
-				if (elem.offsetTop >= scroll_top) {
-					model.current = elem.dataset.id;
-					return true;
-				}
-			});
+		if (! model.current || ! findView(model, model.current).length) {
+			model.current = getFirstItemInScreen(model);
 		}
 		setCurrent(model, model.current);
 	});
