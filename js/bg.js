@@ -1214,6 +1214,40 @@ var getOEmbed = (function() {
 			return;
 		}
 
+		var result = url.match(pinsta_re);
+		if (result) {
+			Ripple.ajax.get(url).
+			next(function(html) {
+				var $html = $(html);
+				var large_url;
+				var thumbnail_url;
+				[].some.call($html.find('script'), function(script) {
+					var code = script.textContent;
+					if (code.indexOf('var mediaJson') > -1) {
+						code = code.match(/var mediaJson = ([^;]+);/)[1];
+						var media_json = JSON.parse(code);
+						large_url = media_json[0].images.standard_resolution;
+						thumbnail_url = media_json[0].images.thumbnail;
+						return true;
+					}
+				});
+				$html.length = 0;
+				$html = null;
+				if (large_url) {
+					loadImage({
+						url: self.url,
+						large_url: large_url,
+						thumbnail_url: thumbnail_url,
+						oEmbed: self
+					});
+				} else {
+					self.status = 'ignored';
+					lscache.set('oembed-' + url, self);
+				}
+			});
+			return;
+		}
+
 		var result = url.match(weibo_re);
 		if (result) {
 			var large_url = url.replace(/\/(?:mw1024|bmiddle|thumbnail)\//, '/large/');
@@ -1483,6 +1517,7 @@ var getOEmbed = (function() {
 	}
 
 	var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
+	var pinsta_re = /https?:\/\/pinsta\.me\/p\/[a-zA-Z0-9_]+/;
 	var fanfou_re = /https?:\/\/fanfou\.com\/photo\//;
 	var weibo_re = /https?:\/\/[w0-9]+\.sinaimg\.cn\/\S+\.jpg/;
 	var twitpic_re = /https?:\/\/(?:www\.)?twitpic\.com\//;
@@ -1500,6 +1535,7 @@ var getOEmbed = (function() {
 		tinypic_re,
 		/flickr\.com\/photos\/|flic.kr\//,
 		instagram_re,
+		pinsta_re,
 		/yfrog\./,
 		twipple_re,
 		/https?:\/\/twitgoo\.com\//,
