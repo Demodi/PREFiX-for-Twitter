@@ -57,6 +57,12 @@ $(function() {
 		$tweets_per_page.text($(this).val());
 	}).trigger('change');
 
+	$('#repostFormat').change(function(e) {
+		if (! this.value.trim()) {
+			this.value = PREFiX.settings.default.repostFormat;
+		}
+	});
+
 	var $auto_flush_cache = $('[key="autoFlushCache"]');
 	var $cache_amount = $('[key="cacheAmount"]');
 

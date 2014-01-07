@@ -1776,7 +1776,11 @@ function repost(e) {
 	composebar_model.id = '';
 	var tweet = this.$vmodel.tweet;
 	tweet = tweet.retweeted_status || tweet;
-	var value = 'RT@' + tweet.user.screen_name + ' ' + tweet.text;
+	var value = PREFiX.settings.current.repostFormat.
+		replace(/\$name\$|\$text\$/ig, function(k) {
+			return k === '$name$' ?
+				tweet.user.screen_name : tweet.text;
+		})
 	composebar_model.text = value;
 	composebar_model.id = tweet.in_reply_to_status_id_str || tweet.id_str;
 	$textarea.focus();

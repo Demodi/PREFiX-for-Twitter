@@ -155,7 +155,6 @@ button {
 }
 [type="text"] {
 	width: 225px;
-	text-align: center;
 }
 [type="range"] {
 	margin: 0 8px;
@@ -190,6 +189,9 @@ select {
 }
 #custom-consumer li button {
 	margin-right: 5px;
+}
+[key="embedlyKey"] {
+	text-align: center;
 }
 #about-prefix {
 	background: url('/icons/48.png') left center no-repeat;

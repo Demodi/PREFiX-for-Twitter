@@ -2532,7 +2532,8 @@ var settings = {
 		notif_directmsg: true,
 		notif_follower: true,
 		notif_favourite: true,
-		notif_retweet: true
+		notif_retweet: true,
+		repostFormat: 'RT@$name$ $text$'
 	},
 	load: function() {
 		var local_settings = lscache.get('settings') || { };
@@ -2584,7 +2585,8 @@ var usage_tips = [
 	'您可以在扩展管理页面末端给 PREFiX 设置快捷键, 从而使用快捷键直接打开 PREFiX 页面. ',
 	'如果您发现 PREFiX 启动时容易卡顿, 建议开启自动抛弃缓存功能, 并设置保留在缓存中的最大消息数量. ',
 	'如果您习惯使用双击选中文本, 请在设置页中开启 "只有按住 Ctrl / Command 键才能双击输入框发送消息". ',
-	'如果您希望旋转图片, 请按快捷键 R 键. '
+	'如果您希望旋转图片, 请按快捷键 R 键. ',
+	'您可以自由定义转发时消息的格式, 详见设置页. '
 ];
 
 var PREFiX = this.PREFiX = {
