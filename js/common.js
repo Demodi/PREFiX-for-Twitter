@@ -128,12 +128,13 @@ var getFullTime = Ripple.helpers.generateTimeFormater(function(table) {
 
 function fixTweetList(tweets) {
 	var $text = $('<div />');
-	tweets.forEach(function(tweet) {
+	tweets = tweets.filter(function(tweet) {
 		tweet.relativeTime = getRelativeTime(tweet.created_at);
 		var retweeted = tweet.retweeted_status;
 		if (retweeted) {
 			retweeted.relativeTime = getRelativeTime(retweeted.created_at);
 		}
+		return ! tweet.filtered_out;
 	});
 	return tweets.sort(function(tweet_a, tweet_b) {
 		return tweet_b.id - tweet_a.id;

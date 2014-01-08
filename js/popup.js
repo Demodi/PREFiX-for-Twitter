@@ -741,6 +741,27 @@ function deleteTweetFromAllLists(tweet_id) {
 	}
 }
 
+function filterOutAllLists() {
+	var lists = [
+		tl_model,
+		mentions_model,
+		directmsgs_model,
+		usertl_model,
+		searches_model
+	];
+	lists.forEach(function(list) {
+		[ 'tweets', 'messages' ].forEach(function(type) {
+			if (! list[type]) return;
+			var new_list = list[type].filter(function(tweet) {
+				bg_win.filterOut(tweet);
+				return ! tweet.filtered_out;
+			});
+			list[type] = [];
+			list[type] = new_list;
+		});
+	});
+}
+
 function hideAllOverlays(e) {
 	if ($('body.show-picture').length) {
 		e.preventDefault();
@@ -1832,6 +1853,41 @@ function showRelatedTweets(e) {
 	})();
 }
 
+function hideBlockTip() {
+	$('#block-tip').css('animation', 'wobbleOut .4s').delay(400).hide(0);
+}
+
+function blockUser(e) {
+	if (! e.shiftKey || e.ctrlKey || e.altKey || e.metaKey)
+		return;
+	e.preventDefault();
+	var tweet = this.$vmodel.tweet || this.$vmodel.message;
+	tweet = tweet.retweeted_status || tweet;
+	var user = tweet.user || tweet.sender;
+	var screen_name = user.screen_name;
+	var name = user.name;
+	var id = user.id_str;
+	$('#blocked-user-name').text(bg_win.getName(user));
+	$('#block-tip').show().css('animation', 'wobbleIn .4s');
+	$('#block-user').off().click(function(e) {
+		var filters = PREFiX.settings.current.filters;
+		filters.push({
+			pattern: screen_name,
+			type: 'screen_name'
+		}, {
+			pattern: name,
+			type: 'name'
+		}, {
+			pattern: 'data-userid="' + id + '"',
+			type: 'content'
+		});
+		PREFiX.settings.save();
+		filterOutAllLists();
+		bg_win.filterOutAllLists();
+	}).click(hideBlockTip);
+	$('#hide-block-tip').off().click(hideBlockTip);
+}
+
 function onNewTweetInserted() {
 	this.forEach(bg_win.getOEmbed);
 	this.forEach(function(tweet) {
@@ -2066,7 +2122,9 @@ var tl_model = avalon.define('home-timeline', function(vm) {
 	vm.toggleFavourite = toggleFavourite;
 
 	vm.showRelatedTweets = showRelatedTweets;
-	
+
+	vm.blockUser = blockUser;
+
 	vm.tweets = [];
 
 	vm.scrollTop = 0;
@@ -2170,6 +2228,8 @@ var mentions_model = avalon.define('mentions', function(vm) {
 	vm.toggleFavourite = toggleFavourite;
 	
 	vm.showRelatedTweets = showRelatedTweets;
+
+	vm.blockUser = blockUser;
 
 	vm.tweets = [];
 
@@ -2307,6 +2367,8 @@ var directmsgs_model = avalon.define('directmsgs', function(vm) {
 		$textarea.focus();
 	}
 
+	vm.blockUser = blockUser;
+
 	vm.messages = [];
 
 	vm.scrollTop = 0;
@@ -2394,6 +2456,8 @@ var searches_model = avalon.define('saved-searches', function(vm) {
 	vm.toggleFavourite = toggleFavourite;
 
 	vm.showRelatedTweets = showRelatedTweets;
+
+	vm.blockUser = blockUser;
 
 	vm.keyword = PREFiX.keyword;
 
@@ -2574,6 +2638,8 @@ var usertl_model = avalon.define('user-timeline', function(vm) {
 	vm.toggleFavourite = toggleFavourite;
 
 	vm.showRelatedTweets = showRelatedTweets;
+
+	vm.blockUser = blockUser;
 
 	vm.tweets = [];
 

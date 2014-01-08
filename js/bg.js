@@ -818,7 +818,7 @@ function initStreamingAPI() {
 			setTimeout(function() {
 				if (data.delete.status) {
 					batchProcess(function(view) {
-						view.deleteTweetFromAllLists(data.delete.status.id_str);
+						view.deleteTweetFromAllLists && view.deleteTweetFromAllLists(data.delete.status.id_str);
 					});
 					isNeedNotify();
 					updateTitle();
@@ -862,7 +862,7 @@ function initStreamingAPI() {
 				Ripple.events.trigger('process_tweet', data.target_object);
 				if (data.source.id_str === PREFiX.account.id_str) {
 					batchProcess(function(view) {
-						view.markTweetAsFavourited(data.target_object.id_str);
+						view.markTweetAsFavourited && view.markTweetAsFavourited(data.target_object.id_str);
 					});
 				} else {
 					notify({
@@ -875,7 +875,7 @@ function initStreamingAPI() {
 			} else if (ev === 'unfavorite') {
 				if (data.source.id_str === PREFiX.account.id_str) {
 					batchProcess(function(view) {
-						view.markTweetAsUnfavourited(data.target_object.id_str);
+						view.markTweetAsUnfavourited && view.markTweetAsUnfavourited(data.target_object.id_str);
 					});
 				}
 			} else if (ev === 'follow') {
@@ -1753,6 +1753,92 @@ var cropAvatar = (function() {
 	}
 })();
 
+var cached_res = { };
+function prepareRE(str) {
+	if (cached_res[str]) {
+		return cached_res[str];
+	}
+	var re = /^\/(\S+)\/([igm]*)$/;
+	if (re.test(str)) {
+		var result = str.match(re);
+		re = new RegExp(result[1], result[2] || '');
+	} else {
+		re = new RegExp(
+			str.
+			replace(/(\.|\||\+|\{|\}|\[|\]|\(|\)|\\)/g, '\\$1').
+			replace(/\?/g, '.').
+			replace(/\*/g, '.*'),
+			'i'
+		);
+	}
+	cached_res[str] = re;
+	return re;
+}
+
+function filterOut(tweet) {
+	if (tweet.is_self) {
+		tweet.filtered_out = false;
+		return;
+	}
+	settings.current.filters.some(function(filter) {
+		var re = prepareRE(filter.pattern);
+		var str = '';
+		switch (filter.type) {
+			case 'screen_name':
+				str = (tweet.user || tweet.sender).screen_name;
+				break;
+			case 'name':
+				str = (tweet.user || tweet.sender).name;
+				break;
+			case 'content':
+				str = tweet.fixedText;
+				break;
+			case 'client':
+				str = tweet.source;
+				break;
+		}
+		var result = re.test(str);
+		if (! result && tweet.retweeted_status) {
+			var retweeted = tweet.retweeted_status;
+			switch (filter.type) {
+				case 'screen_name':
+					str = retweeted.user.screen_name;
+					break;
+				case 'name':
+					str = retweeted.user.name;
+					break;
+				case 'content':
+					str = retweeted.fixedText;
+					break;
+				case 'client':
+					str = retweeted.source;
+					break;
+			}
+			result = re.test(str);
+			retweeted.filtered_out = result;
+		}
+		tweet.filtered_out = result;
+		return result;
+	});
+}
+
+function filterOutAllLists() {
+	var lists = [
+		PREFiX.homeTimeline,
+		PREFiX.mentions,
+		PREFiX.directmsgs
+	];
+	lists.forEach(function(list) {
+		[ 'buffered', 'tweetes', 'messages' ].forEach(function(type) {
+			if (! list[type]) return;
+			list[type] = list[type].filter(function(tweet) {
+				filterOut(tweet);
+				return ! tweet.filtered_out;
+			});
+		});
+	});
+}
+
 var init_interval;
 var _initData = function() { }
 function initData() {
@@ -2491,6 +2577,8 @@ Ripple.events.observe('process_tweet', function(tweet) {
 		arguments.callee(tweet.retweeted_status);
 		tweet.photo = tweet.retweeted_status.photo;
 	}
+
+	filterOut(tweet);
 });
 
 Ripple.events.addGlobalObserver('after', function(data, e) {
@@ -2533,7 +2621,8 @@ var settings = {
 		notif_follower: true,
 		notif_favourite: true,
 		notif_retweet: true,
-		repostFormat: 'RT@$name$ $text$'
+		repostFormat: 'RT@$name$ $text$',
+		filters: []
 	},
 	load: function() {
 		var local_settings = lscache.get('settings') || { };
@@ -2552,6 +2641,9 @@ var settings = {
 	},
 	onSettingsUpdated: function() {
 		initSavedSearches();
+		batchProcess(function(view) {
+			view.filterOutAllLists && view.filterOutAllLists();
+		});
 		chrome.extension.getViews().forEach(function(view) {
 			if (view.location.pathname === '/popup.html' &&
 				view.location.search === '?new_window=true') {
@@ -2586,7 +2678,8 @@ var usage_tips = [
 	'如果您发现 PREFiX 启动时容易卡顿, 建议开启自动抛弃缓存功能, 并设置保留在缓存中的最大消息数量. ',
 	'如果您习惯使用双击选中文本, 请在设置页中开启 "只有按住 Ctrl / Command 键才能双击输入框发送消息". ',
 	'如果您希望旋转图片, 请按快捷键 R 键. ',
-	'您可以自由定义转发时消息的格式, 详见设置页. '
+	'您可以自由定义转发时消息的格式, 详见设置页. ',
+	'您可以在设置页中设置过滤消息的规则, 也可以按住 Shift 键右击用户头像来屏蔽 TA. '
 ];
 
 var PREFiX = this.PREFiX = {

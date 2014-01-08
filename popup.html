@@ -39,6 +39,10 @@
 			<p>您是否愿意为 PREFiX 评分?</p>
 			<div class="buttons"><a class="confirm-btn" id="show-rating-page">好的</a><br /><a class="reject-btn" id="hide-rating-tip">不用了</a></div>
 		</div>
+		<div id="block-tip" class="fix notify-box" style="display: none;">
+			<p>您确定要屏蔽用户 <span id="blocked-user-name"></span> 吗? 您将会不再看到所有 TA 发送的和提及 TA 的消息. </p>
+			<div class="buttons"><a class="confirm-btn" id="block-user">是的</a><br /><a class="reject-btn" id="hide-block-tip">不要</a></div>
+		</div>
 		<div id="notification"></div>
 		<div id="picture-overlay">
 			<div class="loading-tip slide-effect" data-id="1"><span>LOADING</span></div>
@@ -107,7 +111,7 @@
 							</div>
 							<div class="avatar">
 								<a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name">
-									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" />
+									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" ms-live-contextmenu="blockUser" />
 								</a>
 							</div>
 							<div class="content">
@@ -138,7 +142,7 @@
 							</div>
 							<div class="avatar">
 								<a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name">
-									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" />
+									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" ms-live-contextmenu="blockUser" />
 								</a>
 							</div>
 							<div class="content">
@@ -166,7 +170,7 @@
 							</div>
 							<div class="avatar">
 								<a ms-title="{{message.sender.name}} (@{{message.sender.screen_name}})">
-									<img ms-src="message.sender.profile_image_url_https" ms-css-margin-left="message.avatar_margin.left" ms-css-margin-top="message.avatar_margin.top" ms-css-width="message.avatar_size.width" ms-css-height="message.avatar_size.height" />
+									<img ms-src="message.sender.profile_image_url_https" ms-css-margin-left="message.avatar_margin.left" ms-css-margin-top="message.avatar_margin.top" ms-css-width="message.avatar_size.width" ms-css-height="message.avatar_size.height" ms-live-contextmenu="blockUser" />
 								</a>
 							</div>
 							<div class="content">
@@ -194,7 +198,7 @@
 							</div>
 							<div class="avatar">
 								<a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name">
-									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" />
+									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" ms-live-contextmenu="blockUser" />
 								</a>
 							</div>
 							<div class="content">
@@ -243,7 +247,7 @@
 							</div>
 							<div class="avatar">
 								<a ms-title="{{(tweet.retweeted_status || tweet).user.name}} (@{{(tweet.retweeted_status || tweet).user.screen_name}})" ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name">
-									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" />
+									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" ms-live-contextmenu="blockUser" />
 								</a>
 							</div>
 							<div class="content">
