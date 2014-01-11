@@ -1513,7 +1513,7 @@ var getOEmbed = (function() {
 		if (this.status === 'loading') {
 			this.callbacks.push(callback);
 		} else if (this.status === 'completed') {
-			callback();
+			setTimeout(callback);
 		}
 	}
 
