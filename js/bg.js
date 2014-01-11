@@ -2622,7 +2622,8 @@ var settings = {
 		notif_favourite: true,
 		notif_retweet: true,
 		repostFormat: 'RT@$name$ $text$',
-		filters: []
+		filters: [],
+		flushCacheWhenTop: true
 	},
 	load: function() {
 		var local_settings = lscache.get('settings') || { };
