@@ -177,7 +177,11 @@ function findView(model, id) {
 		return model.$elem.find('[data-id=' + id + ']');
 	} else {
 		id = getFirstItemInScreen(model);
-		return findView(model, id)
+		if (id) {
+			return findView(model, id);
+		} else {
+			return model.$elem.find('[data-id]').first();
+		}
 	}
 }
 
