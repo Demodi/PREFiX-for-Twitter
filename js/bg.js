@@ -1044,7 +1044,7 @@ function update() {
 				var content = '您有 ';
 				content += PREFiX.count.direct_messages || PREFiX.count.mentions;
 				content += ' 条未读';
-				content += is_dm ? '私信' : '@消息';
+				content += is_dm ? '私信' : ' @ 消息';
 				if (! PREFiX.popupActive || (PREFiX.panelMode && ! PREFiX.is_popup_focused)) {
 					showNotification({
 						content: content,
