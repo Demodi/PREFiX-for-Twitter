@@ -911,11 +911,15 @@ function initStreamingAPI() {
 				data.textWithoutTags += '[Photo]'
 			}
 			var user_id = data.user.id_str;
+			if (data.retweeted_status && user_id === PREFiX.account.id_str) {
+				data.retweeted = true;
+			}
 			var is_retweeted_from_me = false;
 			if (data.retweeted_status && data.retweeted_status.is_self) {
 				is_retweeted_from_me = true;
 			}
 			if (is_retweeted_from_me) {
+				// 有人锐推了自己的消息
 				notify({
 					type: 'retweet',
 					title: getName(data.user) + '锐推了你的消息',
@@ -923,29 +927,75 @@ function initStreamingAPI() {
 					icon: data.user.profile_image_url_https
 				});
 			} else {
-				if (data.retweeted_status &&
-					friends.indexOf(data.retweeted_status.user.id_str) > -1) {
-					return;
-				}
-				if (friends.indexOf(user_id) > -1 || ! friends.length ||
-					user_id === PREFiX.account.id_str) {
-					unshift(PREFiX.homeTimeline.buffered, [ data ]);
-					flushCache();
-				}
 				var mentioned = data.entities.user_mentions.some(function(mention) {
 					return mention.id_str === PREFiX.account.id_str;
 				});
-				if (mentioned && ! data.is_self && ! data.retweeted_status) {
-					unshift(PREFiX.mentions.buffered, [ data ]);
-					if (isNeedNotify()) {
-						playSound();
-					}
-					notify({
-						type: 'mention',
-						title: getName(data.user) + '提到了你',
-						content: data.textWithoutTags,
-						icon: data.user.profile_image_url_https
+				if (! mentioned && data.retweeted_status) {
+					mentioned = data.retweeted_status.entities.user_mentions.some(function(mention) {
+						return mention.id_str === PREFiX.account.id_str;
 					});
+				}
+				var is_retweeted_from_friend = data.retweeted_status &&
+					friends.indexOf(data.retweeted_status.user.id_str) > -1;
+				// 有人锐推了好友的未提到自己的消息, 忽略
+				if (is_retweeted_from_friend && ! mentioned) {
+					return;
+				}
+				if (friends.indexOf(user_id) > -1 || ! friends.length ||
+					data.is_self) {
+					// 有人锐推了提到自己的好友的消息
+					if (data.retweeted_status &&
+						(friends.indexOf(data.retweeted_status.user.id_str) > -1 ||
+						data.is_self)) {
+						if (is_retweeted_from_friend && ! data.is_self) {
+							// 好友锐推了提到自己的好友的消息
+							notify({
+								type: 'retweet',
+								title: getName(data.user) + '锐推了提到你的消息',
+								content: getName(data.retweeted_status.user) + ': ' +
+									data.retweeted_status.textWithoutTags
+							});
+						}
+						if (data.is_self &&
+							friends.indexOf(data.retweeted_status.user.id_str) === -1) {
+							// 自己锐推的非好友的消息
+							unshift(PREFiX.homeTimeline.buffered, [ data ]);
+							flushCache();
+						}
+						return;
+					}
+					// 好友和自己的消息, 加入 home-timeline
+					unshift(PREFiX.homeTimeline.buffered, [ data ]);
+					flushCache();
+				}
+				// 提到了自己的消息
+				if (mentioned) {
+					if (data.retweeted_status) {
+						if (! data.is_self) {
+							// 锐推的非自己的消息
+							notify({
+								type: 'retweet',
+								title: getName(data.user) + '锐推了提到你的消息',
+								content: getName(data.retweeted_status.user) + ': ' +
+									data.retweeted_status.textWithoutTags
+							});
+						}
+					} else {
+						// 提到自己的非锐推的消息
+						unshift(PREFiX.mentions.buffered, [ data ]);
+						if (! data.is_self) {
+							// 非锐推非自己的消息
+							if (isNeedNotify()) {
+								playSound();
+							}
+							notify({
+								type: 'mention',
+								title: getName(data.user) + '提到了你',
+								content: data.textWithoutTags,
+								icon: data.user.profile_image_url_https
+							});
+						}
+					}
 				}
 				isNeedNotify();
 				updateTitle();
