@@ -1678,6 +1678,7 @@ function loadOldder() {
 }
 
 function remove(e) {
+	cancelReply();
 	showNotification('正在删除..');
 	var current_model = getCurrent();
 	var current = current_model.current;
@@ -1722,13 +1723,21 @@ function remove(e) {
 }
 
 function cancelReply() {
-	var current_model = getCurrent();
-	current_model.is_replying = false;
-	current_model.tweets.some(function(tweet) {
-		if (tweet.current_replied) {
-			tweet.current_replied = false;
-			return true;
-		}
+	var models = [
+		tl_model,
+		mentions_model,
+		directmsgs_model,
+		searches_model,
+		usertl_model
+	];
+	models.forEach(function(model) {
+		model.is_replying = false;
+		(model.tweets || model.messages).some(function(tweet) {
+			if (tweet.current_replied) {
+				tweet.current_replied = false;
+				return true;
+			}
+		});
 	});
 }
 
@@ -2034,6 +2043,7 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 					showNotification('发表成功!');
 					vm.text = '';
 					$textarea.blur();
+					cancelReply();
 				}).error(function(e) {
 					if (e.status && e.response) {
 						showNotification(e.response.errors[0].message);
@@ -2328,6 +2338,7 @@ var directmsgs_model = avalon.define('directmsgs', function(vm) {
 	vm.current = PREFiX.directmsgs.current;
 
 	vm.remove = function() {
+		cancelReply();
 		showNotification('正在删除..')
 		var current_model = directmsgs_model;
 		var current = current_model.current;
@@ -2371,6 +2382,7 @@ var directmsgs_model = avalon.define('directmsgs', function(vm) {
 	}
 
 	vm.reply = function() {
+		cancelReply();
 		var message = this.$vmodel.message;
 		composebar_model.text = '';
 		composebar_model.type = 'send-dm';
@@ -2378,6 +2390,8 @@ var directmsgs_model = avalon.define('directmsgs', function(vm) {
 		composebar_model.user = message.sender.id;
 		composebar_model.screen_name = message.sender.name;
 		$textarea.focus();
+		directmsgs_model.is_replying = true;
+		message.current_replied = true;
 	}
 
 	vm.blockUser = blockUser;
@@ -2386,10 +2400,15 @@ var directmsgs_model = avalon.define('directmsgs', function(vm) {
 
 	vm.scrollTop = 0;
 
+	vm.is_replying = PREFiX.directmsgs.is_replying;
+
 	vm.screenNameFirst = PREFiX.settings.current.screenNameFirst;
 });
 directmsgs_model.$watch('current', function(value) {
 	PREFiX.directmsgs.current = value;
+});
+directmsgs_model.$watch('is_replying', function(value) {
+	PREFiX.directmsgs.is_replying = value;
 });
 directmsgs_model.$watch('scrollTop', function(value) {
 	PREFiX.directmsgs.scrollTop = value;

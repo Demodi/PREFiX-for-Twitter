@@ -1944,7 +1944,8 @@ function unload() {
 		messages: [],
 		buffered: [],
 		scrollTop: 0,
-		current: ''
+		current: '',
+		is_replying: false
 	};
 	PREFiX.friends = [];
 	PREFiX.keyword = '';
@@ -2734,7 +2735,8 @@ var PREFiX = this.PREFiX = {
 		messages: [],
 		buffered: [],
 		scrollTop: 0,
-		current: ''
+		current: '',
+		is_replying: false
 	},
 	friends: [],
 	settings: settings,
