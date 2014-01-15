@@ -210,7 +210,7 @@ $(function() {
 		hide(0);
 	});
 
-	onunload = function(e) {
+	var save = onunload = function(e) {
 		$('[key]').each(function() {
 			var $item = $(this);
 			var key = $item.attr('key');
@@ -239,4 +239,6 @@ $(function() {
 		PREFiX.settings.save();
 		PREFiX.settings.onSettingsUpdated();
 	}
+
+	$('[key]').on('change', save);
 });
