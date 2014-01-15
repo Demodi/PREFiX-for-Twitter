@@ -1200,6 +1200,7 @@ function processPhoto(tweet, photo) {
 	img_thumb.src = photo.thumbnail_url || photo.url;
 	photo.url_large = isZoomAble(photo.url) ?
 		getLargeImage(photo.url) : photo.url;
+	photo.url = photo.thumbnail_url || photo.url_large;
 	if (photo.url_large !== img_thumb.src) {
 		var img_large = new Image;
 		img_large.src = photo.url_large;
@@ -1504,6 +1505,44 @@ var getOEmbed = (function() {
 			return;
 		}
 
+		var result = url.match(flickr_re);
+		if (result) {
+			Ripple.ajax.get(url).
+			next(function(html) {
+				var $html = $(html);
+				var large_code = $html.find('#share-options-embed-textarea-l-bbcode').text();
+				var result = large_code.match(/\[img\](\S+)\[\/img\]/);
+				var large_url = result && result[1];
+				var thumbnail_code = $html.find('#share-options-embed-textarea-t-bbcode').text();
+				var result = thumbnail_code.match(/\[img\](\S+)\[\/img\]/);
+				var thumbnail_url = result && result[1];
+				$html.length = 0;
+				$html = null;
+				if (large_url) {
+					loadImage({
+						url: self.url,
+						large_url: large_url,
+						thumbnail_url: thumbnail_url,
+						oEmbed: self
+					});
+				} else {
+					self.status = 'ignored';
+					lscache.set('oembed-' + url, self);
+				}
+			});
+			return;
+		}
+
+		var result = picture_re.test(url);
+		if (result) {
+			loadImage({
+				url: self.url,
+				large_url: url,
+				oEmbed: self
+			});
+			return;
+		}
+
 		if (! settings.current.embedlyKey) {
 			this.status = 'error';
 			return;
@@ -1583,7 +1622,8 @@ var getOEmbed = (function() {
 
 	function loadImage(options) {
 		var oEmbed = options.oEmbed;
-		getNaturalDimentions(options.large_url, function(dimentions) {
+		var image_url = options.thumbnail_url || options.large_url;
+		getNaturalDimentions(image_url, function(dimentions) {
 			oEmbed.data = {
 				url: options.large_url,
 				width: dimentions.width,
@@ -1610,6 +1650,8 @@ var getOEmbed = (function() {
 	var twipple_re = /https?:\/\/p\.twipple\.jp\/\S+/;
 	var tinypic_re = /tinypic\.com\//;
 	var path_re = /https?:\/\/path\.com\/p\//;
+	var flickr_re = /https?:\/\/(?:www\.)?flickr\.com\/photos\//;
+	var picture_re = /\.(?:jpg|jpeg|png|gif|webp)(?:\??\S*)?$/i;
 
 	var photo_res = [
 		weibo_re,
@@ -1617,7 +1659,7 @@ var getOEmbed = (function() {
 		twitpic_re,
 		imgly_re,
 		tinypic_re,
-		/flickr\.com\/photos\/|flic.kr\//,
+		flickr_re,
 		instagram_re,
 		pinsta_re,
 		/yfrog\./,
@@ -1653,7 +1695,8 @@ var getOEmbed = (function() {
 		/https?:\/\/d\.pr\/i\//,
 		/https?:\/\/www\.eyeem\.com\/[pau]\//,
 		/https?:\/\/(?:giphy\.com\/gifs|gph\.is)\//,
-		/https?:\/\/frontback\.me\/p\//
+		/https?:\/\/frontback\.me\/p\//,
+		picture_re
 	];
 
 	function isPhotoLink(url) {
