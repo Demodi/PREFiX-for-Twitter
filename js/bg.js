@@ -847,12 +847,14 @@ function initStreamingAPI() {
 				if (isNeedNotify()) {
 					playSound();
 				}
-				notify({
-					type: 'directmsg',
-					title: '收到 ' + getName(dm.sender) + '发来的私信',
-					content: dm.textWithoutTags,
-					icon: dm.sender.profile_image_url_https
-				});
+				if (! dm.filtered_out) {
+					notify({
+						type: 'directmsg',
+						title: '收到 ' + getName(dm.sender) + '发来的私信',
+						content: dm.textWithoutTags,
+						icon: dm.sender.profile_image_url_https
+					});
+				}
 				isNeedNotify();
 				updateTitle();
 			}
@@ -922,12 +924,14 @@ function initStreamingAPI() {
 			}
 			if (is_retweeted_from_me) {
 				// 有人锐推了自己的消息
-				notify({
-					type: 'retweet',
-					title: getName(data.user) + '锐推了你的消息',
-					content: data.retweeted_status.textWithoutTags,
-					icon: data.user.profile_image_url_https
-				});
+				if (! data.filtered_out) {
+					notify({
+						type: 'retweet',
+						title: getName(data.user) + '锐推了你的消息',
+						content: data.retweeted_status.textWithoutTags,
+						icon: data.user.profile_image_url_https
+					});
+				}
 			} else {
 				var mentioned = data.entities.user_mentions.some(function(mention) {
 					return mention.id_str === PREFiX.account.id_str;
@@ -951,12 +955,14 @@ function initStreamingAPI() {
 						data.is_self)) {
 						if (is_retweeted_from_friend && ! data.is_self) {
 							// 好友锐推了提到自己的好友的消息
-							notify({
-								type: 'retweet',
-								title: getName(data.user) + '锐推了提到你的消息',
-								content: getName(data.retweeted_status.user) + ': ' +
-									data.retweeted_status.textWithoutTags
-							});
+							if (! data.filtered_out) {
+								notify({
+									type: 'retweet',
+									title: getName(data.user) + '锐推了提到你的消息',
+									content: getName(data.retweeted_status.user) + ': ' +
+										data.retweeted_status.textWithoutTags
+								});
+							}
 						}
 						if (data.is_self &&
 							friends.indexOf(data.retweeted_status.user.id_str) === -1) {
@@ -973,7 +979,7 @@ function initStreamingAPI() {
 				// 提到了自己的消息
 				if (mentioned) {
 					if (data.retweeted_status) {
-						if (! data.is_self) {
+						if (! data.is_self && ! data.filtered_out) {
 							// 锐推的非自己的消息
 							notify({
 								type: 'retweet',
@@ -990,12 +996,14 @@ function initStreamingAPI() {
 							if (isNeedNotify()) {
 								playSound();
 							}
-							notify({
-								type: 'mention',
-								title: getName(data.user) + '提到了你',
-								content: data.textWithoutTags,
-								icon: data.user.profile_image_url_https
-							});
+							if (! data.filtered_out) {
+								notify({
+									type: 'mention',
+									title: getName(data.user) + '提到了你',
+									content: data.textWithoutTags,
+									icon: data.user.profile_image_url_https
+								});
+							}
 						}
 					}
 				}
