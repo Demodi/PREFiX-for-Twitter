@@ -2607,7 +2607,7 @@ searches_model.initialize = function() {
 		$search.prop('disabled', true);
 		$selector.append($search);
 
-		$selector.val('##MY_TIMELINE##');
+		$selector.val('##MY_FAVORITES##');
 		$selector.appendTo('#title');
 
 		$selector.on('change', function(e) {
@@ -2653,7 +2653,7 @@ searches_model.initialize = function() {
 			});
 		$selector.val(is_saved ? keyword : '##MY_TIMELINE##');
 	} else {
-		$selector.val('##MY_TIMELINE##');
+		$selector.val('##MY_FAVORITES##');
 	}
 	$selector.trigger('change');
 
