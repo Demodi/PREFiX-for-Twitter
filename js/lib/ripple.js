@@ -1942,6 +1942,12 @@
 			var self = this;
 			var parameters = argsProcessor.apply(this, arguments);
 
+			for (var key in parameters) {
+				if (parameters[key] === undefined) {
+					delete parameters[key];
+				}
+			}
+
 			var message = {
 				action: urlProcessor(action, parameters),
 				method: method,
