@@ -1973,7 +1973,6 @@ function initCloudSync() {
 			setReadPosition(id_str, read_position, 'init');
 		}
 		chrome.storage.onChanged.addListener(function(changes, namespace) {
-			console.log(arguments)
 			for (var key in changes) {
 				var result = key.match(re);
 				if (! result) continue;
@@ -2028,11 +2027,9 @@ function setReadPosition(id, read_position, flag) {
 		var key = 'prefix_for_twitter_' + id + '_read_position';
 		var data = { };
 		data[key] = read_position;
-		console.log('sync set', data)
-		chrome.storage.sync.set(data, function(data) {
-			console.log('synced', arguments)
+		chrome.storage.sync.set(data, function() {
+			console.log('data synced', data);
 		});
-		console.log('test')
 	}
 }
 
