@@ -13,6 +13,8 @@ var rate_limit = {
 
 var $temp = $('<div />');
 
+var current_id = '';
+
 chrome.runtime.onMessage.addListener(function(request, sender) {
 	if (request.act === 'draw_attention') {
 		if (! sender || ! sender.tab || ! sender.tab.windowId) return;
@@ -1810,7 +1812,7 @@ var cropAvatar = (function() {
 			clearTimeout(timeout);
 			self.width = img.naturalWidth;
 			self.height = img.naturalHeight;
-			img.src = null;
+			img.src = '';
 			img = null;
 			self.call();
 		});
@@ -1955,6 +1957,83 @@ function filterOutAllLists() {
 	});
 }
 
+var cloud_sync_initialized = false;
+function initCloudSync() {
+	if (cloud_sync_initialized) return;
+	cloud_sync_initialized = true;
+	var re = /prefix_for_twitter_(\d+)_read_position/;
+	chrome.storage.sync.get(null, function(items) {
+		for (var key in items) {
+			var result = key.match(re);
+			if (! result) continue;
+			var id_str = result[1];
+			var read_position = items[key];
+			setReadPosition(id_str, read_position, 'init');
+		}
+		chrome.storage.onChanged.addListener(function(changes, namespace) {
+			console.log(arguments)
+			for (var key in changes) {
+				var result = key.match(re);
+				if (! result) continue;
+				var id_str = result[1];
+				var storage_change = changes[key];
+				setReadPosition(id_str, storage_change.newValue, 'sync');
+			}
+		});
+	});
+}
+
+function generateFakeId(id) {
+	var fake_id = (id + '').split('').reverse();
+	fake_id.splice(2, 0, '.');
+	fake_id = parseFloat(fake_id.reverse().join(''));
+	return fake_id;
+}
+
+function setPosition(id, list, read_list, unread_list) {
+	var fake_id = generateFakeId(id);
+	var all_items = fixTweetList(list[unread_list].concat(list[read_list]));
+	var read_items = [];
+	var unread_items = [];
+	all_items.forEach(function(item) {
+		var item_fake_id = generateFakeId(item.id_str);
+		if (item_fake_id <= fake_id) {
+			read_items.push(item);
+		} else {
+			unread_items.push(item);
+		}
+	});
+	list[read_list] = fixTweetList(read_items);
+	list[unread_list] = fixTweetList(unread_items);
+}
+
+function setReadPosition(id, read_position, flag) {
+	lscache.set('read_position_' + id, read_position);
+	if (! flag || flag === 'init') {
+		if (id === current_id) {
+			if (read_position.mentions) {
+				var mentions = PREFiX.mentions;
+				setPosition(read_position.mentions, mentions, 'tweets', 'buffered');
+			}
+		}
+	}
+	if (! flag) {
+		var key = 'prefix_for_twitter_' + id + '_read_position';
+		var data = { };
+		data[key] = read_position;
+		console.log('sync set', data)
+		chrome.storage.sync.set(data, function(data) {
+			console.log('synced', arguments)
+		});
+		console.log('test')
+	}
+}
+
+function loadReadPosition() {
+	if (! current_id) return { };
+	return lscache.get('read_position_' + current_id) || {};
+}
+
 var init_interval;
 var _initData = function() { }
 function initData() {
@@ -1964,6 +2043,8 @@ function initData() {
 function load() {
 	if (PREFiX.loaded) return;
 	PREFiX.loaded = true;
+	current_id = PREFiX.account.id_str;
+	initCloudSync();
 	PREFiX.count = {
 		mentions: 0,
 		direct_messages: 0
@@ -1979,8 +2060,10 @@ function load() {
 				PREFiX.homeTimeline.tweets = fixTweetList(tweets);
 			}
 			_initData = function() {
+				var read_position = loadReadPosition();
 				PREFiX.user().getMentions({
-					count: PREFiX.settings.current.tweetsPerPage
+					count: PREFiX.settings.current.tweetsPerPage,
+					max_id: read_position.mentions
 				}).setupAjax({
 					lock: initData
 				}).next(function(tweets) {
@@ -1988,8 +2071,10 @@ function load() {
 						PREFiX.mentions.tweets = fixTweetList(tweets);
 					}
 					_initData = function() {
+						var read_position = loadReadPosition();
 						PREFiX.user().getDirectMessages({
-							count: PREFiX.settings.current.tweetsPerPage
+							count: PREFiX.settings.current.tweetsPerPage,
+							max_id: read_position.directmsgs
 						}).setupAjax({
 							lock: initData
 						}).next(function(messages) {
@@ -2028,6 +2113,7 @@ function unload() {
 	clearInterval(init_interval);
 	clearInterval(update_browser_action_interval);
 	PREFiX.loaded = false;
+	current_id = '';
 	PREFiX.account = null;
 	stopStreamingAPI();
 	PREFiX.current = 'tl_model';
@@ -2807,6 +2893,7 @@ var PREFiX = this.PREFiX = {
 	unload: unload,
 	initialize: initialize,
 	reset: reset,
+	generateFakeId: generateFakeId,
 	update: update,
 	updateHomeTimeline: updateHomeTimeline,
 	updateMentions: updateMentions,

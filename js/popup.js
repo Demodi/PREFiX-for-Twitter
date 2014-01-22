@@ -595,6 +595,17 @@ function updateRelativeTime() {
 	});
 }
 
+function setPosition(list_name) {
+	var list = PREFiX[list_name];
+	list = list.tweets || list.messages;
+	var latest_item = list[0];
+	if (latest_item) {
+		var read_position = bg_win.loadReadPosition();
+		read_position[list_name] = latest_item.id_str;
+		bg_win.setReadPosition(bg_win.current_id, read_position);
+	}
+}
+
 var breakpoints = [];
 function markBreakpoint() {
 	breakpoints.push(Date.now());
@@ -2292,6 +2303,7 @@ mentions_model.initialize = function() {
 		return mentions.tweets.length;
 	}, function() {
 		mentions_model.tweets = mentions.tweets;
+		setPosition('mentions');
 		setTimeout(function() {
 			$main.scrollTop(PREFiX.mentions.scrollTop);
 			initKeyboardControl();
@@ -2319,11 +2331,13 @@ mentions_model.initialize = function() {
 
 		if (! mentions.tweets.length) {
 			unshift(mentions_model.tweets, buffered);
+			setPosition('mentions');
 		} else {
 			setTimeout(function() {
 				var scroll_top = $main.scrollTop();
 				insertKeepScrollTop(function() {
 					unshift(mentions_model.tweets, buffered);
+					setPosition('mentions');
 					if (scroll_top <= 30) {
 						autoScroll(mentions_model, buffered);
 					}

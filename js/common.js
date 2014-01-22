@@ -137,7 +137,7 @@ function fixTweetList(tweets) {
 		return ! tweet.filtered_out;
 	});
 	return tweets.sort(function(tweet_a, tweet_b) {
-		return tweet_b.id - tweet_a.id;
+		return PREFiX.generateFakeId(tweet_b.id_str) - PREFiX.generateFakeId(tweet_a.id_str);
 	});
 }
 
