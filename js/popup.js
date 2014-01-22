@@ -2448,6 +2448,7 @@ directmsgs_model.initialize = function() {
 		return directmsgs.messages.length;
 	}, function() {
 		directmsgs_model.messages = directmsgs.messages;
+		setPosition('directmsgs');
 		setTimeout(function() {
 			$main.scrollTop(PREFiX.directmsgs.scrollTop);
 			initKeyboardControl();
@@ -2475,11 +2476,13 @@ directmsgs_model.initialize = function() {
 
 		if (! directmsgs.messages.length) {
 			unshift(directmsgs_model.messages, buffered);
+			setPosition('directmsgs');
 		} else {
 			setTimeout(function() {
 				var scroll_top = $main.scrollTop();
 				insertKeepScrollTop(function() {
 					unshift(directmsgs_model.messages, buffered);
+					setPosition('directmsgs');
 					if (scroll_top <= 30) {
 						autoScroll(directmsgs_model, buffered);
 					}

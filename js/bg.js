@@ -726,6 +726,7 @@ function updateMentions() {
 		deferred_mentions = getDataSince('getMentions', latest_mention_tweet.id_str, mentions, null, 45).
 			next(function(tweets) {
 				unshift(mentions.buffered, tweets);
+				fixPosition();
 			});
 	}
 
@@ -747,6 +748,7 @@ function updateDirectMsgs() {
 		deferred_dm = getDataSince('getDirectMessages', latest_dm.id_str, directmsgs, null, 45).
 			next(function(messages) {
 				unshift(directmsgs.buffered, messages);
+				fixPosition();
 			});
 	}
 
@@ -1990,6 +1992,11 @@ function generateFakeId(id) {
 	return fake_id;
 }
 
+function fixPosition() {
+	var read_position = loadReadPosition();
+	setReadPosition(current_id, read_position, 'fix');
+}
+
 function setPosition(id, list, read_list, unread_list) {
 	var fake_id = generateFakeId(id);
 	var all_items = fixTweetList(list[unread_list].concat(list[read_list]));
@@ -2009,7 +2016,7 @@ function setPosition(id, list, read_list, unread_list) {
 
 function setReadPosition(id, read_position, flag) {
 	lscache.set('read_position_' + id, read_position);
-	if (! flag || flag === 'init') {
+	if (! flag || [ 'init', 'sync', 'fix' ].indexOf(flag) > -1) {
 		if (id === current_id) {
 			if (read_position.mentions) {
 				var mentions = PREFiX.mentions;
