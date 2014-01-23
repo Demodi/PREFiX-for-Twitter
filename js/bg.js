@@ -1990,7 +1990,7 @@ function initCloudSync() {
 function generateFakeId(id) {
 	var fake_id = (id + '').split('').reverse();
 	fake_id.splice(2, 0, '.');
-	fake_id = parseFloat(fake_id.reverse().join(''));
+	fake_id = +fake_id.reverse().join('');
 	return fake_id;
 }
 
