@@ -42,7 +42,6 @@
 	},
 	"omnibox": { "keyword": "t" },
 	"manifest_version": 2,
-	"key": "prefixfortwitter",
 	"name": "PREFiX for Twitter",
 	"options_page": "options.html",
 	"permissions": [ "tabs", "contextMenus", "notifications", "storage", "*://*/*" ],
