@@ -640,7 +640,7 @@ function hideFollowingTip() {
 }
 
 function showRatingPage() {
-	var url = 'https://chrome.google.com/webstore/detail/prefix/dcmnjbgdfjhikldahhhjhccnnpjlcodg/reviews';
+	var url = 'https://chrome.google.com/webstore/detail/dcmnjbgdfjhikldahhhjhccnnpjlcodg/reviews';
 	createTab(url, true);
 	hideRatingTip();
 }
