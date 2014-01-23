@@ -853,6 +853,7 @@ function initStreamingAPI() {
 				}
 				if (! dm.filtered_out) {
 					notify({
+						id: 'directmsg-' + dm.id_str,
 						type: 'directmsg',
 						title: '收到 ' + getName(dm.sender) + '发来的私信',
 						content: dm.textWithoutTags,
@@ -1002,6 +1003,7 @@ function initStreamingAPI() {
 							}
 							if (! data.filtered_out) {
 								notify({
+									id: 'mention-' + data.id_str,
 									type: 'mention',
 									title: getName(data.user) + '提到了你',
 									content: data.textWithoutTags,
@@ -1973,6 +1975,7 @@ function initCloudSync() {
 			setReadPosition(id_str, read_position, 'init');
 		}
 		chrome.storage.onChanged.addListener(function(changes, namespace) {
+			console.log('data synced', arguments);
 			for (var key in changes) {
 				var result = key.match(re);
 				if (! result) continue;
@@ -2017,13 +2020,32 @@ function setReadPosition(id, read_position, flag) {
 	lscache.set('read_position_' + id, read_position);
 	if (! flag || [ 'init', 'sync', 'fix' ].indexOf(flag) > -1) {
 		if (id === current_id) {
+			var mentions = PREFiX.mentions;
+			var directmsgs = PREFiX.directmsgs;
 			if (read_position.mentions) {
-				var mentions = PREFiX.mentions;
 				setPosition(read_position.mentions, mentions, 'tweets', 'buffered');
+				var read_fake_id = generateFakeId(read_position.mentions);
+				filterNotification('mention-', function(notif) {
+					var fake_id = generateFakeId(notif.id.replace('mention-', ''));
+					if (read_fake_id >= fake_id) {
+						hideNotification(notif);
+					}
+				});
 			}
 			if (read_position.directmsgs) {
-				var directmsgs = PREFiX.directmsgs;
 				setPosition(read_position.directmsgs, directmsgs, 'messages', 'buffered');
+				var read_fake_id = generateFakeId(read_position.directmsgs);
+				filterNotification('directmsg-', function(notif) {
+					var fake_id = generateFakeId(notif.id.replace('directmsg-', ''));
+					if (read_fake_id >= fake_id) {
+						hideNotification(notif);
+					}
+				});
+			}
+			if (! mentions.buffered.length && ! directmsgs.buffered.length) {
+				filterNotification('notification', function(notif) {
+					hideNotification(notif);
+				});
 			}
 		}
 	}
@@ -2408,6 +2430,13 @@ function hideNotification(notification) {
 	if (index > -1) {
 		notifications.splice(index, 1);
 	}
+}
+function filterNotification(keyword, callback) {
+	notifications.slice(0).forEach(function(notif) {
+		if (notif.id && notif.id.indexOf(keyword) === 0) {
+			callback(notif);
+		}
+	});
 }
 
 function getStatusCount() {
