@@ -2021,6 +2021,10 @@ function setReadPosition(id, read_position, flag) {
 				var mentions = PREFiX.mentions;
 				setPosition(read_position.mentions, mentions, 'tweets', 'buffered');
 			}
+			if (read_position.directmsgs) {
+				var directmsgs = PREFiX.directmsgs;
+				setPosition(read_position.directmsgs, directmsgs, 'messages', 'buffered');
+			}
 		}
 	}
 	if (! flag) {
