@@ -30,7 +30,7 @@
 		"manifest.json"
 	],
 	"content_security_policy": "default_src 'self'; object-src 'self'; script-src 'self' 'unsafe-eval'",
-	"description": "\u7b80\u6d01\u3001\u6613\u7528\u7684 Twitter \u5ba2\u6237\u7aef.",
+	"description": "A simple and easy-to-use Twitter client for Chrome. ",
 	"icons": {
 		"256": "icons/256.png",
 		"128": "icons/128.png",
