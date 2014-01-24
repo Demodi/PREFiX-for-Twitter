@@ -898,7 +898,7 @@ function initStreamingAPI() {
 					notify({
 						type: 'friend',
 						title: getName(data.source) + '关注了你',
-						content: data.source.description,
+						content: data.source.description || '',
 						url: 'https://twitter.com/' + data.source.screen_name,
 						icon: data.source.profile_image_url_https
 					});
