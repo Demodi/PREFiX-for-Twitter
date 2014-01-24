@@ -1985,6 +1985,12 @@ function initCloudSync() {
 			if (result) {
 				var q = result[1];
 				lscache.set('saved-search-' + q + '-id', items[key]);
+				saved_searches_items.some(function(item) {
+					if (item.keyword === q) {
+						item.check();
+						return true;
+					}
+				});
 			}
 		}
 		chrome.storage.onChanged.addListener(function(changes, namespace) {
