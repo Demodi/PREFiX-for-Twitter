@@ -444,6 +444,7 @@ function initSavedSearches() {
 							return t.is_unread;
 						}).length;
 				}
+				updateTitle();
 			});
 			var cache_amount = PREFiX.settings.current.tweetsPerPage;
 			cache_amount = Math.max(self.unread_count, cache_amount);
