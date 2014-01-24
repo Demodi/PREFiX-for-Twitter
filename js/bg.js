@@ -832,6 +832,7 @@ function initStreamingAPI() {
 			}, 2000);
 		} else if (data.disconnect) {
 			stopStreamingAPI();
+			setTimeout(initStreamingAPI);
 		} else if (data.limit) {
 		} else if (data.scrub_geo) {
 		} else if (data.warning) {
@@ -1018,6 +1019,7 @@ function initStreamingAPI() {
 			}
 		}
 	}
+	stopStreamingAPI();
 	PREFiX.streamingAjax = getDefaultInstance().streamingAPI({
 		method: 'GET',
 		action: 'https://userstream.twitter.com/1.1/user.json',
@@ -1041,6 +1043,7 @@ function initStreamingAPI() {
 			}
 		}
 	}).hold(function(e) {
+		stopStreamingAPI();
 		if (PREFiX.account) {
 			console.log('error thrown connecting to streaming api', e)
 			if (! e || e.exceptionType === 'onabort') {
@@ -1054,6 +1057,7 @@ function initStreamingAPI() {
 
 function stopStreamingAPI() {
 	if (PREFiX.streamingAjax) {
+		PREFiX.streamingAjax.deferred._next = new Deferred;
 		PREFiX.streamingAjax.cancel();
 		PREFiX.streamingAjax = null;
 	}
