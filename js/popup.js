@@ -2562,6 +2562,9 @@ searches_model.initialize = function() {
 				return;
 			}
 			lscache.set('saved-search-' + keyword + '-id', tweets[0].id_str);
+			var data = { };
+			data['saved_search_' + keyword] = tweets[0].id_str;
+			chrome.storage.sync.set(data);
 			item.unread_count = 0;
 			item.check();
 			return true;

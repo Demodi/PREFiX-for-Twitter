@@ -412,7 +412,7 @@ function initSavedSearches() {
 		var self = this;
 		var q = this.keyword;
 		var last_tweet_id;
-		var last_read_tweet_id = +lscache.get('saved-search-' + q + '-id');
+		var last_read_tweet_id = generateFakeId(lscache.get('saved-search-' + q + '-id'));
 		if (this.tweets.length) {
 			last_tweet_id = this.tweets[0].id_str;
 		}
@@ -426,8 +426,10 @@ function initSavedSearches() {
 				if (tweets.length) {
 					unshift(self.tweets, tweets);
 					if (! last_read_tweet_id) {
-						last_read_tweet_id = +tweets[0].id_str;
-						lscache.set('saved-search-' + q + '-id', tweets[0].id_str)
+						last_read_tweet_id = generateFakeId(tweets[0].id_str);
+						var data = { };
+						data['saved_search_' + q] = tweets[0].id_str;
+						chrome.storage.sync.set(data);
 					}
 				}
 				if (! settings.current.showSavedSearchCount) {
@@ -438,7 +440,7 @@ function initSavedSearches() {
 				} else {
 					self.unread_count = self.tweets.filter(function(t) {
 							t.is_unread = t.user.id !== PREFiX.account.id &&
-								t.id > last_read_tweet_id && ! isMentioned(t);
+								generateFakeId(t.id_str) > last_read_tweet_id && ! isMentioned(t);
 							return t.is_unread;
 						}).length;
 				}
@@ -1970,22 +1972,35 @@ function initCloudSync() {
 	if (cloud_sync_initialized) return;
 	cloud_sync_initialized = true;
 	var re = /prefix_for_twitter_(\d+)_read_position/;
+	var saved_search_re = /saved_search_(\S+)/;
 	chrome.storage.sync.get(null, function(items) {
 		for (var key in items) {
 			var result = key.match(re);
-			if (! result) continue;
-			var id_str = result[1];
-			var read_position = items[key];
-			setReadPosition(id_str, read_position, 'init');
+			if (result) {
+				var id_str = result[1];
+				var read_position = items[key];
+				setReadPosition(id_str, read_position, 'init');
+			}
+			var result = key.match(saved_search_re);
+			if (result) {
+				var q = result[1];
+				lscache.set('saved-search-' + q + '-id', items[key]);
+			}
 		}
 		chrome.storage.onChanged.addListener(function(changes, namespace) {
 			console.log('data synced', arguments);
 			for (var key in changes) {
-				var result = key.match(re);
-				if (! result) continue;
-				var id_str = result[1];
 				var storage_change = changes[key];
-				setReadPosition(id_str, storage_change.newValue, 'sync');
+				var result = key.match(re);
+				if (result) {
+					var id_str = result[1];
+					setReadPosition(id_str, storage_change.newValue, 'sync');
+				}
+				var result = key.match(saved_search_re);
+				if (result) {
+					var q = result[1];
+					lscache.set('saved-search-' + q + '-id', storage_change.newValue);
+				}
 			}
 		});
 	});
