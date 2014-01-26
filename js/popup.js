@@ -1476,7 +1476,7 @@ function checkCount() {
 	var search_tweets_count = bg_win.getSavedSearchTweetsCount();
 	if (search_tweets_count && PREFiX.settings.current.showSavedSearchCount) {
 		title_contents.push(search_tweets_count + ' 关注话题消息');
-		$saved_searchs.text(Math.min(search_tweets_count, 9)).fadeIn(120);
+		$saved_searchs.text(Math.min(search_tweets_count, 99)).fadeIn(120);
 	} else {
 		$saved_searchs.text('').fadeOut(120);
 	}
