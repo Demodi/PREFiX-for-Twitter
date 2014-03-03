@@ -2742,6 +2742,7 @@ Ripple.events.observe('process_tweet', function(tweet) {
 		var entities = [];
 
 		var media = tweet.entities.media;
+
 		if (media && media.length) {
 			var photo = { };
 			photo.url = media[0].media_url_https;
