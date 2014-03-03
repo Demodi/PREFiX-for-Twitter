@@ -1313,13 +1313,12 @@ function initMainUI() {
 
 function cutStream() {
 	var current = getCurrent();
+	var list = current.tweets || current.messages;
 	var tweets_per_page = PREFiX.settings.current.tweetsPerPage;
-	if (current.tweets) {
-		current.tweets = current.tweets.slice(0, tweets_per_page);
-		current.current = current.tweets[0].id_str;
-	} else {
-		current.messages = current.messages.slice(0, tweets_per_page);
-		current.current = current.messages[0].id_str;
+	if (list.length > 20) {
+		list.splice(tweets_per_page, 9999);
+		list.current = list[0].id_str;
+		initKeyboardControl();
 	}
 	current.allLoaded = false;
 }
