@@ -2829,7 +2829,7 @@ Ripple.events.observe('process_tweet', function(tweet) {
 			var next_item = entities[i + 1];
 			if (next_item) {
 				var mid_str = _text.slice(0, next_item.indices[0] - _added);
-				var next_str = getStr(next_item);
+				var next_str = next_item.url || getStr(next_item);
 				var next_start = _original_text.indexOf(next_str) + _original_added;
 				var next_end = next_start + next_str.length;
 				next_item.indices = [ next_start, next_end ];
