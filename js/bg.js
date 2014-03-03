@@ -360,6 +360,7 @@ function onInputEntered(text) {
 }
 
 function updateDetails(flag) {
+	if (! PREFiX.accessToken) return;
 	var user = Ripple(PREFiX.accessToken);
 	var verify = user.verify().next(function(details) {
 		lscache.set('account_details', details);
@@ -502,7 +503,7 @@ function getDataSince(method, since_id, lock, extra_data, timeout) {
 		}
 		lock.timeout = setTimeout(function() {
 			d.fail({
-				exceptionType: 'timeout'
+				exceptionType: 'ontimeout'
 			});
 			d = new Deferred;
 		}, timeout * 1000);
@@ -592,7 +593,6 @@ function updateTitle() {
 	});
 	if (new_tweets.length) {
 		title.push(new_tweets.length + ' 条新推文');
-		switchTo('tl_model');
 	}
 
 	var saved_searches_count = getSavedSearchTweetsCount();
@@ -1263,20 +1263,53 @@ var getOEmbed = (function() {
 		var url = this.longUrl || this.url;
 		this.status = 'loading';
 
-		if (! isPhotoLink(url)) {
-			short_url_re = PREFiX.shortUrlRe || short_url_re;
-			if (short_url_re.test(url)) {
-				expandUrl(url).next(function(long_url) {
-					if (self.longUrl && self.longUrl === long_url)
-						return;
-					self.longUrl = long_url;
-					fetch.call(self);
-				});
-				return;
-			}
-
+		function markAsIgnored() {
 			self.status = 'ignored';
-			lscache.set('oembed-' + url, self);
+			lscache.set('oembed-' + self.url, self);
+		}
+
+		short_url_re = PREFiX.shortUrlRe || short_url_re;
+		if (short_url_re.test(url)) {
+			expandUrl(url).next(function(long_url) {
+				if (self.longUrl && self.longUrl === long_url)
+					return;
+				self.longUrl = long_url;
+				fetch.call(self);
+			});
+			return;
+		}
+
+		if (! isPhotoLink(url) && ! isMusicLink(url)) {
+			markAsIgnored();
+			return;
+		}
+
+		var result = url.match(xiami_song_re);
+		if (result) {
+			var music_url = result[0];
+			self.data = {
+				type: 'music',
+				url: music_url,
+				id: music_url.match(/\d+$/)[0]
+			};
+			Ripple.ajax.get(music_url).
+			next(function(html) {
+				var re = /<img class="cdCDcover185" src="(\S+)" \/>/;
+				var cover_url = (html.match(re) || [])[1];
+				self.data.cover_url = cover_url || '';
+				self.data.cover_url_large = cover_url.replace(/_2\.jpg/, '.jpg');
+				if (cover_url) {
+					getNaturalDimentions(cover_url, function(dimentions) {
+						self.cover_width = dimentions.width;
+						self.cover_height = dimentions.height;
+						self.status = 'completed';
+						lscache.set('oembed-' + self.url, self);
+						setTimeout(function() {
+							self.call();
+						});
+					});
+				}
+			});
 			return;
 		}
 
@@ -1304,7 +1337,7 @@ var getOEmbed = (function() {
 				[].some.call($html.find('script'), function(script) {
 					var code = script.textContent;
 					if (code.indexOf('var mediaJson') > -1) {
-						code = code.match(/var mediaJson = ([^;]+);/)[1];
+						code = (code.match(/var mediaJson = ([^;]+);/) || [ null, '[]' ])[1];
 						var media_json = JSON.parse(code);
 						media_json.some(function(item) {
 							if (item.id === id) {
@@ -1326,8 +1359,7 @@ var getOEmbed = (function() {
 						oEmbed: self
 					});
 				} else {
-					self.status = 'ignored';
-					lscache.set('oembed-' + url, self);
+					markAsIgnored();
 				}
 			});
 			return;
@@ -1350,18 +1382,19 @@ var getOEmbed = (function() {
 			Ripple.ajax.get(url).
 			next(function(html) {
 				var $html = $(html);
-				var large_url = $html.find('#photo img').attr('src');
+				var large_url = $html.find('#photo img').attr('src') || '';
+				var thumbnail_url = large_url.replace('/n0/', '/m0/');
 				$html.length = 0;
 				$html = null;
 				if (large_url) {
 					loadImage({
 						url: self.url,
 						large_url: large_url,
+						thumbnail_url: thumbnail_url,
 						oEmbed: self
 					});
 				} else {
-					self.status = 'ignored';
-					lscache.set('oembed-' + url, self);
+					markAsIgnored();
 				}
 			});
 			return;
@@ -1387,8 +1420,7 @@ var getOEmbed = (function() {
 						oEmbed: self
 					});
 				} else {
-					self.status = 'ignored';
-					lscache.set('oembed-' + url, self);
+					markAsIgnored();
 				}
 			});
 			return;
@@ -1402,25 +1434,28 @@ var getOEmbed = (function() {
 				var full_url = $html.find('#button-fullview a').attr('href');
 				$html.length = 0;
 				$html = null;
-				if (! /^http/.test(full_url)) {
-					full_url = 'http://img.ly' + full_url;
-				}
-				Ripple.ajax.get(full_url).next(function(html) {
-					var $html = $(html);
-					var large_url = $html.find('#image-full img').attr('src');
-					$html.length = 0;
-					$html = null;
-					if (large_url) {
-						loadImage({
-							url: self.url,
-							large_url: large_url,
-							oEmbed: self
-						});
-					} else {
-						self.status = 'ignored';
-						lscache.set('oembed-' + url, self);
+				if (full_url) {
+					if (! /^http/.test(full_url)) {
+						full_url = 'http://img.ly' + full_url;
 					}
-				})
+					Ripple.ajax.get(full_url).next(function(html) {
+						var $html = $(html);
+						var large_url = $html.find('#image-full img').attr('src');
+						$html.length = 0;
+						$html = null;
+						if (large_url) {
+							loadImage({
+								url: self.url,
+								large_url: large_url,
+								oEmbed: self
+							});
+						} else {
+							markAsIgnored();
+						}
+					});
+				} else {
+					markAsIgnored();
+				}
 			});
 			return;
 		}
@@ -1440,8 +1475,7 @@ var getOEmbed = (function() {
 						oEmbed: self
 					});
 				} else {
-					self.status = 'ignored';
-					lscache.set('oembed-' + url, self);
+					markAsIgnored();
 				}
 			});
 			return;
@@ -1466,8 +1500,7 @@ var getOEmbed = (function() {
 						oEmbed: self
 					});
 				} else {
-					self.status = 'ignored';
-					lscache.set('oembed-' + url, self);
+					markAsIgnored();
 				}
 			});
 			return;
@@ -1499,8 +1532,7 @@ var getOEmbed = (function() {
 						oEmbed: self
 					});
 				} else {
-					self.status = 'ignored';
-					lscache.set('oembed-' + url, self);
+					markAsIgnored();
 				}
 			});
 			return;
@@ -1521,8 +1553,7 @@ var getOEmbed = (function() {
 						oEmbed: self
 					});
 				} else {
-					self.status = 'ignored';
-					lscache.set('oembed-' + url, self);
+					markAsIgnored();
 				}
 			});
 			return;
@@ -1548,10 +1579,12 @@ var getOEmbed = (function() {
 				var base_url = result && result[1];
 				var result = html.match(/sizeMap: (\[[^\]]+\])/);
 				var size_map = result && JSON.parse(result[1]);
-				var size_t = size_map[0];
-				var size_l = size_map.reverse()[0];
-				var large_url = createPhotoURL(size_l);
-				var thumbnail_url = createPhotoURL(size_t);
+				if (size_map) {
+					var size_t = size_map[0];
+					var size_l = size_map.reverse()[0];
+					var large_url = createPhotoURL(size_l);
+					var thumbnail_url = createPhotoURL(size_t);
+				}
 				if (large_url) {
 					loadImage({
 						url: self.url,
@@ -1560,8 +1593,49 @@ var getOEmbed = (function() {
 						oEmbed: self
 					});
 				} else {
-					self.status = 'ignored';
-					lscache.set('oembed-' + url, self);
+					markAsIgnored();
+				}
+			});
+			return;
+		}
+
+		var result = url.match(xiami_album_re);
+		if (result) {
+			var album_url = result[0];
+			Ripple.ajax.get(album_url).
+			next(function(html) {
+				var re = /<img class="cdCover185"\s+src="(\S+)"\s+rel="v:photo"\s+alt="/;
+				var cover_url = (html.match(re) || [])[1] || '';
+				var cover_url_large = cover_url.replace(/_2\.jpg/, '.jpg');
+				if (cover_url_large) {
+					loadImage({
+						url: self.url,
+						large_url: cover_url_large,
+						thumbnail_url: cover_url,
+						oEmbed: self
+					});
+				}
+			});
+			return;
+		}
+
+		var result = url.match(xiami_collection_re);
+		if (result) {
+			var collection_url = result[0];
+			Ripple.ajax.get(collection_url).
+			next(function(html) {
+				var $html = $(html);
+				var cover_url = $html.find('#cover_logo .bigImgCover img').attr('src') || '';
+				var cover_url_large = $html.find('#cover_logo .bigImgCover').attr('href') || '';
+				$html.length = 0;
+				$html = null;
+				if (cover_url_large) {
+					loadImage({
+						url: self.url,
+						large_url: cover_url_large,
+						thumbnail_url: cover_url,
+						oEmbed: self
+					});
 				}
 			});
 			return;
@@ -1607,7 +1681,7 @@ var getOEmbed = (function() {
 					} else {
 						self.status = 'ignored';
 					}
-					lscache.set('oembed-' + url, self);
+					lscache.set('oembed-' + self.url, self);
 					self.call();
 				},
 				error: function(e) {
@@ -1616,7 +1690,7 @@ var getOEmbed = (function() {
 					} else {
 						self.status = 'error';
 					}
-					lscache.set('oembed-' + url, self);
+					lscache.set('oembed-' + self.url, self);
 				}
 			}
 		);
@@ -1646,6 +1720,40 @@ var getOEmbed = (function() {
 		tweet.oEmbedProcessed = true;
 		if (! oEmbed.data) return;
 		var data = oEmbed.data;
+		if (data.type === 'music') {
+			var url = data.url;
+			if (url.indexOf('xiami.com') > -1) {
+				var $item = $('<div>');
+				$item.html(tweet.fixedText);
+				var $same_player = $item.find('.xiami-player[song-id="' + data.id + '"]');
+				if ($same_player.length) return;
+				var $player = $('<span>');
+				$player.addClass('xiami-player');
+				$player.attr('song-id', data.id);
+				var $music_link;
+				waitFor(function() {
+					$item.html(tweet.fixedText);
+					$music_link = $item.find('[href^="' + url + '"]');
+					return $music_link.length;
+				}, function() {
+					$music_link.after($player);
+					var href = $music_link.prop('href');
+					$music_link.prop('href', href + '#processed');
+					$item.find('.xiami-player + .xiami-player').remove();
+					tweet.fixedText = $item.html();
+					$item.length = 0;
+					$item = null;
+				});
+				data = $.extend({ }, data);
+				data.type = 'photo';
+				data.url = data.cover_url_large;
+				data.thumbnail_url = data.cover_url;
+				data.width = data.cover_width;
+				data.height = data.cover_height;
+			}
+		}
+		if (data.type !== 'photo')
+			return;
 		processPhoto(tweet, {
 			url: data.url,
 			thumbnail_url: data.thumbnail_url,
@@ -1685,6 +1793,8 @@ var getOEmbed = (function() {
 	var tinypic_re = /tinypic\.com\//;
 	var path_re = /https?:\/\/path\.com\/p\//;
 	var flickr_re = /https?:\/\/(?:www\.)?flickr\.com\/photos\//;
+	var xiami_album_re = /https?:\/\/(?:www\.)?xiami\.com\/album\/(\d+)/;
+	var xiami_collection_re = /https?:\/\/(?:www\.)?xiami\.com\/song\/showcollect\/id\/(\d+)/;
 	var picture_re = /\.(?:jpg|jpeg|png|gif|webp)(?:\??\S*)?$/i;
 
 	var photo_res = [
@@ -1730,11 +1840,25 @@ var getOEmbed = (function() {
 		/https?:\/\/www\.eyeem\.com\/[pau]\//,
 		/https?:\/\/(?:giphy\.com\/gifs|gph\.is)\//,
 		/https?:\/\/frontback\.me\/p\//,
+		xiami_album_re,
+		xiami_collection_re,
 		picture_re
 	];
 
 	function isPhotoLink(url) {
 		return photo_res.some(function(re) {
+				return re.test(url);
+			});
+	}
+
+	var xiami_song_re = /https?:\/\/(?:www\.)?xiami\.com\/song\/(\d+)/;
+
+	var music_res = [
+		xiami_song_re
+	];
+
+	function isMusicLink(url) {
+		return music_res.some(function(re) {
 				return re.test(url);
 			});
 	}
@@ -1750,7 +1874,8 @@ var getOEmbed = (function() {
 			if (! url.split('/')[3]) return;
 			var is_short_url = short_url_re.test(url);
 			var is_photo_link = isPhotoLink(url) || is_short_url;
-			if (! is_photo_link) return;
+			var is_music_link = isMusicLink(url) || is_short_url;
+			if (! is_photo_link && ! is_music_link) return;
 			var cached, oEmbed;
 			oEmbed_lib.some(function(oembed) {
 				if (oembed.url === url) {
@@ -2436,9 +2561,11 @@ function showNotification(options) {
 	notifications.push(notification);
 
 	if (options.timeout !== false) {
-		notification.timeout = setTimeout(function() {
-			hideNotification(notification);
-		}, options.timeout || 30000);
+		notification.addEventListener('show', function() {
+			notification.timeout = setTimeout(function() {
+				hideNotification(notification);
+			}, options.timeout || 30000);
+		}, false);
 	}
 
 	return notification;
@@ -3018,5 +3145,6 @@ var is_first_run = lscache.get('is_first_run') !== false;
 lscache.set('is_first_run', false);
 
 setInterval(getRateLimit, 3 * 60 * 1000);
+setInterval(updateDetails, 30 * 60 * 1000);
 
 var startup = true;

@@ -47,6 +47,44 @@ function applyViewHeight() {
 	});
 }
 
+function ScrollHandler(elem) {
+	this.elem = elem;
+	this._listeners = [];
+	this._interval = null;
+	this.call = _.throttle(this._call.bind(this), 150);
+	this.start();
+}
+
+ScrollHandler.prototype = {
+	addListener: function(listener) {
+		this._listeners.push(listener);
+	},
+	start: function() {
+		this._interval = setInterval(this._check.bind(this), 100);
+	},
+	_call: function() {
+		var elem = this.elem;
+		this._listeners.forEach(function(listener) {
+			listener.call(elem);
+		});
+	},
+	_check: function() {
+		var is_scrolled = false;
+		var scroll_top = this.elem.scrollTop;
+		var scroll_left = this.elem.scrollLeft;
+		if (scroll_top !== this.scrollTop) {
+			is_scrolled = true;
+		} else if (scroll_left !== this.scrollLeft) {
+			is_scrolled = true;
+		}
+		this.scrollTop = scroll_top;
+		this.scrollLeft = scroll_left;
+		if (is_scrolled) {
+			this.call();
+		}
+	}
+};
+
 var goTop = (function() {
 	var s = 0;
 	var current;
@@ -336,7 +374,8 @@ function initKeyboardControlEvents() {
 					return;
 
 			case 82 /* R */:
-				if ($('body.show-context-timeline').length)
+				if ($('body.show-context-timeline').length &&
+					! $('body.show-picture').length)
 					return;
 
 			case 8 /* Backspace*/:
@@ -614,7 +653,7 @@ function markBreakpoint() {
 function createTab(url, active) {
 	chrome.tabs.create({
 		url: url,
-		active: active === true
+		active: active === true || is_panel_mode
 	});	
 }
 
@@ -640,9 +679,9 @@ function hideFollowingTip() {
 }
 
 function showRatingPage() {
+	hideRatingTip();
 	var url = 'https://chrome.google.com/webstore/detail/dcmnjbgdfjhikldahhhjhccnnpjlcodg/reviews';
 	createTab(url, true);
-	hideRatingTip();
 }
 
 function showRatingTip() {
@@ -650,12 +689,12 @@ function showRatingTip() {
 }
 
 function hideRatingTip() {
+	lscache.set('hide-rating-tip', true);
 	$('#rating-tip').css({
 		'animation-name': 'wobbleOut',
 		'animation-duration': 400
 	}).delay(400).hide(0, function() {
 		$(this).remove();
-		lscache.set('hide-rating-tip', true);
 	});
 }
 
@@ -982,17 +1021,20 @@ function initMainUI() {
 	$main = $scrolling_elem = $('#main');
 
 	var $stream = $('#stream');
+
+	var $main_scroll_handler = new ScrollHandler($main[0]);
+
 	var pointer_events_disabled = false;
 
-	$main[0].onscroll = function(e) {
+	$main_scroll_handler.addListener(function(e) {
 		if (! pointer_events_disabled) {
 			pointer_events_disabled = true;
 			$stream.css('pointer-events', 'none');
 		}
-	}
+	});
 
 	var flush_cache_timeout;
-	$main.scroll(_.throttle(function(e) {
+	$main_scroll_handler.addListener(function(e) {
 		clearTimeout(flush_cache_timeout);
 		flush_cache_timeout = setTimeout(function() {
 			if ($main.scrollTop() < 30 &&
@@ -1012,7 +1054,7 @@ function initMainUI() {
 			loadOldder();
 		if (scroll_top < 30)
 			markBreakpoint();
-	}, 100));
+	});
 
 	$('#app').delegate('a', 'click', function(e) {
 		if (e.currentTarget.href.indexOf('http://') !== 0 &&
@@ -1101,6 +1143,11 @@ function initMainUI() {
 			}).next(function(user) {
 				$this.text('关注 TA').prop('title', '');
 			})
+		}
+	}).delegate('.xiami-player', 'click', function(e) {
+		var song_id = $(this).attr('song-id');
+		if (song_id) {
+			createXiamiPlayerPopup(song_id);
 		}
 	});
 
@@ -1277,10 +1324,11 @@ function cutStream() {
 	current.allLoaded = false;
 }
 
-function computePosition(data, no_minus_left) {
+function computePosition(data) {
 	var left = parseInt(($body[0].clientWidth - data.width) / 2, 10);
 	var top = parseInt(($body[0].clientHeight - data.height) / 2, 10);
-	if (no_minus_left) {
+	data.left = left;
+	if (data.noMinusLeft) {
 		data.left = Math.max(0, left);
 	}
 	data.top = Math.max(0, top);
@@ -1331,8 +1379,9 @@ function showPicture(img_url) {
 		var height = $picture.height();
 		$picture.css(computePosition({
 			width: width / 1.5,
-			height: height / 1.5
-		}, true)).
+			height: height / 1.5,
+			noMinusLeft: true
+		})).
 		css({
 			opacity: .05,
 			display: 'block'
@@ -1341,8 +1390,9 @@ function showPicture(img_url) {
 		addClass('run-animation').
 		css(computePosition({
 			width: width,
-			height: height
-		}, true)).
+			height: height,
+			noMinusLeft: true
+		})).
 		css({
 			opacity: 1
 		});
@@ -1355,6 +1405,7 @@ function showPicture(img_url) {
 }
 
 function hidePicture() {
+	$('#picture-overlay').scrollTop(0);
 	$scrolling_elem = $main;
 	var $picture = $('#picture');
 	var width = $picture.width();
@@ -1372,13 +1423,13 @@ function hidePicture() {
 	}
 	var style = computePosition({
 		width: width / 1.5,
-		height: height / 1.5
+		height: height / 1.5,
+		reverse: rotate_deg % 180
 	});
 	style.left = (400 - ($picture.width() / 1.5)) / 2 + 'px';
 	style.width = $picture.width() / 1.5 + 'px';
 	style.height = $picture.height() / 1.5 + 'px';
 	style.opacity = 0;
-	style['margin-left'] = .05;
 	$picture.css(style);
 	$('#picture-wrapper').css({
 		animation: 'pictureSlideOut 225ms both',
@@ -1404,9 +1455,7 @@ function rotatePicture() {
 		rotate_deg += 90;
 	}
 	var rotate_value = 'rotateZ(' + rotate_deg + 'deg)';
-	var style = {
-		'margin-left': 0
-	};
+	var style = { };
 	var width, height;
 	waitFor(function() {
 		return $picture_copy.width();
@@ -1419,9 +1468,6 @@ function rotatePicture() {
 			if ($picture[0].naturalHeight > 400) {
 				$picture_copy.css('height', '400px');
 			}
-			if ($picture[0].naturalWidth > 400) {
-				style['margin-left'] = (400 - $picture_copy.width()) / 2 + 'px';
-			}
 		}
 		width = $picture_copy.width();
 		height = $picture_copy.height();
@@ -1432,7 +1478,8 @@ function rotatePicture() {
 		});
 		$.extend(style, computePosition({
 			width: width,
-			height: height
+			height: height,
+			reverse: rotate_deg % 180
 		}));
 		style.transform = rotate_value;
 		$picture.css(style);
@@ -1522,6 +1569,8 @@ function autoScroll(model, list) {
 			$breakpoint = $item.next('.breakpoint');
 			if ($breakpoint.length) {
 				$item = $breakpoint;
+			} else if (list.length >= 50) {
+				return;
 			}
 			var offset = $item.offset().top + $item.height();
 			var height = $body.height();
@@ -1532,13 +1581,17 @@ function autoScroll(model, list) {
 			setCurrent(model, target > 0 ? last_item.id_str : first_item.id_str);
 			if ($scrolling_elem === $main) {
 				if ($breakpoint && $breakpoint.length) {
-					$main.scrollTop(target);
+					waitFor(function() {
+						return $main[0].scrollHeight >= target;
+					}, function() {
+						$main.scrollTop(target);
+					});
 				} else {
 					smoothScrollTo(target);
 				}
 			}
 		});
-	}, 100);
+	});
 }
 
 function loadOldder() {
@@ -1864,6 +1917,7 @@ function toggleFavourite(e) {
 		lock: self
 	}).next(function() {
 		tweet.favorited = ! favorited;
+		console.log(tweet.favorited);
 		showNotification(tweet.favorited ? '收藏成功!' : '取消收藏成功!');
 		$(self).css('animation', 'spring .5s linear');
 	});
@@ -2220,7 +2274,7 @@ tl_model.initialize = function() {
 				drawAttention();
 			pre_count.timeline = tl.buffered.length;
 		}
-		if (! PREFiX.is_popup_focused || $main[0].scrollTop > $body.height / 2)
+		if (! PREFiX.is_popup_focused || $main[0].scrollTop > $body.height() / 2)
 			return;
 		var buffered = tl.buffered;
 		tl.buffered = [];
