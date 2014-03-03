@@ -1183,6 +1183,11 @@ function initMainUI() {
 			case 52:
 				$link = $('#navigation-bar .saved-searches');
 				break;
+			case 53:
+				e.preventDefault();
+				PREFiX.userid = PREFiX.account.id_str;
+				nav_model.showUserTimeline();
+				return;
 			default:
 				return;
 		}
