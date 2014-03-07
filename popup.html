@@ -114,7 +114,7 @@
 									<img ms-src="(tweet.retweeted_status || tweet).user.profile_image_url_https" ms-css-margin-left="(tweet.retweeted_status || tweet).avatar_margin.left" ms-css-margin-top="(tweet.retweeted_status || tweet).avatar_margin.top" ms-css-width="(tweet.retweeted_status || tweet).avatar_size.width" ms-css-height="(tweet.retweeted_status || tweet).avatar_size.height" ms-live-contextmenu="blockUser" />
 								</a>
 							</div>
-							<div class="content">
+							<div class="content" ms-live-contextmenu="debug">
 								<div class="info fix">
 									<a class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-userid="(tweet.retweeted_status || tweet).user.id_str" title="查看 TA 的消息 (快捷键 S)"></a>
 									<span class="sub-name" ms-text="screenNameFirst ? (tweet.retweeted_status || tweet).user.name : ('@' + (tweet.retweeted_status || tweet).user.screen_name)"></span>

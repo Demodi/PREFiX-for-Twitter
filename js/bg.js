@@ -1229,7 +1229,9 @@ function processPhoto(tweet, photo) {
 	}
 	tweet.photo = tweet.photo || { };
 	if (tweet.photo.url) return;
-	$.extend(true, tweet.photo, photo);
+	if (tweet.photo !== photo) {
+		$.extend(true, tweet.photo, photo);
+	}
 	return photo;
 }
 
@@ -1246,6 +1248,18 @@ function getNaturalDimentions(url, callback) {
 		image.src = '';
 		image = null;
 	});
+}
+
+function setText(tweet, text) {
+	tweet.fixedText = text + ' ';
+	setTimeout(function() {
+		tweet.fixedText = text;
+	}, 100);
+}
+
+function isShortUrl(url) {
+	short_url_re = PREFiX.shortUrlRe || short_url_re;
+	return short_url_re.test(url);
 }
 
 var getOEmbed = (function() {
@@ -1269,8 +1283,7 @@ var getOEmbed = (function() {
 			lscache.set('oembed-' + self.url, self);
 		}
 
-		short_url_re = PREFiX.shortUrlRe || short_url_re;
-		if (short_url_re.test(url)) {
+		if (isShortUrl(url) && ! isPhotoLink(url) && ! isMusicLink(url)) {
 			expandUrl(url).next(function(long_url) {
 				if (self.longUrl && self.longUrl === long_url)
 					return;
@@ -1741,7 +1754,7 @@ var getOEmbed = (function() {
 					var href = $music_link.prop('href');
 					$music_link.prop('href', href + '#processed');
 					$item.find('.xiami-player + .xiami-player').remove();
-					tweet.fixedText = $item.html();
+					setText(tweet, $item.html());
 					$item.length = 0;
 					$item = null;
 				});
@@ -1913,7 +1926,7 @@ var getOEmbed = (function() {
 							display_url = display_url.substring(0, 25) + '...';
 						}
 						$link.text(display_url);
-						tweet.fixedText = $temp.html();
+						setText(tweet, $temp.html());
 					});
 				});
 			}
@@ -2673,6 +2686,9 @@ function replaceEmoji(text) {
 
 Ripple.events.observe('process_tweet', function(tweet) {
 	if (! tweet) return;
+
+	tweet.inserted = false;
+
 	if (tweet.user) {
 		tweet.is_self = tweet.user.id_str === PREFiX.account.id_str;
 	}
@@ -2729,7 +2745,9 @@ Ripple.events.observe('process_tweet', function(tweet) {
 			top: '0'
 		};
 		tweet.avatarProcessed = false;
-		cropAvatar(tweet, image.src);
+		if (! PREFiX.popupActive) {
+			cropAvatar(tweet, image.src);
+		}
 	}
 
 	if (tweet.source) {
@@ -2775,7 +2793,9 @@ Ripple.events.observe('process_tweet', function(tweet) {
 				width: 0,
 				height: 0
 			};
-			getOEmbed(tweet);
+			if (! PREFiX.popupActive) {
+				getOEmbed(tweet);
+			}
 		}
 
 		var hashtags = tweet.entities.hashtags;

@@ -85,11 +85,21 @@ ScrollHandler.prototype = {
 	}
 };
 
+var registered_destination_handlers = [];
+function setDestination(delta) {
+	registered_destination_handlers.forEach(function(handler) {
+		handler(delta);
+	});
+};
+
 var goTop = (function() {
 	var s = 0;
 	var current;
 	var id;
 	var stop = function() { };
+	registered_destination_handlers.push(function(delta) {
+		s += delta;
+	});
 	return function(e) {
 		stopSmoothScrolling();
 		stop();
@@ -103,7 +113,7 @@ var goTop = (function() {
 		}
 		var breakpoint;
 		id = requestAnimationFrame(function(timestamp) {
-			if (breakpoint) {
+			if (breakpoint && ! smoothscroll_paused) {
 				var diff = (timestamp - breakpoint) * 1.2;
 				current = $main[0].scrollTop;
 				if (s != current) {
@@ -121,10 +131,18 @@ var goTop = (function() {
 })();
 
 var registered_smooth_scroll_data = [];
+var smoothscroll_paused = false;
 function initSmoothScroll($target) {
 	var id;
 	var is_scrolling = false;
 	var destination = null;
+	if ($target === $main) {
+		registered_destination_handlers.push(function(delta) {
+			if (destination !== null) {
+				destination += delta;
+			}
+		});
+	}
 	var _stop = function() { };
 	function runAnimation(dest) {
 		if (dest !== undefined) {
@@ -133,7 +151,7 @@ function initSmoothScroll($target) {
 		function renderFrame(timestamp) {
 			if (! is_scrolling) return;
 
-			if (breakpoint) {
+			if (breakpoint && ! smoothscroll_paused) {
 				var progress = (timestamp - breakpoint) * 1.2;
 
 				var pos = $target.scrollTop();
@@ -153,7 +171,6 @@ function initSmoothScroll($target) {
 					return _stop();
 				}
 			}
-
 
 			breakpoint = timestamp;
 			id = requestAnimationFrame(renderFrame);
@@ -1545,12 +1562,19 @@ function resetLoadingEffect() {
 	}, 0);
 }
 
-function insertKeepScrollTop(insert) {
+function insertKeepScrollTop(insert, after_scroll) {
 	var scroll_top = $main[0].scrollTop;
 	var scroll_height = $main[0].scrollHeight;
+	smoothscroll_paused = true;
 	insert();
 	setTimeout(function() {
-		$main.scrollTop(scroll_top + $main[0].scrollHeight - scroll_height);
+		var delta = $main[0].scrollHeight - scroll_height;
+		$main.scrollTop(scroll_top + delta);
+		setDestination(delta)
+		setTimeout(function() {
+			after_scroll();
+			smoothscroll_paused = false;
+		});
 	}, 50);
 }
 
@@ -1586,6 +1610,7 @@ function autoScroll(model, list) {
 						$main.scrollTop(target);
 					});
 				} else {
+					stopSmoothScrolling();
 					smoothScrollTo(target);
 				}
 			}
@@ -1985,9 +2010,21 @@ function blockUser(e) {
 }
 
 function onNewTweetInserted() {
-	this.forEach(bg_win.getOEmbed);
-	this.forEach(function(tweet) {
-		bg_win.cropAvatar(tweet, (tweet.user || tweet.sender).profile_image_url_https);
+	var d;
+	this.forEach(function(t, i) {
+		if (! t.inserted) {
+			t = findModel(getCurrent(), t.id_str);
+			t.inserted = true;
+			function enrich() {
+				bg_win.getOEmbed(t);
+			}
+			if (d) {
+				d = d.always(enrich);
+			} else {
+				d = Deferred.next(enrich).error(function() {});
+			}
+			bg_win.cropAvatar(t, (t.user || t.sender).profile_image_url_https);
+		}
 	});
 }
 
@@ -2220,6 +2257,9 @@ var tl_model = avalon.define('home-timeline', function(vm) {
 
 	vm.showRelatedTweets = showRelatedTweets;
 
+	vm.debug = function() {
+		console.log(this.$vmodel.$model.tweet);
+	}
 	vm.blockUser = blockUser;
 
 	vm.tweets = [];
@@ -2250,14 +2290,27 @@ tl_model.initialize = function() {
 	$('#title h2').text('Timeline');
 	$('#home-timeline').addClass('current');
 
+	var init_scroll_cancelled = false;
+	var scroll_initialized = false;
+
 	var tl = PREFiX.homeTimeline;
 	waitFor(function() {
 		return tl.tweets.length;
 	}, function() {
-		tl_model.tweets = tl.tweets;
+		if (tl_model.tweets.length !== tl.tweets.length ||
+			tl_model.tweets[0].id_str !== tl.tweets[0].id_str) {
+			tl_model.tweets = tl.tweets;
+		}
 		markBreakpoint();
+		waitFor(function() {
+			return $main[0].scrollHeight >= tl.scrollTop;
+		}, function() {
+			if (! init_scroll_cancelled) {
+				$main.scrollTop(tl.scrollTop);
+			}
+			scroll_initialized = true;
+		});
 		setTimeout(function() {
-			$main.scrollTop(PREFiX.homeTimeline.scrollTop);
 			initKeyboardControl();
 		}, 50);
 		updateRelativeTime();
@@ -2270,7 +2323,7 @@ tl_model.initialize = function() {
 		}
 		if (tl.buffered.length !== pre_count.timeline) {
 			if (PREFiX.settings.current.drawAttention)
-				drawAttention();
+				setTimeout(drawAttention);
 			pre_count.timeline = tl.buffered.length;
 		}
 		if (! PREFiX.is_popup_focused || $main[0].scrollTop > $body.height() / 2)
@@ -2280,7 +2333,9 @@ tl_model.initialize = function() {
 		if (! tl.tweets.length) {
 			unshift(tl_model.tweets, buffered);
 		} else {
-			setTimeout(function() {
+			waitFor(function() {
+				return scroll_initialized;
+			}, function() {
 				var scroll_top = $main.scrollTop();
 				insertKeepScrollTop(function() {
 					if (buffered.length >= 50) {
@@ -2296,12 +2351,13 @@ tl_model.initialize = function() {
 						}
 					}
 					unshift(tl_model.tweets, buffered);
-					if (scroll_top <= 30) {
+					PREFiX.updateTitle();
+				}, function() {
+					if (! scroll_top) {
 						autoScroll(tl_model, buffered);
 					}
-					PREFiX.updateTitle();
 				});
-			}, 50);
+			});
 		}
 
 		PREFiX.updateTitle();
@@ -2356,14 +2412,27 @@ mentions_model.initialize = function() {
 	$('#title h2').text('Mentions');
 	$('#mentions').addClass('current');
 
+	var init_scroll_cancelled = false;
+	var scroll_initialized = false;
+
 	var mentions = PREFiX.mentions;
 	waitFor(function() {
 		return mentions.tweets.length;
 	}, function() {
-		mentions_model.tweets = mentions.tweets;
+		if (mentions_model.tweets.length !== mentions.tweets.length ||
+			mentions_model.tweets[0].id_str !== mentions.tweets[0].id_str) {
+			mentions_model.tweets = mentions.tweets;
+		}
 		setPosition('mentions');
+		waitFor(function() {
+			return $main[0].scrollHeight >= mentions.scrollTop;
+		}, function() {
+			if (! init_scroll_cancelled) {
+				$main.scrollTop(mentions.scrollTop);
+			}
+			scroll_initialized = true;
+		});
 		setTimeout(function() {
-			$main.scrollTop(PREFiX.mentions.scrollTop);
 			initKeyboardControl();
 		}, 50);
 		updateRelativeTime();
@@ -2376,7 +2445,7 @@ mentions_model.initialize = function() {
 		}
 		if (mentions.buffered.length !== pre_count.mentions) {
 			if (PREFiX.settings.current.drawAttention)
-				drawAttention();
+				setTimeout(drawAttention);
 			pre_count.mentions = mentions.buffered.length;
 		}
 		if (! PREFiX.is_popup_focused || $main[0].scrollTop)
@@ -2391,17 +2460,20 @@ mentions_model.initialize = function() {
 			unshift(mentions_model.tweets, buffered);
 			setPosition('mentions');
 		} else {
-			setTimeout(function() {
+			waitFor(function() {
+				return scroll_initialized;
+			}, function() {
 				var scroll_top = $main.scrollTop();
 				insertKeepScrollTop(function() {
 					unshift(mentions_model.tweets, buffered);
 					setPosition('mentions');
-					if (scroll_top <= 30) {
+					PREFiX.updateTitle();
+				}, function() {
+					if (! scroll_top) {
 						autoScroll(mentions_model, buffered);
 					}
-					PREFiX.updateTitle();
 				});
-			}, 50);
+			});
 		}
 
 		PREFiX.updateTitle();
@@ -2501,14 +2573,27 @@ directmsgs_model.initialize = function() {
 	$('#title h2').text('Direct Messages');
 	$('#directmsgs').addClass('current');
 
+	var init_scroll_cancelled = false;
+	var scroll_initialized = false;
+
 	var directmsgs = PREFiX.directmsgs;
 	waitFor(function() {
 		return directmsgs.messages.length;
 	}, function() {
-		directmsgs_model.messages = directmsgs.messages;
+		if (directmsgs_model.messages.length !== directmsgs.messages.length ||
+			directmsgs_model.messages[0].id_str !== directmsgs.messages[0].id_str) {
+			directmsgs_model.messages = directmsgs.messages;
+		}
 		setPosition('directmsgs');
+		waitFor(function() {
+			return $main[0].scrollHeight >= directmsgs.scrollTop;
+		}, function() {
+			if (! init_scroll_cancelled) {
+				$main.scrollTop(directmsgs.scrollTop);
+			}
+			scroll_initialized = true;
+		});
 		setTimeout(function() {
-			$main.scrollTop(PREFiX.directmsgs.scrollTop);
 			initKeyboardControl();
 		}, 50);
 		updateRelativeTime();
@@ -2521,7 +2606,7 @@ directmsgs_model.initialize = function() {
 		}
 		if (directmsgs.buffered.length !== pre_count.directmsgs) {
 			if (PREFiX.settings.current.drawAttention)
-				drawAttention();
+				setTimeout(drawAttention);
 			pre_count.directmsgs = directmsgs.buffered.length;
 		}
 		if (! PREFiX.is_popup_focused || $main[0].scrollTop)
@@ -2536,17 +2621,20 @@ directmsgs_model.initialize = function() {
 			unshift(directmsgs_model.messages, buffered);
 			setPosition('directmsgs');
 		} else {
-			setTimeout(function() {
+			waitFor(function() {
+				return scroll_initialized;
+			}, function() {
 				var scroll_top = $main.scrollTop();
 				insertKeepScrollTop(function() {
 					unshift(directmsgs_model.messages, buffered);
 					setPosition('directmsgs');
-					if (scroll_top <= 30) {
+					PREFiX.updateTitle();
+				}, function() {
+					if (! scroll_top) {
 						autoScroll(directmsgs_model, buffered);
 					}
-					PREFiX.updateTitle();
 				});
-			}, 50);
+			});
 		}
 
 		PREFiX.updateTitle();
@@ -2623,6 +2711,7 @@ searches_model.initialize = function() {
 			data['saved_search_' + keyword] = tweets[0].id_str;
 			chrome.storage.sync.set(data);
 			item.unread_count = 0;
+			bg_win.updateTitle();
 			return true;
  		});
  		if (is_saved) {
@@ -2843,25 +2932,35 @@ $(function() {
 			getCurrent().initialize();
 			initKeyboardControlEvents();
 			setTimeout(showUsageTip, 100);
-			var $tip = $('#uploading-photo-tip');
-			var shown = lscache.get('uploading_photo_tip');
-			if (! shown && lscache.get('hide-following-tip')) {
-				$tip.show();
-				$('#hide-uploading-photo-tip').click(function(e) {
-					$tip.css({
-						'animation-name': 'wobbleOut',
-						'animation-duration': 400
-					}).delay(400).hide(0, function() {
-						$(this).remove();
-						lscache.set('uploading_photo_tip', true);
-					});
-				});
-			} else {
-				$tip.remove();
-			}
 		}, 100);
 	});
+	var $tip = $('#uploading-photo-tip');
+	var shown = lscache.get('uploading_photo_tip');
+	if (! shown && lscache.get('hide-following-tip')) {
+		$tip.show();
+		$('#hide-uploading-photo-tip').click(function(e) {
+			$tip.css({
+				'animation-name': 'wobbleOut',
+				'animation-duration': 400
+			}).delay(400).hide(0, function() {
+				$(this).remove();
+				lscache.set('uploading_photo_tip', true);
+			});
+		});
+	} else {
+		$tip.remove();
+	}
 });
+
+function searchTweet(id) {
+	tl_model.tweets.some(function(tweet) {
+		if (tweet.id_str === id) {
+			window.t = tweet;
+			console.log(tweet.$model);
+			return true;
+		}
+	});
+}
 
 onunload = function() {
 	PREFiX.popupActive = false;
