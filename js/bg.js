@@ -2909,7 +2909,6 @@ Ripple.events.observe('process_tweet', function(tweet) {
 			text_to_add = text.slice(end, next_end);
 
 			text_to_add = replaceEmoji(text_to_add);
-			text_to_add = text_to_add.replace(/\n+/g, '<br />');
 			fixed_text.push(text_to_add);
 		});
 	}
@@ -2919,6 +2918,7 @@ Ripple.events.observe('process_tweet', function(tweet) {
 	}
 
 	text = fixed_text.join('');
+	text = text.replace(/\n\s*/g, '<br />');
 	tweet.fixedText = text;
 
 	tweet.is_breakpoint = false;
