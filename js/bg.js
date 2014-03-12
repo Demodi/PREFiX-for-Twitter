@@ -1229,9 +1229,7 @@ function processPhoto(tweet, photo) {
 	}
 	tweet.photo = tweet.photo || { };
 	if (tweet.photo.url) return;
-	if (tweet.photo !== photo) {
-		$.extend(true, tweet.photo, photo);
-	}
+	tweet.photo = $.extend(true, tweet.photo, tweet.photo === photo ? { } : photo);
 	return photo;
 }
 
@@ -1416,10 +1414,10 @@ var getOEmbed = (function() {
 
 		var result = url.match(twitpic_re);
 		if (result) {
-			var full_url = url;
+			var full_url = url.replace(/#\S*$/, '');
 			if (! /\/full$/.test(url)) {
 				full_url += '/full';
-				full_url = full_url.replace('//', '/');
+				full_url = full_url.replace('//full', '//');
 			}
 			Ripple.ajax.get(full_url).
 			next(function(html) {
