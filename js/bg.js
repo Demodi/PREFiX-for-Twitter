@@ -1249,10 +1249,7 @@ function getNaturalDimentions(url, callback) {
 }
 
 function setText(tweet, text) {
-	tweet.fixedText = text + ' ';
-	setTimeout(function() {
-		tweet.fixedText = text;
-	}, 100);
+	tweet.fixedText = text;
 }
 
 function isShortUrl(url) {
