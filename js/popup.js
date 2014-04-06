@@ -2112,6 +2112,9 @@ var composebar_model = avalon.define('composebar-textarea', function(vm) {
 			vm.id = '';
 			vm.user = '';
 			vm.screen_name = '';
+			if (nav_model.current === 'directmsgs_model') {
+				cancelReply();
+			}
 		}
 		$('#compose-bar').toggleClass('uploading-not-supported', vm.type === 'send-dm');
 	}
