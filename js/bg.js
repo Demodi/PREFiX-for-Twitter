@@ -1790,13 +1790,13 @@ var getOEmbed = (function() {
 		});
 	}
 
-	var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_]+\//;
-	var pinsta_re = /https?:\/\/pinsta\.me\/p\/([a-zA-Z0-9_]+)/;
+	var instagram_re = /https?:\/\/(instagram\.com|instagr.am)\/p\/[a-zA-Z0-9_\-]+\//;
+	var pinsta_re = /https?:\/\/pinsta\.me\/p\/([a-zA-Z0-9_\-]+)/;
 	var fanfou_re = /https?:\/\/fanfou\.com\/photo\//;
 	var weibo_re = /https?:\/\/[w0-9]+\.sinaimg\.cn\/\S+\.jpg/;
 	var twitpic_re = /https?:\/\/(?:www\.)?twitpic\.com\//;
 	var imgly_re = /https?:\/\/img\.ly\//;
-	var lofter_re = /\.lofter\.com\/post\/[a-zA-Z0-9_]+/;
+	var lofter_re = /\.lofter\.com\/post\/[a-zA-Z0-9_\-]+/;
 	var imgur_re = /imgur\.com\//;
 	var twipple_re = /https?:\/\/p\.twipple\.jp\/\S+/;
 	var tinypic_re = /tinypic\.com\//;

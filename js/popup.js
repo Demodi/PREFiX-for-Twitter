@@ -2263,6 +2263,7 @@ var tl_model = avalon.define('home-timeline', function(vm) {
 
 	vm.debug = function() {
 		console.log(this.$vmodel.$model.tweet);
+		window.t = this.$vmodel.tweet;
 	}
 	vm.blockUser = blockUser;
 
