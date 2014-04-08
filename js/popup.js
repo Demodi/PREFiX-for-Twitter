@@ -854,8 +854,8 @@ function setImage(file) {
 	if (file) {
 		size = computeSize(file.size);
 	}
-	if (file && file.size > 2 * 1024 * 1024) {
-		var msg = '您的图片文件大小 (' + size + ') 超过 2MB, 上传可能会失败.' +
+	if (file && file.size > 3 * 1024 * 1024) {
+		var msg = '您的图片文件大小 (' + size + ') 超过 3MB, 上传可能会失败.' +
 			' 确定要继续吗?';
 		if (! confirm(msg)) return;
 	}
