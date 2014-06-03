@@ -2544,7 +2544,7 @@ function switchTo(model_name) {
 	}
 }
 
-var Notifications = Notifications || webkitNotifications;
+window.Notifications = window.Notifications || window.webkitNotifications;
 var notifications = [];
 
 function showNotification(options) {
