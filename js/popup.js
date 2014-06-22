@@ -1852,7 +1852,11 @@ function reply() {
 	if (tweet.retweeted_status) {
 		at_users[tweet.retweeted_status.user.screen_name] = true;
 	}
-	var prefix = '@' + tweet.user.screen_name + ' ';
+	var prefix = '';
+	var screen_name = tweet.user.screen_name;
+	if (screen_name !== PREFiX.account.screen_name) {
+		prefix = '@' + screen_name + ' ';
+	}
 	if (tweet.retweeted_status) {
 		prefix += '@' + tweet.retweeted_status.user.screen_name + ' ';
 	}
