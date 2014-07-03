@@ -1854,7 +1854,7 @@ function reply() {
 	}
 	var prefix = '';
 	var screen_name = tweet.user.screen_name;
-	if (screen_name !== PREFiX.account.screen_name) {
+	if (screen_name !== PREFiX.account.screen_name || ! tweet.retweeted_status) {
 		prefix = '@' + screen_name + ' ';
 	}
 	if (tweet.retweeted_status) {
