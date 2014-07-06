@@ -1552,7 +1552,7 @@ var getOEmbed = (function() {
 			Ripple.ajax.get(url).
 			next(function(html) {
 				var $html = $(html);
-				var large_url = $html.find('.photo-container img').attr('src');
+				var large_url = $html.filter('main.photo').find('.modal img').attr('src');
 				$html.length = 0;
 				$html = null;
 				if (large_url) {
@@ -1800,7 +1800,7 @@ var getOEmbed = (function() {
 	var imgur_re = /imgur\.com\//;
 	var twipple_re = /https?:\/\/p\.twipple\.jp\/\S+/;
 	var tinypic_re = /tinypic\.com\//;
-	var path_re = /https?:\/\/path\.com\/p\//;
+	var path_re = /https?:\/\/path\.com\/(?:moment|p)\//;
 	var flickr_re = /https?:\/\/(?:www\.)?flickr\.com\/photos\//;
 	var xiami_album_re = /https?:\/\/(?:www\.)?xiami\.com\/album\/(\d+)/;
 	var xiami_collection_re = /https?:\/\/(?:www\.)?xiami\.com\/song\/showcollect\/id\/(\d+)/;
