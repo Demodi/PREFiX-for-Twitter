@@ -1122,9 +1122,9 @@ function initMainUI() {
 		hidePicture();
 	}).delegate('#stream .info', 'mouseenter', function(e) {
 		var $info = $(e.currentTarget);
-		var original_width = $info.width();
+		var original_width = parseInt($info.width(), 10);
 		$info.css('position', 'absolute');
-		var full_width = $info.width() + 95;
+		var full_width = parseInt($info.width() + 95, 10);
 		$info.css('position', '');
 		if (full_width <= original_width) return;
 		e.currentTarget.scrolling = true;
