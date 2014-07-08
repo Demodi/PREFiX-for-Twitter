@@ -1553,6 +1553,9 @@ var getOEmbed = (function() {
 			next(function(html) {
 				var $html = $(html);
 				var large_url = $html.filter('main.photo').find('.modal img').attr('src');
+				if (! large_url) {
+					large_url = $html.find('.photo-container img').attr('src');
+				}
 				$html.length = 0;
 				$html = null;
 				if (large_url) {
