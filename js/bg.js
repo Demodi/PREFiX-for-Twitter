@@ -2563,6 +2563,11 @@ function showNotification(options) {
 	options.icon = options.icon || '/icons/40.png';
 	options.title = options.title || 'PREFiX for Twitter';
 
+	if (options.content) {
+		options.content = $temp.html(options.content).text();
+		$temp.empty();
+	}
+
 	if (Notifications) {
 		notification = Notifications.createNotification(options.icon,
 			options.title, options.content);
