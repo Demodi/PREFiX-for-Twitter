@@ -1149,6 +1149,10 @@ function initMainUI() {
 		$info.css('text-indent', 0);
 		clearTimeout(e.currentTarget.timeout);
 		e.currentTarget.scrolling = false;
+	}).delegate('#stream .permanent-link', 'mouseenter', function(e) {
+		var $permanent_link = $(e.currentTarget);
+		var $info = $permanent_link.parent();
+		$info.prop('scrolling', false);
 	}).delegate('#relationship', 'click', function(e) {
 		var $this = $(e.currentTarget);
 		if ($this.text() === '关注 TA') {
