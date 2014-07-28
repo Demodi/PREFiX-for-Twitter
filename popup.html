@@ -63,7 +63,7 @@
 						<div class="info fix">
 							<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name"></a>
 							<span class="sub-name" ms-text="screenNameFirst ? (tweet.retweeted_status || tweet).user.name : ('@' + (tweet.retweeted_status || tweet).user.screen_name)"></span>
-							<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
+							<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'推文链接 / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
 							<span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
 						</div>
 						<div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
@@ -118,7 +118,7 @@
 								<div class="info fix">
 									<a class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-userid="(tweet.retweeted_status || tweet).user.id_str" title="查看 TA 的消息 (快捷键 S)"></a>
 									<span class="sub-name" ms-text="screenNameFirst ? (tweet.retweeted_status || tweet).user.name : ('@' + (tweet.retweeted_status || tweet).user.screen_name)"></span>
-									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
+									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'推文链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
 									<span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
 								</div>
 								<div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
@@ -149,7 +149,7 @@
 								<div class="info fix">
 									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-userid="(tweet.retweeted_status || tweet).user.id_str" title="查看 TA 的消息 (快捷键 S)"></a>
 									<span class="sub-name" ms-text="screenNameFirst ? (tweet.retweeted_status || tweet).user.name : ('@' + (tweet.retweeted_status || tweet).user.screen_name)"></span>
-									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
+									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'推文链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
 									<span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
 								</div>
 								<div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
@@ -205,7 +205,7 @@
 								<div class="info fix">
 									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-userid="(tweet.retweeted_status || tweet).user.id_str" title="查看 TA 的消息 (快捷键 S)"></a>
 									<span class="sub-name" ms-text="screenNameFirst ? (tweet.retweeted_status || tweet).user.name : ('@' + (tweet.retweeted_status || tweet).user.screen_name)"></span>
-									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
+									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'推文链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
 									<span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
 								</div>
 								<div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText" ms-class-bold="tweet.is_unread"></div>
@@ -254,7 +254,7 @@
 								<div class="info fix">
 									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name" class="name" ms-text="screenNameFirst ? ('@' + (tweet.retweeted_status || tweet).user.screen_name) : (tweet.retweeted_status || tweet).user.name" ms-data-userid="(tweet.retweeted_status || tweet).user.id_str" title="查看 TA 的消息 (快捷键 S)"></a>
 									<span class="sub-name" ms-text="screenNameFirst ? (tweet.retweeted_status || tweet).user.name : ('@' + (tweet.retweeted_status || tweet).user.screen_name)"></span>
-									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'消息链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
+									<a ms-href="'https://twitter.com/' + (tweet.retweeted_status || tweet).user.screen_name + '/status/' + (tweet.retweeted_status || tweet).id_str" ms-title="'推文链接 (快捷键 U) / ' + (tweet.retweeted_status || tweet).fullTime + '\n通过 ' + (tweet.retweeted_status || tweet).source" class="permanent-link">#</a>
 									<span class="timestamp" ms-html="(tweet.retweeted_status || tweet).relativeTime"></span>
 								</div>
 								<div class="tweet-content" ms-html="(tweet.retweeted_status || tweet).fixedText"></div>
