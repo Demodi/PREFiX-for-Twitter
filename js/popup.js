@@ -129,7 +129,11 @@ var goTop = (function() {
 			if (s >= 1 || ! breakpoint) {
 				breakpoint = timestamp;
 				id = requestAnimationFrame(arguments.callee);
-			};
+			} else if (s < 1 && $scrolling_elem === $main) {
+				var current_model = getCurrent();
+				var list = current_model.tweets || current_model.messages;
+				setCurrent(current_model, list[0].id_str);
+			}
 		});
 	}
 })();
@@ -338,15 +342,13 @@ function initKeyboardControlEvents() {
 			return;
 		}
 
+		var do_go_top = false;
+
 		if (e.keyCode === 72) {
 			var list = current_model.tweets || current_model.messages;
 			target = 0;
 			if ($scrolling_elem === $main) {
-				if ($main.scrollTop() === 0) {
-					PREFiX.update();
-					cutStream();
-				}
-				setCurrent(current_model, list[0].id_str);
+				do_go_top = true;
 			}
 		} else if (e.keyCode === 74) {
 			if (! $current_view.length) {
@@ -375,7 +377,12 @@ function initKeyboardControlEvents() {
 			target = $main[0].scrollHeight - $main.height();
 			setCurrent(current_model, list[list.length - 1].id_str);
 		}
-		smoothScrollTo(target);
+
+		if (do_go_top) {
+			$('h1').click();
+		} else {
+			smoothScrollTo(target);
+		}
 	}).keydown(function(e) {
 		if (e.ctrlKey || e.altKey || e.metaKey) return;
 
